@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":security-http"))
     implementation(project(":http"))
     implementation("io.micronaut.security:micronaut-security-session")
+    developmentOnly("io.micronaut.security:micronaut-security-jwt")
     runtimeOnly("ch.qos.logback:logback-classic")
 
     // HTTP Client

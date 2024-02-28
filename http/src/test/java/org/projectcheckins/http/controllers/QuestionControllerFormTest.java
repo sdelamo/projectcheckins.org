@@ -4,6 +4,7 @@ import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.util.StringUtils;
+import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.BlockingHttpClient;
@@ -22,10 +23,7 @@ import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.http.BrowserRequest;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.projectcheckins.http.AssertUtils.assertRedirection;
@@ -38,14 +36,34 @@ class QuestionControllerFormTest {
     @Test
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
-        HttpResponse<?> saveResponse = Assertions.assertDoesNotThrow(() -> client.exchange(BrowserRequest.POST("/question/save", Map.of("title", "What are working on?"))));
+        String title = "What are working on?";
+        HttpResponse<?> saveResponse = Assertions.assertDoesNotThrow(() -> client.exchange(BrowserRequest.POST("/question/save", Map.of("title", title))));
         assertRedirection(saveResponse, s -> s.startsWith("/question") && s.endsWith("/show"));
+        String location = saveResponse.getHeaders().get(HttpHeaders.LOCATION);
+        String id = location.substring(location.indexOf("/question/") + "/question/".length(), location.lastIndexOf("/show"));
 
-        URI updateUri = UriBuilder.of("/question").path("yyy").path("update").build();
-        HttpResponse<?> updateResponse = Assertions.assertDoesNotThrow(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "yyy", "title", "What are working on?"))));
-        assertRedirection(updateResponse, "/question/yyy/show"::equals);
+        String html = Assertions.assertDoesNotThrow(() -> client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path("list").build()), String.class));
+        assertTrue(html.contains(title));
+        assertTrue(html.contains("/question/create"));
 
-        HttpClientResponseException thrown = Assertions.assertThrows(HttpClientResponseException.class, () -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "xxx", "title", "What are working on?"))));
+        html = Assertions.assertDoesNotThrow(() -> client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("show").build()), String.class));
+        assertTrue(html.contains(title));
+        assertTrue(html.contains("/question/list"));
+        assertTrue(html.contains("/question/" + id  + "/edit"));
+
+        html = Assertions.assertDoesNotThrow(() -> client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class));
+        assertTrue(html.contains(title));
+
+        String updatedTitle = "What did you do today?";
+        URI updateUri = UriBuilder.of("/question").path(id).path("update").build();
+        HttpResponse<?> updateResponse = Assertions.assertDoesNotThrow(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", id, "title", updatedTitle))));
+        assertRedirection(updateResponse, s -> s.equals("/question/" + id + "/show"));
+
+        html = Assertions.assertDoesNotThrow(() -> client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class));
+        assertFalse(html.contains(title));
+        assertTrue(html.contains(updatedTitle));
+
+        HttpClientResponseException thrown = Assertions.assertThrows(HttpClientResponseException.class, () -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "yyy", "title", "What are working on?"))));
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, thrown.getStatus());
 
         URI deleteUri = UriBuilder.of("/question").path("yyy").path("delete").build();
@@ -57,29 +75,35 @@ class QuestionControllerFormTest {
     @Singleton
     @Replaces(QuestionRepository.class)
     static class QuestionRepositoryMock implements QuestionRepository {
+
+        Map<String, String> titleById = new HashMap<>();
         @Override
         public String save(QuestionSave questionSave) {
-            return "xxx";
+            String id = "xxx";
+            titleById.put(id, questionSave.title());
+            return id;
         }
 
         @Override
         public Optional<Question> findById(String id) {
-            return Optional.empty();
+            return Optional.ofNullable(titleById.get(id)).map(title -> new Question(id, titleById.get(id)));
         }
 
         @Override
         public void update(QuestionUpdate questionUpdate) {
-
+            if (titleById.containsKey(questionUpdate.id())) {
+                titleById.put(questionUpdate.id(), questionUpdate.title());
+            }
         }
 
         @Override
         public List<Question> findAll() {
-            return Collections.emptyList();
+            return titleById.keySet().stream().map(id -> new Question(id, titleById.get(id))).toList();
         }
 
         @Override
         public void deleteById(String id) {
-
+            titleById.remove(id);
         }
     }
 }

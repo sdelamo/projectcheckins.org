@@ -1,12 +1,15 @@
 package org.projectcheckins.http.controllers;
 
+import io.micronaut.http.MediaType;
+import io.micronaut.http.annotation.*;
+import io.micronaut.security.annotation.Secured;
+import io.micronaut.views.ModelAndView;
+import io.micronaut.views.fields.Form;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.projectcheckins.annotations.GetHtml;
 import org.projectcheckins.annotations.PostForm;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.Body;
-import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.fields.FormGenerator;
@@ -45,7 +48,7 @@ class QuestionController {
     // SHOW
     private static final String PATH_SHOW = PATH + ApiConstants.PATH_SHOW;
     private static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_SHOW).build();
-    private static final String VIEW_SHOW = PATH + ApiConstants.VIEW_EDIT;
+    private static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
 
     // EDIT
     private static final String PATH_EDIT = PATH + ApiConstants.PATH_EDIT;
@@ -89,10 +92,13 @@ class QuestionController {
                 .orElseGet(NotFoundController.NOT_FOUND_REDIRECT);
     }
 
-    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_EDIT)
+    @Hidden
+    @Produces(MediaType.TEXT_HTML)
+    @Get(PATH_EDIT)
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionEdit(@PathVariable @NotBlank String id) {
         return questionRepository.findById(id)
-                .map(question -> (HttpResponse) HttpResponse.ok(updateModel(question)))
+                .map(question -> (HttpResponse) HttpResponse.ok(new ModelAndView<>(VIEW_EDIT, updateModel(question))))
                 .orElseGet(NotFoundController.NOT_FOUND_REDIRECT);
     }
 
@@ -113,7 +119,8 @@ class QuestionController {
 
     @NonNull
     private Map<String, Object> updateModel(@NonNull Question question) {
-        return Map.of(ApiConstants.MODEL_FORM, formGenerator.generate(PATH_UPDATE_BUILDER.apply(question.id()).toString(), new QuestionUpdate(question.id(), question.title())));
+        Form form = formGenerator.generate(PATH_UPDATE_BUILDER.apply(question.id()).toString(), new QuestionUpdate(question.id(), question.title()));
+        return Map.of(ApiConstants.MODEL_FORM, form);
     }
 
 }

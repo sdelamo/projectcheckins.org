@@ -6,6 +6,10 @@
 </head>
 <body>
 <main>
+    <a href="/question/list" th:text="#{question.list}"></a>
+    <a th:href="@{|/question/${question.id}/edit|}" th:text="#{question.edit}"></a>
+
+    <h1 th:text="${question.title}"></h1>
 </main>
 </body>
 </html>

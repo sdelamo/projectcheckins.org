@@ -1,8 +1,1 @@
-<th:block th:fragment="form(form)" xmlns:th="http://www.thymeleaf.org">
-    <th:block th:if="${form.action.endsWith('image/save')}">
-        <form th:action="${form.action}" th:method="${form.method()}" enctype="multipart/form-data"><fieldset th:replace="~{fieldset/fieldset :: fieldset(${form.fieldset()})}"></fieldset></form>
-    </th:block>
-    <th:block th:unless="${form.action.endsWith('image/save')}">
-        <form th:action="${form.action}" th:method="${form.method()}"><fieldset th:replace="~{fieldset/fieldset :: fieldset(${form.fieldset()})}"></fieldset></form>
-    </th:block>
-</th:block>
+<th:block th:fragment="form(form)" xmlns:th="http://www.thymeleaf.org"><form th:action="${form.action()}" th:method="${form.method()}" th:enctype="${form.enctype()}"><fieldset th:replace="~{fieldset/fieldset :: fieldset(${form.fieldset()})}"></fieldset></form></th:block>
