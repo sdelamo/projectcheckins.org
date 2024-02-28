@@ -1,0 +1,99 @@
+package org.projectcheckins.security;
+
+import io.micronaut.context.annotation.Property;
+import io.micronaut.context.annotation.Requires;
+import io.micronaut.core.annotation.NonNull;
+import io.micronaut.security.authentication.AuthenticationFailed;
+import io.micronaut.security.authentication.AuthenticationFailureReason;
+import io.micronaut.security.authentication.AuthenticationResponse;
+import io.micronaut.security.authentication.UsernamePasswordCredentials;
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import jakarta.inject.Singleton;
+import jakarta.validation.constraints.NotBlank;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@Property(name = "spec.name", value = "DelegatingAuthenticationProviderTest")
+@MicronautTest(startApplication = false)
+class DelegatingAuthenticationProviderTest {
+
+    private final static String NOT_FOUND_EMAIL = "delamos@unityfoundation.io";
+    private final static String FOUND_EMAIL = "calvog@unityfoundation.io";
+    private static final String CORRECT_PASSWORD = "password";
+    private static final String WRONG_PASSWORD = "wrongpassword";
+
+    @Test
+    void testUserNotFoundAuthentication(DelegatingAuthenticationProvider authenticationProvider) {
+        UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(NOT_FOUND_EMAIL, CORRECT_PASSWORD);
+        assertFalse(authenticationProvider.authenticate(null, credentials).isAuthenticated());
+        assertTrue(authenticationProvider.authenticate(null, credentials) instanceof AuthenticationFailed);
+        AuthenticationFailed authenticationFailed = (AuthenticationFailed) authenticationProvider.authenticate(null, credentials);
+        assertEquals(AuthenticationFailureReason.USER_NOT_FOUND, authenticationFailed.getReason());
+    }
+
+    @Test
+    void testUserCredentialsDontMatch(DelegatingAuthenticationProvider authenticationProvider) {
+        UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FOUND_EMAIL, WRONG_PASSWORD);
+        assertFalse(authenticationProvider.authenticate(null, credentials).isAuthenticated());
+        assertTrue(authenticationProvider.authenticate(null, credentials) instanceof AuthenticationFailed);
+        AuthenticationFailed authenticationFailed = (AuthenticationFailed) authenticationProvider.authenticate(null, credentials);
+        assertEquals(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH, authenticationFailed.getReason());
+    }
+
+    @Test
+    void testUserFoundAuthentication(DelegatingAuthenticationProvider authenticationProvider) {
+        UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FOUND_EMAIL, CORRECT_PASSWORD);
+        AuthenticationResponse authenticationResponse = authenticationProvider.authenticate(null, credentials);
+        assertTrue(authenticationResponse.isAuthenticated());
+        assertFalse(authenticationResponse instanceof AuthenticationFailed);
+    }
+    @Requires(property = "spec.name", value = "DelegatingAuthenticationProviderTest")
+    @Singleton
+    static class AuthenticationFetcherMock implements AuthoritiesFetcher {
+        @Override
+        public List<String> findAuthoritiesByEmail(@NonNull @NotBlank String email) {
+            return Collections.emptyList();
+        }
+    }
+
+    @Requires(property = "spec.name", value = "DelegatingAuthenticationProviderTest")
+    @Singleton
+    static class UserFetcherMock implements UserFetcher {
+
+        private final String encodedPassword;
+        UserFetcherMock(PasswordEncoder passwordEncoder) {
+            encodedPassword = passwordEncoder.encode(CORRECT_PASSWORD);
+        }
+
+        @Override
+        @NonNull
+        public Optional<UserState> findByEmail(@NotBlank @NonNull String email) {
+            if (email.equals(FOUND_EMAIL)) {
+                return Optional.of(new UserState() {
+                    @Override
+                    public String getId() {
+                        return "xxx";
+                    }
+
+                    @Override
+                    public String getEmail() {
+                        return FOUND_EMAIL;
+                    }
+
+                    @Override
+                    public String getPassword() {
+                        return encodedPassword;
+                    }
+                });
+            }
+            return Optional.empty();
+        }
+    }
+
+
+}

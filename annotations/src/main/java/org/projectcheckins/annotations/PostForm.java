@@ -1,4 +1,4 @@
-package com.softamo.concertados.annotations;
+package org.projectcheckins.annotations;
 
 import io.micronaut.http.annotation.UriMapping;
 import io.micronaut.scheduling.TaskExecutors;

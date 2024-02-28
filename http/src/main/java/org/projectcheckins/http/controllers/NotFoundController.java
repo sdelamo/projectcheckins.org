@@ -1,8 +1,7 @@
 package org.projectcheckins.http.controllers;
 
-import com.softamo.concertados.annotations.GetHtml;
+import org.projectcheckins.annotations.GetHtml;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.MutableHttpResponse;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.security.rules.SecurityRule;
 

@@ -1,6 +1,6 @@
 package org.projectcheckins.processor;
 
-import com.softamo.concertados.annotations.PostForm;
+import org.projectcheckins.annotations.PostForm;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Consumes;

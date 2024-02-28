@@ -1,6 +1,6 @@
 package org.projectcheckins.processor;
 
-import com.softamo.concertados.annotations.GetHtml;
+import org.projectcheckins.annotations.GetHtml;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Get;
