@@ -1,5 +1,8 @@
 package org.projectcheckins.http.exceptions;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.projectcheckins.http.AssertUtils.htmlBody;
+
 import org.projectcheckins.annotations.GetHtml;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Requires;
@@ -16,13 +19,11 @@ import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.exceptions.QuestionNotFoundException;
-import org.projectcheckins.http.AssertUtils;
 import org.projectcheckins.http.BrowserRequest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.projectcheckins.http.AssertUtils.status;
 
 @MicronautTest
 @Property(name = "spec.name", value = "NotFoundHandlerTest")
@@ -32,8 +33,10 @@ class NotFoundHandlerTest {
     void notFoundJson(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
         HttpRequest<?> request = HttpRequest.GET("/notFound/throwing");
-        HttpClientResponseException ex = Assertions.assertThrows(HttpClientResponseException.class, () -> client.exchange(request, String.class));
-        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+        assertThatThrownBy(() -> client.exchange(request, String.class))
+            .isInstanceOf(HttpClientResponseException.class)
+            .extracting(e -> ((HttpClientResponseException)e).getStatus())
+            .isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -42,9 +45,11 @@ class NotFoundHandlerTest {
         HttpRequest<?> request = BrowserRequest.GET("/notFound/throwing/html");
         Argument<String> ok = Argument.of(String.class);
         Argument<String> ko = Argument.of(String.class);
-        HttpClientResponseException ex = Assertions.assertThrows(HttpClientResponseException.class, () -> client.exchange(request, ok, ko));
-        String html = AssertUtils.assertHtmlPage(ex.getResponse(), HttpStatus.NOT_FOUND);
-        Assertions.assertTrue(html.contains("Not Found"));
+        assertThatThrownBy(() -> client.exchange(request, ok, ko))
+            .isInstanceOf(HttpClientResponseException.class)
+            .extracting(e -> ((HttpClientResponseException)e).getResponse())
+            .matches(status(HttpStatus.NOT_FOUND))
+            .matches(htmlBody("Not Found"));
     }
 
     @Controller

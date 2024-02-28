@@ -1,5 +1,7 @@
 package org.projectcheckins.processor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.projectcheckins.annotations.PostForm;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.http.MediaType;
@@ -11,8 +13,6 @@ import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,21 +28,16 @@ class PostFormAnnotationMapperTest {
                 .member("rolesAllowed", "ROLE_ORGANIZER_WRITE", "ROLE_ADMIN")
                 .build();
 
-        List<AnnotationValue<?>> annotations = mapper.map(value, null);
-        assertNotNull(annotations);
-        assertEquals(6, annotations.size());
-        assertTrue(annotations.stream().anyMatch(ann ->
-                AnnotationValue.builder(Produces.class).member("value", MediaType.TEXT_HTML).build().equals(ann)));
-        assertTrue(annotations.stream().anyMatch(ann ->
-                AnnotationValue.builder(ExecuteOn.class).member("value", TaskExecutors.BLOCKING).build().equals(ann)));
-        assertTrue(annotations.stream().anyMatch(ann ->
-                AnnotationValue.builder(Post.class).member("uri", "/{id}/update").build().equals(ann)));
-        assertTrue(annotations.stream().anyMatch(ann ->
-                AnnotationValue.builder(Consumes.class).member("value", MediaType.APPLICATION_FORM_URLENCODED).build().equals(ann)));
-        assertTrue(annotations.stream().anyMatch(ann ->
-                AnnotationValue.builder(Secured.class).member("value", "ROLE_ORGANIZER_WRITE", "ROLE_ADMIN").build().equals(ann)));
-        assertTrue(annotations.stream().anyMatch(ann ->
-                AnnotationValue.builder(Hidden.class).build().equals(ann)));
-
+        assertThat(mapper.map(value, null))
+            .isNotNull()
+            .hasSize(6)
+            .containsExactlyInAnyOrder(
+                AnnotationValue.builder(Produces.class).member("value", MediaType.TEXT_HTML).build(),
+                AnnotationValue.builder(ExecuteOn.class).member("value", TaskExecutors.BLOCKING).build(),
+                AnnotationValue.builder(Post.class).member("uri", "/{id}/update").build(),
+                AnnotationValue.builder(Consumes.class).member("value", MediaType.APPLICATION_FORM_URLENCODED).build(),
+                AnnotationValue.builder(Secured.class).member("value", "ROLE_ORGANIZER_WRITE", "ROLE_ADMIN").build(),
+                AnnotationValue.builder(Hidden.class).build()
+            );
     }
 }

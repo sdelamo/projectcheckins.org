@@ -1,5 +1,9 @@
 package org.projectcheckins.http.controllers;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.projectcheckins.http.AssertUtils.redirection;
+
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
@@ -14,7 +18,6 @@ import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.forms.Question;
 import org.projectcheckins.core.forms.QuestionSave;
@@ -25,9 +28,6 @@ import org.projectcheckins.http.BrowserRequest;
 import java.net.URI;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.projectcheckins.http.AssertUtils.assertRedirection;
-
 @Property(name = "micronaut.http.client.follow-redirects", value = StringUtils.FALSE)
 @Property(name = "micronaut.security.filter.enabled", value = StringUtils.FALSE)
 @Property(name = "spec.name", value = "QuestionControllerFormTest")
@@ -37,38 +37,42 @@ class QuestionControllerFormTest {
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
         String title = "What are working on?";
-        HttpResponse<?> saveResponse = Assertions.assertDoesNotThrow(() -> client.exchange(BrowserRequest.POST("/question/save", Map.of("title", title))));
-        assertRedirection(saveResponse, s -> s.startsWith("/question") && s.endsWith("/show"));
+        HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", Map.of("title", title)));
+        assertThat(saveResponse)
+            .matches(redirection(s -> s.startsWith("/question") && s.endsWith("/show")));
+
         String location = saveResponse.getHeaders().get(HttpHeaders.LOCATION);
         String id = location.substring(location.indexOf("/question/") + "/question/".length(), location.lastIndexOf("/show"));
 
-        String html = Assertions.assertDoesNotThrow(() -> client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path("list").build()), String.class));
-        assertTrue(html.contains(title));
-        assertTrue(html.contains("/question/create"));
+        assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path("list").build()), String.class))
+            .contains(title)
+            .contains("/question/create");
 
-        html = Assertions.assertDoesNotThrow(() -> client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("show").build()), String.class));
-        assertTrue(html.contains(title));
-        assertTrue(html.contains("/question/list"));
-        assertTrue(html.contains("/question/" + id  + "/edit"));
+        assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("show").build()), String.class))
+            .contains(title)
+            .contains("/question/list")
+            .contains("/question/" + id  + "/edit");
 
-        html = Assertions.assertDoesNotThrow(() -> client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class));
-        assertTrue(html.contains(title));
+        assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class))
+            .contains(title);
 
         String updatedTitle = "What did you do today?";
         URI updateUri = UriBuilder.of("/question").path(id).path("update").build();
-        HttpResponse<?> updateResponse = Assertions.assertDoesNotThrow(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", id, "title", updatedTitle))));
-        assertRedirection(updateResponse, s -> s.equals("/question/" + id + "/show"));
+        assertThat(client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", id, "title", updatedTitle))))
+            .matches(redirection(s -> s.equals("/question/" + id + "/show")));
 
-        html = Assertions.assertDoesNotThrow(() -> client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class));
-        assertFalse(html.contains(title));
-        assertTrue(html.contains(updatedTitle));
+        assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class))
+            .doesNotContain(title)
+            .contains(updatedTitle);
 
-        HttpClientResponseException thrown = Assertions.assertThrows(HttpClientResponseException.class, () -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "yyy", "title", "What are working on?"))));
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, thrown.getStatus());
+        assertThatThrownBy(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "yyy", "title", "What are working on?"))))
+            .isInstanceOf(HttpClientResponseException.class)
+            .extracting(e -> ((HttpClientResponseException)e).getStatus())
+            .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
 
         URI deleteUri = UriBuilder.of("/question").path("yyy").path("delete").build();
-        HttpResponse<?> deleteResponse = Assertions.assertDoesNotThrow(() -> client.exchange(BrowserRequest.POST(deleteUri.toString(), Map.of("title", "What are working on?"))));
-        assertRedirection(deleteResponse, "/question/list"::equals);
+        assertThat(client.exchange(BrowserRequest.POST(deleteUri.toString(), Map.of("title", "What are working on?"))))
+            .matches(redirection("/question/list"));
     }
 
     @Requires(property = "spec.name", value = "QuestionControllerFormTest")

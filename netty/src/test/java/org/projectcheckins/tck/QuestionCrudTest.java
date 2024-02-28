@@ -1,5 +1,8 @@
 package org.projectcheckins.tck;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
 import io.micronaut.context.annotation.Property;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpRequest;
@@ -14,10 +17,6 @@ import org.projectcheckins.core.repositories.QuestionRepository;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-
 @Property(name = "micronaut.security.filter.enabled", value = StringUtils.FALSE)
 @MicronautTest
 class QuestionCrudTest {
@@ -27,13 +26,13 @@ class QuestionCrudTest {
                       QuestionRepository questionRepository) {
         BlockingHttpClient client = httpClient.toBlocking();
         HttpRequest<?> request = BrowserRequest.POST("/question/save", Map.of("title", "What are working on?"));
-        assertDoesNotThrow(() -> client.exchange(request));
+        assertThatCode(() -> client.exchange(request))
+            .doesNotThrowAnyException();
         Optional<Question> questionOptional = questionRepository.findAll()
                 .stream()
                 .filter(q -> q.title().equals("What are working on?"))
                 .findFirst();
-        assertTrue(questionOptional.isPresent());
-        Question question = questionOptional.get();
-        questionRepository.deleteById(question.id());
+        assertThat(questionOptional).isNotEmpty();
+        questionOptional.map(Question::id).ifPresent(questionRepository::deleteById);
     }
 }

@@ -1,36 +1,44 @@
 package org.projectcheckins.security.http;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
 import io.micronaut.core.type.Argument;
 import io.micronaut.serde.SerdeIntrospections;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.validation.validator.Validator;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @MicronautTest(startApplication = false)
 class LoginFormTest {
     @Test
     void usernameIsRequired(Validator validator) {
-        assertFalse(validator.validate(new LoginForm(null, "rawpassword")).isEmpty());
-        assertFalse(validator.validate(new LoginForm("", "rawpassword")).isEmpty());
-        assertTrue(validator.validate(new LoginForm("manolo", "rawpassword")).isEmpty());
+        assertThat(validator.validate(new LoginForm(null, "rawpassword")))
+            .isNotEmpty();
+        assertThat(validator.validate(new LoginForm("", "rawpassword")))
+            .anyMatch(x -> x.getPropertyPath().toString().equals("username") && x.getMessage().equals("must not be blank"));
+        assertThat(validator.validate(new LoginForm("manolo", "rawpassword")))
+            .isEmpty();
     }
 
     @Test
     void passwordIsRequired(Validator validator) {
-        assertFalse(validator.validate(new LoginForm("manolo", null)).isEmpty());
-        assertFalse(validator.validate(new LoginForm("manolo", "")).isEmpty());
+        assertThat(validator.validate(new LoginForm("manolo", null)))
+            .isNotEmpty();
+        assertThat(validator.validate(new LoginForm("manolo", "")))
+            .anyMatch(x -> x.getPropertyPath().toString().equals("password") && x.getMessage().equals("must not be blank"));
     }
 
     @Test
     void loginFormIsAnnotatedWithSerdeableDeserializable(SerdeIntrospections serdeIntrospections) {
-        assertDoesNotThrow(() -> serdeIntrospections.getDeserializableIntrospection(Argument.of(LoginForm.class)));
+        assertThatCode(() -> serdeIntrospections.getDeserializableIntrospection(Argument.of(LoginForm.class)))
+            .doesNotThrowAnyException();
     }
 
     @Test
     void loginFormIsAnnotatedWithSerdeableSerializable(SerdeIntrospections serdeIntrospections) {
-        assertDoesNotThrow(() -> serdeIntrospections.getSerializableIntrospection(Argument.of(LoginForm.class)));
+        assertThatCode(() -> serdeIntrospections.getSerializableIntrospection(Argument.of(LoginForm.class)))
+            .doesNotThrowAnyException();
     }
 
 }

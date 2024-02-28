@@ -1,15 +1,11 @@
 package org.projectcheckins.repository.eclipsestore;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.Question;
 import org.projectcheckins.core.forms.QuestionSave;
 import org.projectcheckins.core.forms.QuestionUpdate;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @MicronautTest
 class EclipseStoreQuestionRepositoryTest {
@@ -17,26 +13,22 @@ class EclipseStoreQuestionRepositoryTest {
     @Test
     void testCrud(EclipseStoreQuestionRepository questionRepository) {
 
-        String id = questionRepository.save(new QuestionSave("What are working on?"));
-        Optional<Question> questionOptional = questionRepository.findAll()
-                .stream()
-                .filter(q -> q.title().equals("What are working on?"))
-                .findFirst();
-        assertTrue(questionOptional.isPresent());
-        Question question = questionOptional.get();
-        assertEquals("What are working on?", question.title());
-        questionOptional =  questionRepository.findById(id);
-        assertTrue(questionOptional.isPresent());
-        question = questionOptional.get();
-        assertEquals("What are working on?", question.title());
+        String title = "What are working on?";
+        String id = questionRepository.save(new QuestionSave(title));
+        assertThat(questionRepository.findAll())
+            .anyMatch(q -> q.title().equals(title));
+
+        assertThat(questionRepository.findById(id))
+            .isNotEmpty()
+            .hasValueSatisfying(q -> q.title().equals(title));
 
         String updatedTitle = "What are you working on this week?";
         questionRepository.update(new QuestionUpdate(id, updatedTitle));
-        questionOptional =  questionRepository.findById(id);
-        assertTrue(questionOptional.isPresent());
-        question = questionOptional.get();
-        assertEquals(updatedTitle, question.title());
-        questionRepository.deleteById(question.id());
-        assertTrue(questionRepository.findAll().isEmpty());
+        assertThat(questionRepository.findById(id))
+            .isNotEmpty()
+            .hasValueSatisfying(q -> q.title().equals(updatedTitle));
+
+        questionRepository.deleteById(id);
+        assertThat(questionRepository.findAll()).isEmpty();
     }
 }

@@ -1,15 +1,12 @@
 package org.projectcheckins.repository.eclipsestore;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.security.RegisterService;
 import org.projectcheckins.security.UserAlreadyExistsException;
 import org.projectcheckins.security.UserFetcher;
-import org.projectcheckins.security.UserState;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @MicronautTest(startApplication = false)
 class EclipseStoreUserFetcherTest {
@@ -19,14 +16,12 @@ class EclipseStoreUserFetcherTest {
 
     @Test
     void authoritiesFetcher(UserFetcher userFetcher, RegisterService registerService) throws UserAlreadyExistsException {
-        assertTrue(userFetcher.findByEmail(NOT_FOUND_EMAIL).isEmpty());
+        assertThat(userFetcher.findByEmail(NOT_FOUND_EMAIL))
+            .isEmpty();
         registerService.register(FOUND_EMAIL, "password");
-        Optional<UserState> userStateOptional = userFetcher.findByEmail(FOUND_EMAIL);
-        assertFalse(userStateOptional.isEmpty());
-        UserState userState = userStateOptional.get();
-        assertEquals(FOUND_EMAIL, userState.getEmail());
-        assertNotNull(userState.getId());
-        assertNotNull(userState.getPassword());
-        assertNotEquals("password", userState.getPassword());
+        assertThat(userFetcher.findByEmail(FOUND_EMAIL)).hasValueSatisfying(userState -> assertThat(userState)
+            .matches(u -> u.getEmail().equals(FOUND_EMAIL))
+            .matches(u -> u.getId() != null)
+            .matches(u -> u.getPassword() != null && !u.getPassword().equals("password")));
     }
 }

@@ -1,31 +1,30 @@
 package org.projectcheckins.http.controllers;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.projectcheckins.http.AssertUtils.htmlPage;
+import static org.projectcheckins.http.AssertUtils.htmlBody;
+import static org.projectcheckins.http.AssertUtils.redirection;
+
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.util.StringUtils;
-import io.micronaut.http.HttpResponse;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.forms.Question;
 import org.projectcheckins.core.forms.QuestionSave;
 import org.projectcheckins.core.forms.QuestionUpdate;
 import org.projectcheckins.core.repositories.QuestionRepository;
-import org.projectcheckins.http.AssertUtils;
 import org.projectcheckins.http.BrowserRequest;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Property(name = "micronaut.security.filter.enabled", value = StringUtils.FALSE)
 @Property(name = "micronaut.http.client.follow-redirects", value = StringUtils.FALSE)
@@ -36,21 +35,21 @@ class QuestionControllerTest {
     @Test
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
-        HttpResponse<String>  listResponse = Assertions.assertDoesNotThrow(() -> client.exchange(BrowserRequest.GET("/question/list"), String.class));
-        AssertUtils.assertHtmlPage(listResponse);
+        assertThat(client.exchange(BrowserRequest.GET("/question/list"), String.class))
+            .matches(htmlPage());
 
-        HttpResponse<String>  editResponse = assertDoesNotThrow(() -> client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("xxx").path("edit").build()), String.class));
-        AssertUtils.assertHtmlPage(editResponse);
+        assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("xxx").path("edit").build()), String.class))
+            .matches(htmlPage());
 
-        HttpResponse<String>  notFoundQuestionEditResponse = assertDoesNotThrow(() -> client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("yyy").path("edit").build()), String.class));
-        AssertUtils.assertRedirection(notFoundQuestionEditResponse, "/notFound"::equals);
+        assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("yyy").path("edit").build()), String.class))
+            .matches(redirection("/notFound"));
 
-        HttpResponse<String>  showResponse = assertDoesNotThrow(() -> client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("xxx").path("show").build()), String.class));
-        AssertUtils.assertHtmlPage(showResponse);
+        assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("xxx").path("show").build()), String.class))
+            .matches(htmlPage());
 
-        HttpResponse<String>  createResponse = assertDoesNotThrow(() -> client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("create").build()), String.class));
-        String html = AssertUtils.assertHtmlPage(createResponse);
-        assertTrue(html.contains("""
+        assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("create").build()), String.class))
+            .matches(htmlPage())
+            .matches(htmlBody("""
                 <input type="text" name="title"""));
 
     }

@@ -18,6 +18,9 @@ dependencies {
     // HTTP Client
     testImplementation("io.micronaut:micronaut-http-client-jdk")
 
+    // AssertJ
+    testImplementation("org.assertj:assertj-core:3.25.1")
+
     // Persistence
     implementation(project(":repository-eclipsestore"))
 }

@@ -1,5 +1,8 @@
 package org.projectcheckins.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static java.util.function.Predicate.not;
+
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.NonNull;
@@ -16,8 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @Property(name = "spec.name", value = "DelegatingAuthenticationProviderTest")
 @MicronautTest(startApplication = false)
 class DelegatingAuthenticationProviderTest {
@@ -30,27 +31,29 @@ class DelegatingAuthenticationProviderTest {
     @Test
     void testUserNotFoundAuthentication(DelegatingAuthenticationProvider authenticationProvider) {
         UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(NOT_FOUND_EMAIL, CORRECT_PASSWORD);
-        assertFalse(authenticationProvider.authenticate(null, credentials).isAuthenticated());
-        assertTrue(authenticationProvider.authenticate(null, credentials) instanceof AuthenticationFailed);
-        AuthenticationFailed authenticationFailed = (AuthenticationFailed) authenticationProvider.authenticate(null, credentials);
-        assertEquals(AuthenticationFailureReason.USER_NOT_FOUND, authenticationFailed.getReason());
+        assertThat(authenticationProvider.authenticate(null, credentials))
+            .matches(not(AuthenticationResponse::isAuthenticated))
+            .isInstanceOf(AuthenticationFailed.class)
+            .extracting(c -> ((AuthenticationFailed) c).getReason())
+            .isEqualTo(AuthenticationFailureReason.USER_NOT_FOUND);
     }
 
     @Test
     void testUserCredentialsDontMatch(DelegatingAuthenticationProvider authenticationProvider) {
         UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FOUND_EMAIL, WRONG_PASSWORD);
-        assertFalse(authenticationProvider.authenticate(null, credentials).isAuthenticated());
-        assertTrue(authenticationProvider.authenticate(null, credentials) instanceof AuthenticationFailed);
-        AuthenticationFailed authenticationFailed = (AuthenticationFailed) authenticationProvider.authenticate(null, credentials);
-        assertEquals(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH, authenticationFailed.getReason());
+        assertThat(authenticationProvider.authenticate(null, credentials))
+            .matches(not(AuthenticationResponse::isAuthenticated))
+            .isInstanceOf(AuthenticationFailed.class)
+            .extracting(c -> ((AuthenticationFailed) c).getReason())
+            .isEqualTo(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH);
     }
 
     @Test
     void testUserFoundAuthentication(DelegatingAuthenticationProvider authenticationProvider) {
         UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FOUND_EMAIL, CORRECT_PASSWORD);
-        AuthenticationResponse authenticationResponse = authenticationProvider.authenticate(null, credentials);
-        assertTrue(authenticationResponse.isAuthenticated());
-        assertFalse(authenticationResponse instanceof AuthenticationFailed);
+        assertThat(authenticationProvider.authenticate(null, credentials))
+            .matches(AuthenticationResponse::isAuthenticated)
+            .isNotInstanceOf(AuthenticationFailed.class);
     }
     @Requires(property = "spec.name", value = "DelegatingAuthenticationProviderTest")
     @Singleton
