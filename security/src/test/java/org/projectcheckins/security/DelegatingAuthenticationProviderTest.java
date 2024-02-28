@@ -29,7 +29,7 @@ class DelegatingAuthenticationProviderTest {
     private static final String WRONG_PASSWORD = "wrongpassword";
 
     @Test
-    void testUserNotFoundAuthentication(DelegatingAuthenticationProvider authenticationProvider) {
+    void testUserNotFoundAuthentication(DelegatingAuthenticationProvider<?> authenticationProvider) {
         UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(NOT_FOUND_EMAIL, CORRECT_PASSWORD);
         assertThat(authenticationProvider.authenticate(null, credentials))
             .matches(not(AuthenticationResponse::isAuthenticated))
@@ -39,7 +39,7 @@ class DelegatingAuthenticationProviderTest {
     }
 
     @Test
-    void testUserCredentialsDontMatch(DelegatingAuthenticationProvider authenticationProvider) {
+    void testUserCredentialsDontMatch(DelegatingAuthenticationProvider<?> authenticationProvider) {
         UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FOUND_EMAIL, WRONG_PASSWORD);
         assertThat(authenticationProvider.authenticate(null, credentials))
             .matches(not(AuthenticationResponse::isAuthenticated))
@@ -49,7 +49,7 @@ class DelegatingAuthenticationProviderTest {
     }
 
     @Test
-    void testUserFoundAuthentication(DelegatingAuthenticationProvider authenticationProvider) {
+    void testUserFoundAuthentication(DelegatingAuthenticationProvider<?> authenticationProvider) {
         UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FOUND_EMAIL, CORRECT_PASSWORD);
         assertThat(authenticationProvider.authenticate(null, credentials))
             .matches(AuthenticationResponse::isAuthenticated)

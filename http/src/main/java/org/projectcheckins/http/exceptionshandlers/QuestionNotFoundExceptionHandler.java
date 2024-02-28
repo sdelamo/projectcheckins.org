@@ -9,28 +9,28 @@ import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.server.exceptions.ExceptionHandler;
 import io.micronaut.http.server.exceptions.response.ErrorContext;
 import io.micronaut.http.server.exceptions.response.ErrorResponseProcessor;
-import io.micronaut.views.ModelAndView;
 import io.micronaut.views.ViewsRenderer;
 import jakarta.inject.Singleton;
+import java.util.Map;
 import org.projectcheckins.core.exceptions.QuestionNotFoundException;
 
 import java.util.Collections;
 
 @Produces
 @Singleton
-public class QuestionNotFoundExceptionHandler implements ExceptionHandler<QuestionNotFoundException, HttpResponse> {
+public class QuestionNotFoundExceptionHandler implements ExceptionHandler<QuestionNotFoundException, HttpResponse<?>> {
 
     private final ErrorResponseProcessor<?> errorResponseProcessor;
-    private final ViewsRenderer viewsRenderer;
+    private final ViewsRenderer<Map<?, ?>, HttpRequest<?>> viewsRenderer;
 
     public QuestionNotFoundExceptionHandler(ErrorResponseProcessor<?> errorResponseProcessor,
-                                            ViewsRenderer viewsRenderer) {
+                                            ViewsRenderer<Map<?, ?>, HttpRequest<?>> viewsRenderer) {
         this.errorResponseProcessor = errorResponseProcessor;
         this.viewsRenderer = viewsRenderer;
     }
 
     @Override
-    public HttpResponse<?> handle(HttpRequest request, QuestionNotFoundException e) {
+    public HttpResponse<?> handle(@SuppressWarnings("rawtypes") HttpRequest request, QuestionNotFoundException e) {
         if (acceptHtml(request)) {
             Writable writable = viewsRenderer.render("error/404", Collections.emptyMap(), request);
             return HttpResponse.notFound(writable)
