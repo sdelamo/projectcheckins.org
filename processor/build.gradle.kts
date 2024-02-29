@@ -14,5 +14,5 @@ dependencies {
     testRuntimeOnly("ch.qos.logback:logback-classic")
 
     // AssertJ
-    testImplementation("org.assertj:assertj-core:3.25.1")
+    testImplementation("org.assertj:assertj-core")
 }
