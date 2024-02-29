@@ -1,9 +1,14 @@
 package org.projectcheckins.repository.eclipsestore;
 
+import io.micronaut.core.annotation.NonNull;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.eclipsestore.RootProvider;
 import io.micronaut.eclipsestore.annotations.StoreParams;
+import io.micronaut.multitenancy.Tenant;
 import jakarta.inject.Singleton;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.exceptions.QuestionNotFoundException;
 import org.projectcheckins.core.forms.Question;
 import org.projectcheckins.core.forms.QuestionSave;
@@ -26,7 +31,8 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
     }
 
     @Override
-    public String save(QuestionSave questionSave) {
+    @NonNull
+    public String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant) {
         QuestionEntity entity = new QuestionEntity();
         String id = idGenerator.generate();
         entity.setId(id);
@@ -37,9 +43,28 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
     }
 
     @Override
-    public Optional<Question> findById(String id) {
+    @NonNull
+    public Optional<Question> findById(@NotBlank String id, @Nullable Tenant tenant) {
         return findEntityById(id)
                 .map(this::questionOfEntity);
+    }
+
+    @Override
+    public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
+        QuestionEntity question = findEntityById(questionUpdate.id()).orElseThrow(QuestionNotFoundException::new);
+        question.setTitle(questionUpdate.title());
+        save(question);
+    }
+
+    @Override
+    public List<Question> findAll(@Nullable Tenant tenant) {
+        return rootProvider.root().getQuestions().stream().map(this::questionOfEntity).toList();
+    }
+
+    @Override
+    public void deleteById(@NotBlank String id, @Nullable Tenant tenant) {
+        rootProvider.root().getQuestions().removeIf(q -> q.getId().equals(id));
+        save(rootProvider.root().getQuestions());
     }
 
     private Question questionOfEntity(QuestionEntity entity) {
@@ -51,24 +76,6 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
                 .stream()
                 .filter(q -> q.getId().equals(id))
                 .findFirst();
-    }
-
-    @Override
-    public void update(QuestionUpdate questionUpdate) {
-        QuestionEntity question = findEntityById(questionUpdate.id()).orElseThrow(QuestionNotFoundException::new);
-        question.setTitle(questionUpdate.title());
-        save(question);
-    }
-
-    @Override
-    public List<Question> findAll() {
-        return rootProvider.root().getQuestions().stream().map(this::questionOfEntity).toList();
-    }
-
-    @Override
-    public void deleteById(@NotBlank String id) {
-        rootProvider.root().getQuestions().removeIf(q -> q.getId().equals(id));
-        save(rootProvider.root().getQuestions());
     }
 
     @StoreParams("questions")

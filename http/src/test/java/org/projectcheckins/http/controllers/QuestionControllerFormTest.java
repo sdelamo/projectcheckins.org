@@ -7,6 +7,8 @@ import static org.projectcheckins.http.AssertUtils.redirection;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
+import io.micronaut.core.annotation.NonNull;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpResponse;
@@ -16,8 +18,12 @@ import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.http.uri.UriBuilder;
+import io.micronaut.multitenancy.Tenant;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.forms.Question;
 import org.projectcheckins.core.forms.QuestionSave;
@@ -34,7 +40,7 @@ import java.util.*;
 @MicronautTest
 class QuestionControllerFormTest {
     @Test
-    void crud(@Client("/") HttpClient httpClient) {
+    void crud(@Client("/") HttpClient httpClient, QuestionRepository questionRepository) {
         BlockingHttpClient client = httpClient.toBlocking();
         String title = "What are working on?";
         HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", Map.of("title", title)));
@@ -70,9 +76,11 @@ class QuestionControllerFormTest {
             .extracting(e -> ((HttpClientResponseException)e).getStatus())
             .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
 
-        URI deleteUri = UriBuilder.of("/question").path("yyy").path("delete").build();
-        assertThat(client.exchange(BrowserRequest.POST(deleteUri.toString(), Map.of("title", "What are working on?"))))
+        URI deleteUri = UriBuilder.of("/question").path(id).path("delete").build();
+        assertThat(client.exchange(BrowserRequest.POST(deleteUri.toString(), Collections.emptyMap())))
             .matches(redirection("/question/list"));
+
+        assertThat(questionRepository.findAll()).isEmpty();
     }
 
     @Requires(property = "spec.name", value = "QuestionControllerFormTest")
@@ -81,32 +89,36 @@ class QuestionControllerFormTest {
     static class QuestionRepositoryMock implements QuestionRepository {
 
         Map<String, String> titleById = new HashMap<>();
+
         @Override
-        public String save(QuestionSave questionSave) {
+        @NonNull
+        public String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant) {
             String id = "xxx";
             titleById.put(id, questionSave.title());
             return id;
         }
 
         @Override
-        public Optional<Question> findById(String id) {
+        @NonNull
+        public Optional<Question> findById(@NotBlank String id, @Nullable Tenant tenant) {
             return Optional.ofNullable(titleById.get(id)).map(title -> new Question(id, titleById.get(id)));
         }
 
         @Override
-        public void update(QuestionUpdate questionUpdate) {
+        public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
             if (titleById.containsKey(questionUpdate.id())) {
                 titleById.put(questionUpdate.id(), questionUpdate.title());
             }
         }
 
         @Override
-        public List<Question> findAll() {
+        @NonNull
+        public List<Question> findAll(@Nullable Tenant tenant) {
             return titleById.keySet().stream().map(id -> new Question(id, titleById.get(id))).toList();
         }
 
         @Override
-        public void deleteById(String id) {
+        public void deleteById(@NotBlank String id, @Nullable Tenant tenant) {
             titleById.remove(id);
         }
     }

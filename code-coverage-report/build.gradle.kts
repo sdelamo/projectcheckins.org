@@ -8,6 +8,7 @@ repositories {
 }
 
 dependencies {
+    jacocoAggregation(project(":multitenancy"))
     jacocoAggregation(project(":core"))
     jacocoAggregation(project(":http"))
     jacocoAggregation(project(":netty"))

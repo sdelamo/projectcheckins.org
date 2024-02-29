@@ -1,7 +1,9 @@
 package org.projectcheckins.http.controllers;
 
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
+import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
@@ -71,8 +73,8 @@ class QuestionController {
     }
 
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
-    Map<String, Object> questionList() {
-        return Map.of(MODEL_QUESTIONS, questionRepository.findAll());
+    Map<String, Object> questionList(@Nullable Tenant tenant) {
+        return Map.of(MODEL_QUESTIONS, questionRepository.findAll(tenant));
     }
 
     @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE)
@@ -80,14 +82,15 @@ class QuestionController {
         return Map.of(ApiConstants.MODEL_FORM, formGenerator.generate(PATH_SAVE, QuestionSave.class));
     }
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionSave(@NonNull @NotNull @Valid @Body QuestionSave questionSave) {
-        String id = questionRepository.save(questionSave);
+    HttpResponse<?> questionSave(@NonNull @NotNull @Valid @Body QuestionSave questionSave,
+                                 @Nullable Tenant tenant) {
+        String id = questionRepository.save(questionSave, tenant);
         return HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW)
-    HttpResponse<?> questionShow(@PathVariable @NotBlank String id) {
-        return questionRepository.findById(id)
+    HttpResponse<?> questionShow(@PathVariable @NotBlank String id, @Nullable Tenant tenant) {
+        return questionRepository.findById(id, tenant)
                 .map(question -> (HttpResponse) HttpResponse.ok(Map.of(MODEL_QUESTION, question)))
                 .orElseGet(NotFoundController.NOT_FOUND_REDIRECT);
     }
@@ -96,24 +99,28 @@ class QuestionController {
     @Produces(MediaType.TEXT_HTML)
     @Get(PATH_EDIT)
     @Secured(SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionEdit(@PathVariable @NotBlank String id) {
-        return questionRepository.findById(id)
+    HttpResponse<?> questionEdit(@PathVariable @NotBlank String id,
+                                 @Nullable Tenant tenant) {
+        return questionRepository.findById(id, tenant)
                 .map(question -> (HttpResponse) HttpResponse.ok(new ModelAndView<>(VIEW_EDIT, updateModel(question))))
                 .orElseGet(NotFoundController.NOT_FOUND_REDIRECT);
     }
 
     @PostForm(uri = PATH_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionUpdate(@PathVariable @NotBlank String id,
-                                   @NonNull @NotNull @Valid @Body QuestionUpdate questionUpdate) {
+                                   @NonNull @NotNull @Valid @Body QuestionUpdate questionUpdate,
+                                   @Nullable Tenant tenant) {
         if (!id.equals(questionUpdate.id())) {
             return HttpResponse.unprocessableEntity();
         }
-        questionRepository.update(questionUpdate);
+        questionRepository.update(questionUpdate, tenant);
         return HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
  
     @PostForm(uri = PATH_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionDelete(@PathVariable @NotBlank String id) {
+    HttpResponse<?> questionDelete(@PathVariable @NotBlank String id,
+                                   @Nullable Tenant tenant) {
+        questionRepository.deleteById(id, tenant);
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 

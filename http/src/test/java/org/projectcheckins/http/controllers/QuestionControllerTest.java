@@ -8,13 +8,19 @@ import static org.projectcheckins.http.AssertUtils.redirection;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
+import io.micronaut.core.annotation.NonNull;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.uri.UriBuilder;
+import io.micronaut.multitenancy.Tenant;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.forms.Question;
 import org.projectcheckins.core.forms.QuestionSave;
@@ -59,12 +65,14 @@ class QuestionControllerTest {
     @Replaces(QuestionRepository.class)
     static class QuestionRepositoryMock implements QuestionRepository {
         @Override
-        public String save(QuestionSave questionSave) {
+        @NonNull
+        public String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant) {
             return "xxx";
         }
 
         @Override
-        public Optional<Question> findById(String id) {
+        @NonNull
+        public Optional<Question> findById(@NotBlank String id, @Nullable Tenant tenant) {
             if (id.equals("xxx")) {
                 return Optional.of(new Question("xxx", "What are working on?"));
             }
@@ -72,17 +80,18 @@ class QuestionControllerTest {
         }
 
         @Override
-        public void update(QuestionUpdate questionUpdate) {
+        public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
 
         }
 
         @Override
-        public List<Question> findAll() {
+        @NonNull
+        public List<Question> findAll(@Nullable Tenant tenant) {
             return Collections.emptyList();
         }
 
         @Override
-        public void deleteById(String id) {
+        public void deleteById(@NotBlank String id, @Nullable Tenant tenant) {
 
         }
     }
