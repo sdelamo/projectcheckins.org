@@ -25,6 +25,7 @@ class DelegatingAuthenticationProviderTest {
 
     private final static String NOT_FOUND_EMAIL = "delamos@unityfoundation.io";
     private final static String FOUND_EMAIL = "calvog@unityfoundation.io";
+    private final static String NOT_ENABLED = "disabled@unityfoundation.io";
     private static final String CORRECT_PASSWORD = "password";
     private static final String WRONG_PASSWORD = "wrongpassword";
 
@@ -55,6 +56,18 @@ class DelegatingAuthenticationProviderTest {
             .matches(AuthenticationResponse::isAuthenticated)
             .isNotInstanceOf(AuthenticationFailed.class);
     }
+
+    @Test
+    void testUserDisabledAuthentication(DelegatingAuthenticationProvider<?> authenticationProvider) {
+        UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(NOT_ENABLED, CORRECT_PASSWORD);
+        assertThat(authenticationProvider.authenticate(null, credentials))
+                .matches(not(AuthenticationResponse::isAuthenticated))
+                .isInstanceOf(AuthenticationFailed.class)
+                .extracting(c -> ((AuthenticationFailed) c).getReason())
+                .isEqualTo(AuthenticationFailureReason.USER_DISABLED);
+    }
+
+
     @Requires(property = "spec.name", value = "DelegatingAuthenticationProviderTest")
     @Singleton
     static class AuthenticationFetcherMock implements AuthoritiesFetcher {
@@ -76,11 +89,16 @@ class DelegatingAuthenticationProviderTest {
         @Override
         @NonNull
         public Optional<UserState> findByEmail(@NotBlank @NonNull String email) {
-            if (email.equals(FOUND_EMAIL)) {
+            if (email.equals(FOUND_EMAIL) || email.equals(NOT_ENABLED)) {
                 return Optional.of(new UserState() {
                     @Override
                     public String getId() {
                         return "xxx";
+                    }
+
+                    @Override
+                    public boolean isEnabled() {
+                        return !email.equals(NOT_ENABLED);
                     }
 
                     @Override

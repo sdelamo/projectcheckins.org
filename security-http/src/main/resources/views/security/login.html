@@ -6,8 +6,9 @@
 </head>
 <body>
 <main>
-        <form th:replace="~{fieldset/form :: form(${form})}"></form>
-        <p><a href="/security/signUp" th:text="#{nav.signup}"></a></p>
+    <form th:replace="~{fieldset/form :: form(${form})}"></form>
+    <th:block th:if="${alert}"><div th:replace="~{bootstrap/_alert :: alert(${alert})}"></div></th:block>
+    <p><a href="/security/signUp" th:text="#{nav.signup}"></a></p>
 </main>
 </body>
 </html>

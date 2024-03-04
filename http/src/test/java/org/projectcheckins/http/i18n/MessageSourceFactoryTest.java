@@ -15,5 +15,4 @@ class MessageSourceFactoryTest {
         assertThat(messageSource.getMessage("title.notFound", Locale.ENGLISH))
             .contains("Not Found");
     }
-
 }

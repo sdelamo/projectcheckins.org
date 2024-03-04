@@ -1,0 +1,10 @@
+<th:block th:fragment="alert(alert)" xmlns:th="http://www.thymeleaf.org">
+    <div class="alert" th:classappend="@{|alert-${alert.variant.toString().toLowerCase()} ${alert.dismissible ? 'alert-dismissible fade show mt-3' : ''}|}" th:if="${alert.message.code()}"  role="alert">
+        <span th:text="${#strings.defaultString(#messages.msgOrNull(alert.message.code()),alert.message.defaultMessage())}"></span>
+        <button th:if="${alert.dismissible}" type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div class="alert" th:classappend="@{|alert-${alert.variant.toString().toLowerCase()} ${alert.dismissible ? 'alert-dismissible fade show mt-3' : ''}|}" th:unless="${alert.message.code()}" role="alert">
+        <span th:text="${alert.message.defaultMessage()}"></span>
+        <button th:if="${alert.dismissible}" type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</th:block>

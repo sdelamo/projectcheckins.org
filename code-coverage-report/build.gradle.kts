@@ -9,7 +9,10 @@ repositories {
 
 dependencies {
     jacocoAggregation(project(":multitenancy"))
+    jacocoAggregation(project(":bootstrap"))
     jacocoAggregation(project(":core"))
+    jacocoAggregation(project(":email"))
+    jacocoAggregation(project(":email-http"))
     jacocoAggregation(project(":http"))
     jacocoAggregation(project(":netty"))
     jacocoAggregation(project(":processor"))

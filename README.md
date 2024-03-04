@@ -44,7 +44,7 @@ then run `./gradlew :netty:run`
 ### Libraries 
 
 - [KSUID](https://github.com/ksuid/ksuid)
-- 
+- [Awaitility](https://github.com/awaitility/awaitility)
 ### Gradle Plugins
 [Jacoco Gradle Plugin](https://docs.gradle.org/current/userguide/jacoco_plugin.html)
 

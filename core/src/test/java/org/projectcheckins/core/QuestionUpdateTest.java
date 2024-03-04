@@ -35,14 +35,14 @@ class QuestionUpdateTest {
     }
 
     @Test
-    void questionSaveIsAnnotatedWithSerdeableDeserializable(SerdeIntrospections serdeIntrospections) {
+    void questionUpdateIsAnnotatedWithSerdeableDeserializable(SerdeIntrospections serdeIntrospections) {
         assertThatCode(() -> serdeIntrospections.getDeserializableIntrospection(Argument.of(QuestionUpdate.class)))
             .doesNotThrowAnyException();
     }
 
     @Test
-    void questionSaveIsAnnotatedWithSerdeableSerializable(SerdeIntrospections serdeIntrospections) {
-        assertThatCode(() -> serdeIntrospections.getSerializableIntrospection(Argument.of(Question.class)))
+    void questionUpdateIsAnnotatedWithSerdeableSerializable(SerdeIntrospections serdeIntrospections) {
+        assertThatCode(() -> serdeIntrospections.getSerializableIntrospection(Argument.of(QuestionUpdate.class)))
             .doesNotThrowAnyException();
     }
 }

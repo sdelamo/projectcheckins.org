@@ -3,6 +3,7 @@ plugins {
 }
 dependencies {
     implementation(project(":core"))
+    implementation(project(":email"))
     implementation(project(":security"))
     annotationProcessor("io.micronaut.eclipsestore:micronaut-eclipsestore-annotations")
     implementation("io.micronaut.eclipsestore:micronaut-eclipsestore")

@@ -26,6 +26,9 @@ dependencies {
     // AssertJ
     testImplementation("org.assertj:assertj-core")
 
+    // Async testing
+    testImplementation("org.awaitility:awaitility:${project.properties["awaitilityVersion"]}")
+
     // Logging
     testRuntimeOnly("ch.qos.logback:logback-classic")
 }
