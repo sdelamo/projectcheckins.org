@@ -1,6 +1,6 @@
-<th:block th:each="field : ${el.fields()}" th:fragment="fieldset(el)" xmlns:th="http://www.thymeleaf.org">
-    <th:block th:if="${field.class.name == 'io.micronaut.views.fields.elements.InputFileFormElement'}"><div th:replace="~{fieldset/inputfile :: inputfile(${field})}"/></th:block>
-    <th:block th:unless="${field.class.name == 'io.micronaut.views.fields.elements.InputFileFormElement'}">
+<th:block th:fragment="fieldset(el)" xmlns:th="http://www.thymeleaf.org">
+    <th:block th:each="field : ${el.fields()}">
+        <th:block th:if="${field.tag.toString() == 'input' && field.type.toString() == 'file'}"><div th:replace="~{fieldset/inputfile :: inputfile(${field})}"/></th:block>
         <th:block th:if="${field.tag.toString() == 'input' && field.type.toString() == 'hidden'}"><input th:replace="~{fieldset/inputhidden :: inputhidden(${field})}"/></th:block>
         <th:block th:if="${field.tag.toString() == 'input' && field.type.toString() == 'password'}"><div class="mb-3" th:insert="~{fieldset/inputstring :: inputstring('password',${field})}"/></th:block>
         <th:block th:if="${field.tag.toString() == 'textarea'}"><div class="mb-3" th:insert="~{fieldset/textarea :: textarea(${field})}"/></th:block>
@@ -17,5 +17,14 @@
         <th:block th:if="${field.tag.toString() == 'input' && field.type.toString() == 'checkbox'}"><div class="mb-3" th:insert="~{fieldset/inputcheckbox :: inputcheckbox(${field})}"></div></th:block>
         <th:block th:if="${field.tag.toString() == 'select'}"><div class="mb-3" th:insert="~{fieldset/select :: select(${field})}"></div></th:block>
         <th:block th:if="${field.tag.toString() == 'trix-editor'}"><div class="mb-3" th:if="${el.hasErrors()}" th:insert="~{fieldset/errors :: errors(${el.errors()})}"></div><div class="mb-3" th:insert="~{fieldset/trixeditor :: trixeditor(${field})}"></div></th:block>
+    </th:block>
+
+    <th:block th:if="${el.hasErrors()}">
+        <th:block th:each="error : ${el.errors()}">
+            <div class="alert alert-danger" role="alert">
+                <span th:if="${error.code()}" th:text="${#strings.defaultString(#messages.msgOrNull(error.code()),error.defaultMessage())}"></span>
+                <span th:unless="${error.code()}" th:text="${error.defaultMessage()}"></span>
+            </div>
+        </th:block>
     </th:block>
 </th:block>

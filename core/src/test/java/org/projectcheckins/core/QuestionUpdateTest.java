@@ -1,15 +1,14 @@
 package org.projectcheckins.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-
 import io.micronaut.core.type.Argument;
 import io.micronaut.serde.SerdeIntrospections;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.validation.validator.Validator;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.Question;
 import org.projectcheckins.core.forms.QuestionUpdate;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @MicronautTest
 class QuestionUpdateTest {

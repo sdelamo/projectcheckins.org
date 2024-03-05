@@ -1,6 +1,5 @@
 package org.projectcheckins.bootstrap;
 
-import io.micronaut.core.annotation.Introspected;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.serde.annotation.Serdeable;
 import io.micronaut.views.fields.messages.Message;

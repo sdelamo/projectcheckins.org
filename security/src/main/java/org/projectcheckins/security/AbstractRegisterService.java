@@ -1,7 +1,9 @@
 package org.projectcheckins.security;
 
 import io.micronaut.core.annotation.NonNull;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +20,9 @@ public abstract class AbstractRegisterService implements RegisterService {
                            @NonNull @NotBlank String rawPassword) throws UserAlreadyExistsException {
         return register(username, rawPassword, Collections.emptyList());
     }
+
+    @NonNull
+    protected abstract String register(@NonNull @NotNull @Valid UserSave userSave) throws UserAlreadyExistsException;
 
     @Override
     public String register(@NonNull @NotBlank String username,

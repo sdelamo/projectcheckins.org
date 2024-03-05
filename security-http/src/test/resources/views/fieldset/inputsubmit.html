@@ -1,9 +1,0 @@
-<th:block th:fragment="inputsubmit(el)" xmlns:th="http://www.thymeleaf.org">
-    <input th:if="${el.value().code() == 'action.delete'}"
-           type="submit"
-           th:value="${#strings.defaultString(#messages.msgOrNull(el.value().code()),el.value().defaultMessage())}"
-           th:data-confirm-delete="#{action.delete.confirm}"
-           onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false"
-           class="btn"
-           th:classappend="${el.value.code() == 'action.delete'} ?  'btn-danger' : 'btn-primary'"/>
-    <input th:if="${el.value().code() != null && el.value().code() != 'action.delete'}" type="submit" th:value="${#strings.defaultString(#messages.msgOrNull(el.value().code()),el.value().defaultMessage())}" class="btn btn-primary"/><input th:unless="${el.value().code() != null}" type="submit" th:value="${el.value().defaultMessage()}" class="btn btn-primary"/></th:block>

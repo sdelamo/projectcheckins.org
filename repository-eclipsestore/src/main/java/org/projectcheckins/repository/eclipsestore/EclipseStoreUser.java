@@ -57,11 +57,7 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
 
     @NonNull
     private UserEntity entityOf(@NonNull UserSave userSave) {
-        UserEntity userEntity = new UserEntity();
-        userEntity.setEmail(userSave.email());
-        userEntity.setEncodedPassword(userSave.encodedPassword());
-        userEntity.setAuthorities(userSave.authorities());
-        return userEntity;
+        return new UserEntity(null, userSave.email(), userSave.encodedPassword(), userSave.authorities());
     }
 
     @Override
