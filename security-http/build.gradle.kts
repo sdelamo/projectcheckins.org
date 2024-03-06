@@ -6,6 +6,7 @@ dependencies {
     api(project(":bootstrap"))
     compileOnly("io.micronaut.security:micronaut-security-session")
     testImplementation(project(":thymeleaf-fieldset"))
+    testImplementation(project(":test-utils"))
     testImplementation("io.micronaut.security:micronaut-security-session")
     testImplementation("io.micronaut.security:micronaut-security-jwt")
     compileOnly("com.fasterxml.jackson.core:jackson-databind")

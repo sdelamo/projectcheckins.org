@@ -1,7 +1,7 @@
 package org.projectcheckins.http.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.projectcheckins.http.AssertUtils.redirection;
+import static org.projectcheckins.test.AssertUtils.redirection;
 
 import io.micronaut.context.annotation.Property;
 import io.micronaut.core.util.StringUtils;

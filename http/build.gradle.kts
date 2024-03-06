@@ -8,4 +8,5 @@ dependencies {
     annotationProcessor("io.micronaut.openapi:micronaut-openapi")
     compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
     testImplementation(project(":thymeleaf-fieldset"))
+    testImplementation(project(":test-utils"))
 }

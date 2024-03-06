@@ -1,13 +1,38 @@
-package org.projectcheckins.http;
+package org.projectcheckins.test;
 
 import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
+import io.micronaut.http.client.exceptions.HttpClientResponseException;
+import org.assertj.core.api.AbstractObjectAssert;
+import org.assertj.core.api.Condition;
+import org.assertj.core.api.ThrowableAssert;
 
+import java.util.Optional;
 import java.util.function.Predicate;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public final class AssertUtils {
     private AssertUtils() {
+    }
+
+    public static AbstractObjectAssert<?, String> assertThrowsWithHtml(ThrowableAssert.ThrowingCallable shouldRaiseThrowable, HttpStatus httpStatus) {
+        return assertThatThrownBy(shouldRaiseThrowable)
+                .isInstanceOf(HttpClientResponseException.class)
+                .hasFieldOrPropertyWithValue("status", httpStatus)
+                .extracting(e -> ((HttpClientResponseException) e).getResponse())
+                .extracting(r -> r.getBody(String.class))
+                .extracting(Optional::get);
+    }
+
+    public static Condition<String> containsOnlyOnce(String needle) {
+        return containsManyTimes(1, needle);
+    }
+
+    public static Condition<String> containsManyTimes(int expectedTimes, String needle) {
+        return new Condition<>(haystack -> haystack.split(needle, -1).length - 1 == expectedTimes,
+                "Contains [%s] exactly %s times", needle, expectedTimes);
     }
 
     public static Predicate<HttpResponse<?>> status(HttpStatus httpStatus) {
@@ -41,7 +66,7 @@ public final class AssertUtils {
     }
 
     public static Predicate<HttpResponse<?>> location(String location) {
-        return location(x -> location.equals(x));
+        return location(location::equals);
     }
 
     public static Predicate<HttpResponse<?>> redirection(Predicate<String> expected) {

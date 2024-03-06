@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":thymeleaf-fieldset"))
     implementation(project(":security-http"))
     implementation(project(":http"))
+    testImplementation(project(":test-utils"))
     implementation("io.micronaut.security:micronaut-security-session")
     developmentOnly("io.micronaut.security:micronaut-security-jwt")
     runtimeOnly("ch.qos.logback:logback-classic")

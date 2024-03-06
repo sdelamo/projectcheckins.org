@@ -2,7 +2,7 @@ package org.projectcheckins.http.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.projectcheckins.http.AssertUtils.redirection;
+import static org.projectcheckins.test.AssertUtils.redirection;
 
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
@@ -29,7 +29,7 @@ import org.projectcheckins.core.forms.Question;
 import org.projectcheckins.core.forms.QuestionSave;
 import org.projectcheckins.core.forms.QuestionUpdate;
 import org.projectcheckins.core.repositories.QuestionRepository;
-import org.projectcheckins.http.BrowserRequest;
+import org.projectcheckins.test.BrowserRequest;
 
 import java.net.URI;
 import java.util.*;

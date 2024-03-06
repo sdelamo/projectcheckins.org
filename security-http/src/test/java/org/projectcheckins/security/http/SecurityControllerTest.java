@@ -10,7 +10,6 @@ import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
-import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.security.authentication.AuthenticationFailureReason;
 import io.micronaut.security.authentication.AuthenticationRequest;
 import io.micronaut.security.authentication.AuthenticationResponse;
@@ -20,15 +19,14 @@ import jakarta.inject.Singleton;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.security.RegisterService;
 import org.projectcheckins.security.UserAlreadyExistsException;
-
+import org.projectcheckins.test.BrowserRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import static org.projectcheckins.security.http.AssertUtils.*;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.projectcheckins.test.AssertUtils.*;
 
 @Property(name = "spec.name", value = "SecurityControllerTest")
 

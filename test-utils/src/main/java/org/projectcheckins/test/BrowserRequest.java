@@ -1,4 +1,4 @@
-package org.projectcheckins.security.http;
+package org.projectcheckins.test;
 
 import io.micronaut.http.HttpRequestFactory;
 import io.micronaut.http.MediaType;
