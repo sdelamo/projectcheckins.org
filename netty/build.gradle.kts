@@ -9,6 +9,7 @@ repositories {
 }
 
 dependencies {
+    developmentOnly(project(":devseeddata"))
     implementation(project(":thymeleaf-fieldset"))
     implementation(project(":security-http"))
     implementation(project(":http"))
