@@ -10,13 +10,8 @@ import jakarta.validation.constraints.NotNull;
  * @see <a href="https://getbootstrap.com/docs/5.3/components/alerts/">Alerts</a>
  */
 @Serdeable
-public record Alert(@NonNull @NotNull @Valid Message message,
-                    @NonNull @NotNull AlertVariant variant,
-                    boolean dismissible) {
-
-    public Alert(@NonNull String defaultMessage,
-                 @NonNull AlertVariant variant,
-                 boolean dismissible) {
+public record Alert(@NonNull @NotNull @Valid Message message, @NonNull @NotNull AlertVariant variant, boolean dismissible) {
+    public Alert(@NonNull String defaultMessage, @NonNull AlertVariant variant, boolean dismissible) {
         this(Message.of(defaultMessage), variant, dismissible);
     }
 

@@ -3,4 +3,5 @@ plugins {
 }
 dependencies {
     implementation("io.micronaut.views:micronaut-views-fieldset")
+    testImplementation(project(":test-utils"))
 }

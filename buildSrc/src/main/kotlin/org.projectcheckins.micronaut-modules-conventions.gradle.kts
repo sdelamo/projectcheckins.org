@@ -13,6 +13,7 @@ dependencies {
     // Validation
     annotationProcessor("io.micronaut.validation:micronaut-validation-processor")
     implementation("io.micronaut.validation:micronaut-validation")
+    testAnnotationProcessor("io.micronaut.validation:micronaut-validation-processor")
 
     // HTTP Client
     testImplementation("io.micronaut:micronaut-http-client-jdk")

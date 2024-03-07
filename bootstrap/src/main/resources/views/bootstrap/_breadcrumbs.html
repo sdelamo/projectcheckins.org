@@ -1,0 +1,20 @@
+<th:block th:fragment="breadcrumbs(breadcrumbs)" xmlns:th="http://www.thymeleaf.org">
+    <nav aria-label="breadcrumb" th:if="${breadcrumbs}">
+        <ol class="breadcrumb">
+            <th:block  th:each="breadcrumb : ${breadcrumbs}">
+                <th:block th:if="${breadcrumb.href() != null && breadcrumb.label.code != null}">
+                    <li class="breadcrumb-item"><a th:href="${breadcrumb.href()}" th:text="${#strings.defaultString(#messages.msgOrNull(breadcrumb.label.code()),breadcrumb.label.defaultMessage())}"></a></li>
+                </th:block>
+                <th:block th:if="${breadcrumb.href() != null && breadcrumb.label.code == null}">
+                    <li class="breadcrumb-item"><a th:href="${breadcrumb.href()}" th:text="${breadcrumb.label.defaultMessage()}"></a></li>
+                </th:block>
+                <th:block th:if="${breadcrumb.href() == null && breadcrumb.label.code != null}">
+                    <li aria-current="page" class="breadcrumb-item active"  th:text="${#strings.defaultString(#messages.msgOrNull(breadcrumb.label.code()),breadcrumb.label.defaultMessage())}"></li>
+                </th:block>
+                <th:block th:if="${breadcrumb.href() == null && breadcrumb.label.code == null}">
+                    <li aria-current="page" class="breadcrumb-item active" th:text="${breadcrumb.label.defaultMessage()}"></li>
+                </th:block>
+            </th:block>
+        </ol>
+    </nav>
+</th:block>
