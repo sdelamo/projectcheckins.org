@@ -32,6 +32,10 @@ dependencies {
 
     // Logging
     testRuntimeOnly("ch.qos.logback:logback-classic")
+
+    // For Warnings treated as errors
+    compileOnly("com.fasterxml.jackson.core:jackson-databind")
+    testCompileOnly("com.fasterxml.jackson.core:jackson-databind")
 }
 
 tasks.withType<Test> {

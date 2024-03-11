@@ -12,8 +12,5 @@ dependencies {
     compileOnly("com.github.ksuid:ksuid:${project.properties["ksuidVersion"]}")
     testImplementation("com.github.ksuid:ksuid:${project.properties["ksuidVersion"]}")
 
-    compileOnly("com.fasterxml.jackson.core:jackson-databind")
-    testCompileOnly("com.fasterxml.jackson.core:jackson-databind")
-
     testImplementation(project(":test-utils"))
 }

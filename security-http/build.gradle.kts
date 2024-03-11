@@ -9,6 +9,4 @@ dependencies {
     testImplementation(project(":test-utils"))
     testImplementation("io.micronaut.security:micronaut-security-session")
     testImplementation("io.micronaut.security:micronaut-security-jwt")
-    compileOnly("com.fasterxml.jackson.core:jackson-databind")
-    testCompileOnly("com.fasterxml.jackson.core:jackson-databind")
 }
