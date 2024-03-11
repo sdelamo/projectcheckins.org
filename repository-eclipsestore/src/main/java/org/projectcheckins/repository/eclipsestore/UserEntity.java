@@ -2,6 +2,7 @@ package org.projectcheckins.repository.eclipsestore;
 
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.core.annotation.NonNull;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 
 import jakarta.validation.constraints.NotNull;
@@ -30,7 +31,14 @@ public class UserEntity {
     @NotNull
     private DayOfWeek firstDayOfWeek;
 
+    @NotNull
     private TimeFormat timeFormat;
+
+    @Nullable
+    private String firstName;
+
+    @Nullable
+    private String lastName;
 
     public UserEntity(String id,
                       String email,
@@ -38,7 +46,9 @@ public class UserEntity {
                       List<String> authorities,
                       TimeZone timeZone,
                       DayOfWeek firstDayOfWeek,
-                      TimeFormat timeFormat) {
+                      TimeFormat timeFormat,
+                      String firstName,
+                      String lastName) {
         this.id = id;
         this.email = email;
         this.encodedPassword = encodedPassword;
@@ -46,6 +56,8 @@ public class UserEntity {
         this.timeZone = timeZone;
         this.firstDayOfWeek = firstDayOfWeek;
         this.timeFormat = timeFormat;
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
     public String getId() {
@@ -110,5 +122,21 @@ public class UserEntity {
 
     public void setTimeFormat(TimeFormat timeFormat) {
         this.timeFormat = timeFormat;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 }

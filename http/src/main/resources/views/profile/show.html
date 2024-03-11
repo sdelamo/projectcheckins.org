@@ -13,6 +13,10 @@
             <th th:text="#{profile.email}"></th>
             <td th:text="${profile.email}"></td>
         </tr>
+        <tr th:if="${profile.getFullName()}">
+            <th th:text="#{profile.fullName}"></th>
+            <td th:text="${profile.getFullName()}"></td>
+        </tr>
         <tr>
             <th th:text="#{profile.timeZone}"></th>
             <td th:text="${timeZoneFormatter.format(profile.timeZone)}"></td>
@@ -22,7 +26,7 @@
             <td th:text="${profile.firstDayOfWeek}"></td>
         </tr>
         <tr>
-             <th th:text="#{profile.timeFormat}">
+            <th th:text="#{profile.timeFormat}">
             <td><span th:replace="~{profile/_timeFormat :: timeFormat(${profile.timeFormat})}"></span></td>
         </tr>
         </tbody>

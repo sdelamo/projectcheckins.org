@@ -56,8 +56,14 @@ class ProfileControllerTest {
     assertThat(client.exchange(BrowserRequest.POST("/profile/update", auth, Map.of(
         "timeZone", TimeZone.getDefault().getID(),
         "firstDayOfWeek", DayOfWeek.MONDAY.name(),
-        "timeFormat", TimeFormat.TWENTY_FOUR_HOUR_CLOCK))))
+        "timeFormat", TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
+        "firstName", "Guillermo",
+        "lastName", "Calvo"))))
         .matches(redirection("/profile/show"));
+
+      assertThat(client.exchange(BrowserRequest.GET("/profile/show", auth), String.class))
+              .matches(htmlPage())
+              .matches(htmlBody("Guillermo Calvo"));
   }
 
   @Requires(property = "spec.name", value = "ProfileControllerTest")
@@ -76,7 +82,7 @@ class ProfileControllerTest {
 
     @Override
     public Optional<Profile> findByAuthentication(Authentication authentication, Tenant tenant) {
-      return Optional.of(new Profile(authentication.getAttributes().get("email").toString(), TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK));
+      return Optional.of(new Profile(authentication.getAttributes().get("email").toString(), TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK, "first name", "last name"));
     }
 
     @Override

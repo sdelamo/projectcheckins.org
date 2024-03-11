@@ -13,7 +13,7 @@ class UserEntityTest {
 
     @Test
     void settersAndGetters() {
-        UserEntity user = new UserEntity("id", "email@projectcheckins.org", "password", Collections.emptyList(), TimeZone.getDefault(), DayOfWeek.SUNDAY, TimeFormat.TWELVE_HOUR_CLOCK);
+        UserEntity user = new UserEntity("id", "email@projectcheckins.org", "password", Collections.emptyList(), TimeZone.getDefault(), DayOfWeek.SUNDAY, TimeFormat.TWELVE_HOUR_CLOCK, "first name", "last name");
         assertThat(user)
             .hasFieldOrPropertyWithValue("id", "id")
             .hasFieldOrPropertyWithValue("email", "email@projectcheckins.org")
@@ -22,7 +22,9 @@ class UserEntityTest {
             .satisfies(u -> assertThat(u.getAuthorities()).isEmpty())
             .hasFieldOrPropertyWithValue("timeZone", TimeZone.getDefault())
             .hasFieldOrPropertyWithValue("firstDayOfWeek", DayOfWeek.SUNDAY)
-            .hasFieldOrPropertyWithValue("timeFormat", TimeFormat.TWELVE_HOUR_CLOCK);
+            .hasFieldOrPropertyWithValue("timeFormat", TimeFormat.TWELVE_HOUR_CLOCK)
+            .hasFieldOrPropertyWithValue("firstName", "first name")
+            .hasFieldOrPropertyWithValue("lastName", "last name");
 
         user.setId("newId");
         user.setEmail("newEmail@projectcheckins.org");
@@ -32,6 +34,8 @@ class UserEntityTest {
         user.setTimeZone(TimeZone.getTimeZone("Europe/Madrid"));
         user.setFirstDayOfWeek(DayOfWeek.MONDAY);
         user.setTimeFormat(TimeFormat.TWENTY_FOUR_HOUR_CLOCK);
+        user.setFirstName("FIRST NAME");
+        user.setLastName("LAST NAME");
 
         assertThat(user)
             .hasFieldOrPropertyWithValue("id", "newId")
@@ -41,7 +45,9 @@ class UserEntityTest {
             .satisfies(u -> assertThat(u.getAuthorities()).containsExactly("ROLE_USER"))
             .hasFieldOrPropertyWithValue("timeZone", TimeZone.getTimeZone("Europe/Madrid"))
             .hasFieldOrPropertyWithValue("firstDayOfWeek", DayOfWeek.MONDAY)
-            .hasFieldOrPropertyWithValue("timeFormat", TimeFormat.TWENTY_FOUR_HOUR_CLOCK);
+            .hasFieldOrPropertyWithValue("timeFormat", TimeFormat.TWENTY_FOUR_HOUR_CLOCK)
+            .hasFieldOrPropertyWithValue("firstName", "FIRST NAME")
+            .hasFieldOrPropertyWithValue("lastName", "LAST NAME");
     }
 
 }
