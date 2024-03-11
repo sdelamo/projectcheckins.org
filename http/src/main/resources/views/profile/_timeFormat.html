@@ -1,0 +1,6 @@
+<th:block th:fragment="timeFormat(timeFormat)" xmlns:th="http://www.thymeleaf.org">
+    <th:block th:if="${timeFormat}">
+        <span th:if="${timeFormat == @org.projectcheckins.core.forms.TimeFormat@TWELVE_HOUR_CLOCK}" th:text="#{profile.timeFormat.twelveHourClock}"></span>
+        <span th:if="${timeFormat == @org.projectcheckins.core.forms.TimeFormat@TWENTY_FOUR_HOUR_CLOCK}" th:text="#{profile.timeFormat.twentyFourClock}"></span>
+    </th:block>
+</th:block>

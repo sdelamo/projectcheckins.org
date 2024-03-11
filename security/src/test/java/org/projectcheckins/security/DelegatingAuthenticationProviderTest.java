@@ -1,8 +1,5 @@
 package org.projectcheckins.security;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static java.util.function.Predicate.not;
-
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.NonNull;
@@ -18,6 +15,9 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import static java.util.function.Predicate.not;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Property(name = "spec.name", value = "DelegatingAuthenticationProviderTest")
 @MicronautTest(startApplication = false)

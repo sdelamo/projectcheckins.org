@@ -9,4 +9,7 @@ dependencies {
     implementation("io.micronaut.eclipsestore:micronaut-eclipsestore")
     implementation("io.micronaut.eclipsestore:micronaut-eclipsestore-annotations")
     implementation("com.github.ksuid:ksuid:${project.properties["ksuidVersion"]}")
+
+    compileOnly("com.fasterxml.jackson.core:jackson-databind")
+    testCompileOnly("com.fasterxml.jackson.core:jackson-databind")
 }

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" th:replace="~{layout :: layout(~{::title},~{::script},~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title></title>
+    <script></script>
+</head>
+<body>
+<main>
+    <a th:href="@{|/profile/edit|}" th:text="#{profile.edit}"></a>
+    <table class="table">
+        <tbody>
+        <tr>
+            <th th:text="#{profile.email}"></th>
+            <td th:text="${profile.email}"></td>
+        </tr>
+        <tr>
+            <th th:text="#{profile.timeZone}"></th>
+            <td th:text="${timeZoneFormatter.format(profile.timeZone)}"></td>
+        </tr>
+        <tr>
+            <th th:text="#{profile.firstDayOfWeek}"></th>
+            <td th:text="${profile.firstDayOfWeek}"></td>
+        </tr>
+        <tr>
+             <th th:text="#{profile.timeFormat}">
+            <td><span th:replace="~{profile/_timeFormat :: timeFormat(${profile.timeFormat})}"></span></td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

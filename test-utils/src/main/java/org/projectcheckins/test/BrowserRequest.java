@@ -5,10 +5,10 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.MutableHttpRequest;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Objects;
 
 public final class BrowserRequest {
-
     private BrowserRequest() {
     }
 
@@ -19,8 +19,16 @@ public final class BrowserRequest {
                 .accept(MediaType.TEXT_HTML);
     }
 
+    public static <T> MutableHttpRequest<T> POST(String uri, Map<CharSequence, CharSequence> headers, T body) {
+        return POST(uri, body).headers(headers);
+    }
+
     public static MutableHttpRequest<?> GET(String uri) {
         return HttpRequestFactory.INSTANCE.get(uri).accept(MediaType.TEXT_HTML);
+    }
+
+    public static MutableHttpRequest<?> GET(String uri, Map<CharSequence, CharSequence> headers) {
+        return GET(uri).headers(headers);
     }
 
     public static MutableHttpRequest<?> GET(URI uri) {

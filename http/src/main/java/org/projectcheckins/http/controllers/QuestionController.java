@@ -91,8 +91,8 @@ class QuestionController {
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW)
     HttpResponse<?> questionShow(@PathVariable @NotBlank String id, @Nullable Tenant tenant) {
         return questionRepository.findById(id, tenant)
-                .map(question -> (HttpResponse) HttpResponse.ok(Map.of(MODEL_QUESTION, question)))
-                .orElseGet(NotFoundController.NOT_FOUND_REDIRECT);
+                .map(question -> HttpResponse.ok(Map.of(MODEL_QUESTION, question)))
+                .orElseGet(NotFoundController::notFoundRedirect);
     }
 
     @Hidden
@@ -102,8 +102,8 @@ class QuestionController {
     HttpResponse<?> questionEdit(@PathVariable @NotBlank String id,
                                  @Nullable Tenant tenant) {
         return questionRepository.findById(id, tenant)
-                .map(question -> (HttpResponse) HttpResponse.ok(new ModelAndView<>(VIEW_EDIT, updateModel(question))))
-                .orElseGet(NotFoundController.NOT_FOUND_REDIRECT);
+                .map(question -> HttpResponse.ok(new ModelAndView<>(VIEW_EDIT, updateModel(question))))
+                .orElseGet(NotFoundController::notFoundRedirect);
     }
 
     @PostForm(uri = PATH_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)

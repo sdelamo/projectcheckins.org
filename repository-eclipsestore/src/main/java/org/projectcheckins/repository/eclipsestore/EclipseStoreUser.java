@@ -6,6 +6,7 @@ import io.micronaut.eclipsestore.annotations.StoreParams;
 import jakarta.inject.Singleton;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.projectcheckins.core.configuration.ProfileConfiguration;
 import org.projectcheckins.core.idgeneration.IdGenerator;
 import org.projectcheckins.email.EmailConfirmationRepository;
 import org.projectcheckins.security.*;
@@ -15,12 +16,15 @@ import java.util.Optional;
 
 @Singleton
 class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, EmailConfirmationRepository {
+    private final ProfileConfiguration profileConfiguration;
     private final RootProvider<Data> rootProvider;
     private final IdGenerator idGenerator;
     protected EclipseStoreUser(PasswordEncoder passwordEncoder,
+                               ProfileConfiguration profileConfiguration,
                                RootProvider<Data> rootProvider,
                                IdGenerator idGenerator) {
         super(passwordEncoder);
+        this.profileConfiguration = profileConfiguration;
         this.rootProvider = rootProvider;
         this.idGenerator = idGenerator;
     }
@@ -57,7 +61,15 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
 
     @NonNull
     private UserEntity entityOf(@NonNull UserSave userSave) {
-        return new UserEntity(null, userSave.email(), userSave.encodedPassword(), userSave.authorities());
+        return new UserEntity(
+            null,
+                userSave.email(),
+                userSave.encodedPassword(),
+                userSave.authorities(),
+                profileConfiguration.getTimeZone(),
+                profileConfiguration.getFirstDayOfWeek(),
+                profileConfiguration.getTimeFormat()
+        );
     }
 
     @Override

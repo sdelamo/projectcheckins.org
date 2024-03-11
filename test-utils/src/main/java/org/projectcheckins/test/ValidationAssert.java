@@ -36,7 +36,11 @@ public class ValidationAssert<T> extends AbstractAssert<ValidationAssert<T>, Set
         Assertions.assertThat(actual)
                 .anyMatch(x -> x.getPropertyPath().toString().equals(name))
                 .extracting(ConstraintViolation::getMessage)
-                .first()
-                .isEqualTo(message);
+                .anyMatch(message::equals);
+    }
+
+    public ValidationAssert<T> hasMalformedEmailViolation(String name) {
+        expectedViolationMessage(name, "must be a well-formed email address");
+        return this;
     }
 }
