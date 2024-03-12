@@ -29,6 +29,10 @@
             <th th:text="#{profile.timeFormat}">
             <td><span th:replace="~{profile/_timeFormat :: timeFormat(${profile.timeFormat})}"></span></td>
         </tr>
+        <tr>
+            <th th:text="#{profile.format}">
+            <td><span th:replace="~{profile/_format :: format(${profile.format})}"></span></td>
+        </tr>
         </tbody>
     </table>
 </main>

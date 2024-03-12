@@ -1,6 +1,7 @@
 package org.projectcheckins.core.configuration;
 
 import io.micronaut.core.annotation.NonNull;
+import org.projectcheckins.core.forms.Format;
 import org.projectcheckins.core.forms.TimeFormat;
 
 import java.time.DayOfWeek;
@@ -16,4 +17,7 @@ public interface ProfileConfiguration {
 
     @NonNull
     TimeFormat getTimeFormat();
+
+    @NonNull
+    Format getFormat();
 }

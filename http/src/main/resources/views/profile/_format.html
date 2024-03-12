@@ -1,0 +1,6 @@
+<th:block th:fragment="format(format)" xmlns:th="http://www.thymeleaf.org">
+    <th:block th:if="${format}">
+        <span th:if="${format == @org.projectcheckins.core.forms.Format@WYSIWYG}" th:text="#{format.wysiwyg}"></span>
+        <span th:if="${format == @org.projectcheckins.core.forms.Format@MARKDOWN}" th:text="#{format.markdown}"></span>
+    </th:block>
+</th:block>

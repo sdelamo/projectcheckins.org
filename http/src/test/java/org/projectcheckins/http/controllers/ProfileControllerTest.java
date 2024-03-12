@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import org.junit.jupiter.api.Test;
+import org.projectcheckins.core.forms.Format;
 import org.projectcheckins.core.forms.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.forms.TimeFormat;
@@ -57,13 +58,15 @@ class ProfileControllerTest {
         "timeZone", TimeZone.getDefault().getID(),
         "firstDayOfWeek", DayOfWeek.MONDAY.name(),
         "timeFormat", TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
+            "format", Format.WYSIWYG,
         "firstName", "Guillermo",
         "lastName", "Calvo"))))
         .matches(redirection("/profile/show"));
 
       assertThat(client.exchange(BrowserRequest.GET("/profile/show", auth), String.class))
               .matches(htmlPage())
-              .matches(htmlBody("Guillermo Calvo"));
+              .matches(htmlBody("Guillermo Calvo"))
+              .matches(htmlBody("Rich Text"));
   }
 
   @Requires(property = "spec.name", value = "ProfileControllerTest")
@@ -82,7 +85,7 @@ class ProfileControllerTest {
 
     @Override
     public Optional<Profile> findByAuthentication(Authentication authentication, Tenant tenant) {
-      return Optional.of(new Profile(authentication.getAttributes().get("email").toString(), TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK, "first name", "last name"));
+      return Optional.of(new Profile(authentication.getAttributes().get("email").toString(), TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "first name", "last name"));
     }
 
     @Override

@@ -6,6 +6,7 @@ import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 
 import jakarta.validation.constraints.NotNull;
+import org.projectcheckins.core.forms.Format;
 import org.projectcheckins.core.forms.TimeFormat;
 
 import java.time.DayOfWeek;
@@ -34,6 +35,9 @@ public class UserEntity {
     @NotNull
     private TimeFormat timeFormat;
 
+    @NotNull
+    private Format format;
+
     @Nullable
     private String firstName;
 
@@ -47,6 +51,7 @@ public class UserEntity {
                       TimeZone timeZone,
                       DayOfWeek firstDayOfWeek,
                       TimeFormat timeFormat,
+                      Format format,
                       String firstName,
                       String lastName) {
         this.id = id;
@@ -56,6 +61,7 @@ public class UserEntity {
         this.timeZone = timeZone;
         this.firstDayOfWeek = firstDayOfWeek;
         this.timeFormat = timeFormat;
+        this.format = format;
         this.firstName = firstName;
         this.lastName = lastName;
     }
@@ -138,5 +144,13 @@ public class UserEntity {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public Format getFormat() {
+        return format;
+    }
+
+    public void setFormat(Format format) {
+        this.format = format;
     }
 }

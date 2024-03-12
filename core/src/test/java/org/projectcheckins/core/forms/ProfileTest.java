@@ -17,22 +17,23 @@ class ProfileTest {
 
     @Test
     void fieldsCannotBeNull(Validator validator) {
-        assertThat(validator.validate(new Profile("email", null, null, null, null, null)))
+        assertThat(validator.validate(new Profile("email", null, null, null, null, null, null)))
                 .hasMalformedEmailViolation("email")
                 .hasNotNullViolation("timeZone")
                 .hasNotNullViolation("firstDayOfWeek")
-                .hasNotNullViolation("timeFormat");
+                .hasNotNullViolation("timeFormat")
+                .hasNotNullViolation("format");
     }
 
     @Test
     void validProfile(Validator validator) {
-        assertThat(validator.validate(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK, null, null)))
+        assertThat(validator.validate(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,null, null)))
                 .isValid();
     }
 
     @Test
     void fullName() {
-        assertThat(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK, "Sergio", "del Amo"))
+        assertThat(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "Sergio", "del Amo"))
                 .extracting(Profile::getFullName)
                 .isEqualTo("Sergio del Amo");
     }

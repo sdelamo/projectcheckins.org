@@ -75,6 +75,7 @@ class ProfileController {
                 profile.timeZone(),
                 profile.firstDayOfWeek(),
                 profile.timeFormat(),
+                profile.format(),
                 profile.firstName(),
                 profile.lastName()));
         return Map.of(ApiConstants.MODEL_FORM, form);

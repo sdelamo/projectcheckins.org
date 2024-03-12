@@ -14,6 +14,7 @@ public record Profile(@NonNull @NotBlank @Email String email,
                       @NotNull TimeZone timeZone,
                       @NotNull DayOfWeek firstDayOfWeek,
                       @NotNull TimeFormat timeFormat,
+                      @NotNull Format format,
                       @Nullable String firstName,
                       @Nullable String lastName) {
 

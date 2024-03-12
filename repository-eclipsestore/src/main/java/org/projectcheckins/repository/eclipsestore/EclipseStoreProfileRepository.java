@@ -60,6 +60,7 @@ class EclipseStoreProfileRepository implements ProfileRepository {
         entity.getTimeZone(),
         entity.getFirstDayOfWeek(),
         entity.getTimeFormat(),
+        entity.getFormat(),
         entity.getFirstName(),
         entity.getLastName()
     );
