@@ -37,6 +37,7 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
         String id = idGenerator.generate();
         entity.setId(id);
         entity.setTitle(questionSave.title());
+        entity.setSchedule(questionSave.schedule());
         rootProvider.root().getQuestions().add(entity);
         save(rootProvider.root().getQuestions());
         return id;
@@ -53,6 +54,7 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
     public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
         QuestionEntity question = findEntityById(questionUpdate.id()).orElseThrow(QuestionNotFoundException::new);
         question.setTitle(questionUpdate.title());
+        question.setSchedule(questionUpdate.schedule());
         save(question);
     }
 
@@ -68,7 +70,10 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
     }
 
     private Question questionOfEntity(QuestionEntity entity) {
-        return new Question(entity.getId(), entity.getTitle());
+        return new Question(
+            entity.getId(),
+            entity.getTitle(),
+            entity.getSchedule());
     }
 
     public Optional<QuestionEntity> findEntityById(String id) {

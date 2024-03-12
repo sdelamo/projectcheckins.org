@@ -74,7 +74,7 @@ class QuestionControllerTest {
         @NonNull
         public Optional<Question> findById(@NotBlank String id, @Nullable Tenant tenant) {
             if (id.equals("xxx")) {
-                return Optional.of(new Question("xxx", "What are working on?"));
+                return Optional.of(new Question("xxx", "What are working on?", "schedule"));
             }
             return Optional.empty();
         }

@@ -9,6 +9,9 @@ public class QuestionEntity {
     @NotBlank
     private String title;
 
+    @NotBlank
+    private String schedule;
+
     public String getId() {
         return id;
     }
@@ -23,5 +26,13 @@ public class QuestionEntity {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getSchedule() {
+        return schedule;
+    }
+
+    public void setSchedule(String schedule) {
+        this.schedule = schedule;
     }
 }

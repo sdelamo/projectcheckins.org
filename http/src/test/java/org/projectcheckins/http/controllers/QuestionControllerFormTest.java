@@ -43,7 +43,9 @@ class QuestionControllerFormTest {
     void crud(@Client("/") HttpClient httpClient, QuestionRepository questionRepository) {
         BlockingHttpClient client = httpClient.toBlocking();
         String title = "What are working on?";
-        HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", Map.of("title", title)));
+        HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", Map.of(
+                "title", title,
+                "schedule", "schedule")));
         assertThat(saveResponse)
             .matches(redirection(s -> s.startsWith("/question") && s.endsWith("/show")));
 
@@ -64,14 +66,17 @@ class QuestionControllerFormTest {
 
         String updatedTitle = "What did you do today?";
         URI updateUri = UriBuilder.of("/question").path(id).path("update").build();
-        assertThat(client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", id, "title", updatedTitle))))
+        assertThat(client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of(
+                "id", id,
+                "title", updatedTitle,
+                "schedule", "schedule"))))
             .matches(redirection(s -> s.equals("/question/" + id + "/show")));
 
         assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class))
             .doesNotContain(title)
             .contains(updatedTitle);
 
-        assertThatThrownBy(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "yyy", "title", "What are working on?"))))
+        assertThatThrownBy(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "yyy", "title", "What are working on?", "schedule", "schedule", "timeZone", TimeZone.getDefault().getID()))))
             .isInstanceOf(HttpClientResponseException.class)
             .extracting(e -> ((HttpClientResponseException)e).getStatus())
             .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -88,38 +93,38 @@ class QuestionControllerFormTest {
     @Replaces(QuestionRepository.class)
     static class QuestionRepositoryMock implements QuestionRepository {
 
-        Map<String, String> titleById = new HashMap<>();
+        Map<String, Question> questions = new HashMap<>();
 
         @Override
         @NonNull
         public String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant) {
             String id = "xxx";
-            titleById.put(id, questionSave.title());
+            questions.put(id, new Question(id, questionSave.title(), questionSave.schedule()));
             return id;
         }
 
         @Override
         @NonNull
         public Optional<Question> findById(@NotBlank String id, @Nullable Tenant tenant) {
-            return Optional.ofNullable(titleById.get(id)).map(title -> new Question(id, titleById.get(id)));
+            return Optional.ofNullable(questions.get(id));
         }
 
         @Override
         public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
-            if (titleById.containsKey(questionUpdate.id())) {
-                titleById.put(questionUpdate.id(), questionUpdate.title());
+            if (questions.containsKey(questionUpdate.id())) {
+                questions.put(questionUpdate.id(), new Question(questionUpdate.id(), questionUpdate.title(), questionUpdate.schedule()));
             }
         }
 
         @Override
         @NonNull
         public List<Question> findAll(@Nullable Tenant tenant) {
-            return titleById.keySet().stream().map(id -> new Question(id, titleById.get(id))).toList();
+            return questions.values().stream().toList();
         }
 
         @Override
         public void deleteById(@NotBlank String id, @Nullable Tenant tenant) {
-            titleById.remove(id);
+            questions.remove(id);
         }
     }
 }

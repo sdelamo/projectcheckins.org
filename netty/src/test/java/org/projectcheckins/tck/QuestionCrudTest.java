@@ -16,6 +16,7 @@ import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.test.BrowserRequest;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 
 @Property(name = "micronaut.security.filter.enabled", value = StringUtils.FALSE)
 @MicronautTest
@@ -25,7 +26,10 @@ class QuestionCrudTest {
     void questionCrud(@Client("/") HttpClient httpClient,
                       QuestionRepository questionRepository) {
         BlockingHttpClient client = httpClient.toBlocking();
-        HttpRequest<?> request = BrowserRequest.POST("/question/save", Map.of("title", "What are working on?"));
+        HttpRequest<?> request = BrowserRequest.POST("/question/save", Map.of(
+                "title", "What are working on?",
+                "schedule", "schedule",
+                "timeZone", TimeZone.getDefault().getID()));
         assertThatCode(() -> client.exchange(request))
             .doesNotThrowAnyException();
         Optional<Question> questionOptional = questionRepository.findAll()

@@ -1,6 +1,6 @@
 package org.projectcheckins.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.projectcheckins.test.ValidationAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.micronaut.core.type.Argument;
@@ -15,12 +15,20 @@ class QuestionSaveTest {
 
     @Test
     void titleIsRequired(Validator validator) {
-        assertThat(validator.validate(new QuestionSave(null)))
-            .isNotEmpty();
-        assertThat(validator.validate(new QuestionSave("")))
-            .anyMatch(x -> x.getPropertyPath().toString().equals("title") && x.getMessage().equals("must not be blank"));
-        assertThat(validator.validate(new QuestionSave("What are you working on")))
-            .isEmpty();
+        assertThat(validator.validate(new QuestionSave(null, "schedule")))
+            .fieldNotBlank("title");
+        assertThat(validator.validate(new QuestionSave("", "schedule")))
+            .fieldNotBlank("title");
+        assertThat(validator.validate(new QuestionSave("What are you working on", "schedule")))
+            .isValid();
+    }
+
+    @Test
+    void scheduleIsRequired(Validator validator) {
+        assertThat(validator.validate(new QuestionSave("What are you working on", null)))
+            .fieldNotBlank("schedule");
+        assertThat(validator.validate(new QuestionSave("What are you working on", "")))
+            .fieldNotBlank("schedule");
     }
 
     @Test

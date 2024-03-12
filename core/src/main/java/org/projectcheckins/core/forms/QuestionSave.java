@@ -4,5 +4,7 @@ import io.micronaut.serde.annotation.Serdeable;
 import jakarta.validation.constraints.NotBlank;
 
 @Serdeable
-public record QuestionSave(@NotBlank String title) {
+public record QuestionSave(@NotBlank String title,
+                           @NotBlank String schedule) {
+
 }

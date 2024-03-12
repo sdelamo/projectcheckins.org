@@ -5,5 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 
 @Serdeable
 public record Question(@NotBlank String id,
-                       @NotBlank String title) {
+                       @NotBlank String title,
+                       @NotBlank String schedule) {
 }

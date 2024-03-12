@@ -14,7 +14,7 @@ class EclipseStoreQuestionRepositoryTest {
     void testCrud(EclipseStoreQuestionRepository questionRepository) {
 
         String title = "What are working on?";
-        String id = questionRepository.save(new QuestionSave(title));
+        String id = questionRepository.save(new QuestionSave(title, "schedule"));
         assertThat(questionRepository.findAll())
             .anyMatch(q -> q.title().equals(title));
 
@@ -23,7 +23,7 @@ class EclipseStoreQuestionRepositoryTest {
             .hasValueSatisfying(q -> q.title().equals(title));
 
         String updatedTitle = "What are you working on this week?";
-        questionRepository.update(new QuestionUpdate(id, updatedTitle));
+        questionRepository.update(new QuestionUpdate(id, updatedTitle, "schedule"));
         assertThat(questionRepository.findById(id))
             .isNotEmpty()
             .hasValueSatisfying(q -> q.title().equals(updatedTitle));
