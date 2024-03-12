@@ -10,8 +10,8 @@ import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
-import java.util.TimeZone;
-import org.projectcheckins.core.exceptions.ProfileNotFoundException;
+
+import org.projectcheckins.core.exceptions.UserNotFoundException;
 import org.projectcheckins.core.forms.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.repositories.ProfileRepository;
@@ -32,7 +32,7 @@ class EclipseStoreProfileRepository implements ProfileRepository {
 
   @Override
   public void update(@NotNull Authentication authentication, @NotNull @Valid ProfileUpdate profileUpdate, @Nullable Tenant tenant) {
-    final UserEntity entity = findFirst(authentication).orElseThrow(ProfileNotFoundException::new);
+    final UserEntity entity = findFirst(authentication).orElseThrow(UserNotFoundException::new);
     save(updateEntity(entity, profileUpdate));
   }
 
