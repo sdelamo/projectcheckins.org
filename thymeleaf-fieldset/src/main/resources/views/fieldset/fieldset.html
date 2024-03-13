@@ -16,7 +16,7 @@
         <th:block th:if="${field.tag.toString() == 'input' && field.type.toString() == 'radio'}"><div class="mb-3" th:insert="~{fieldset/inputradios :: inputradios(${field})}"></div></th:block>
         <th:block th:if="${field.tag.toString() == 'input' && field.type.toString() == 'checkbox'}"><div class="mb-3" th:insert="~{fieldset/inputcheckbox :: inputcheckbox(${field})}"></div></th:block>
         <th:block th:if="${field.tag.toString() == 'select'}"><div class="mb-3" th:insert="~{fieldset/select :: select(${field})}"></div></th:block>
-        <th:block th:if="${field.tag.toString() == 'trix-editor'}"><div class="mb-3" th:if="${el.hasErrors()}" th:insert="~{fieldset/errors :: errors(${el.errors()})}"></div><div class="mb-3" th:insert="~{fieldset/trixeditor :: trixeditor(${field})}"></div></th:block>
+        <th:block th:if="${field.tag.toString() == 'trix-editor'}"><div class="mb-3" th:insert="~{fieldset/trixeditor :: trixeditor(${field})}"></div></th:block>
     </th:block>
 
     <th:block th:if="${el.hasErrors()}">

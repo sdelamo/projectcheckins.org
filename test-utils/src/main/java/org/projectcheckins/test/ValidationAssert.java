@@ -32,15 +32,20 @@ public class ValidationAssert<T> extends AbstractAssert<ValidationAssert<T>, Set
         return this;
     }
 
-    private void expectedViolationMessage(String name, String message) {
-        Assertions.assertThat(actual)
-                .anyMatch(x -> x.getPropertyPath().toString().equals(name))
-                .extracting(ConstraintViolation::getMessage)
-                .anyMatch(message::equals);
+    public ValidationAssert<T> hasNotBlankViolation(String name) {
+        expectedViolationMessage(name, "must not be blank");
+        return this;
     }
 
     public ValidationAssert<T> hasMalformedEmailViolation(String name) {
         expectedViolationMessage(name, "must be a well-formed email address");
         return this;
+    }
+
+    private void expectedViolationMessage(String name, String message) {
+        Assertions.assertThat(actual)
+                .anyMatch(x -> x.getPropertyPath().toString().equals(name))
+                .extracting(ConstraintViolation::getMessage)
+                .anyMatch(message::equals);
     }
 }
