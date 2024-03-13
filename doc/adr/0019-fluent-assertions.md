@@ -16,7 +16,7 @@ We would like to make the development of tests as easy as possible.
 
 This will allow us to keep a high code coverage percentage to avoid obvious errors.
 
-Fluent assertions provide a lightway DSL that can save us from most boilerplate code.
+Fluent assertions provide a lightweight DSL that can save us from most boilerplate code.
 
 
 ## Decision
