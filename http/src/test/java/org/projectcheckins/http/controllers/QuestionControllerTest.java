@@ -22,7 +22,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.Question;
+import org.projectcheckins.core.forms.QuestionRecord;
 import org.projectcheckins.core.forms.QuestionSave;
 import org.projectcheckins.core.forms.QuestionUpdate;
 import org.projectcheckins.core.repositories.QuestionRepository;
@@ -72,9 +72,9 @@ class QuestionControllerTest {
 
         @Override
         @NonNull
-        public Optional<Question> findById(@NotBlank String id, @Nullable Tenant tenant) {
+        public Optional<QuestionRecord> findById(@NotBlank String id, @Nullable Tenant tenant) {
             if (id.equals("xxx")) {
-                return Optional.of(new Question("xxx", "What are working on?", "schedule"));
+                return Optional.of(new QuestionRecord("xxx", "What are working on?", "schedule"));
             }
             return Optional.empty();
         }
@@ -86,7 +86,7 @@ class QuestionControllerTest {
 
         @Override
         @NonNull
-        public List<Question> findAll(@Nullable Tenant tenant) {
+        public List<QuestionRecord> findAll(@Nullable Tenant tenant) {
             return Collections.emptyList();
         }
 

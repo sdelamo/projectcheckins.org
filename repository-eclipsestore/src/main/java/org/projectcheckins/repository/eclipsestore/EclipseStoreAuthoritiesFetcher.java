@@ -22,8 +22,8 @@ class EclipseStoreAuthoritiesFetcher implements AuthoritiesFetcher {
     public List<String> findAuthoritiesByEmail(@NotBlank String email) {
         return rootProvider.root().getUsers()
                 .stream()
-                .filter(user -> user.getEmail().equals(email))
-                .map(UserEntity::getAuthorities)
+                .filter(user -> user.email().equals(email))
+                .map(UserEntity::authorities)
                 .findFirst()
                 .orElseGet(Collections::emptyList);
     }

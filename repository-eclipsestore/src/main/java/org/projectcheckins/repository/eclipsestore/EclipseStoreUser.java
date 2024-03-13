@@ -31,12 +31,12 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
 
     @Override
     public String register(@NonNull UserSave userSave) throws UserAlreadyExistsException {
-        if (rootProvider.root().getUsers().stream().anyMatch(user -> user.getEmail().equals(userSave.email()))) {
+        if (rootProvider.root().getUsers().stream().anyMatch(user -> user.email().equals(userSave.email()))) {
             throw new UserAlreadyExistsException();
         }
         String id = idGenerator.generate();
         UserEntity userEntity = entityOf(userSave);
-        userEntity.setId(id);
+        userEntity.id(id);
         saveUser(rootProvider.root().getUsers(), userEntity);
         return id;
     }
@@ -44,7 +44,7 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
     @Override
     public void enableByEmail(@NonNull @NotBlank @Email String email) {
         rootProvider.root().getUsers().stream()
-                .filter(user -> user.getEmail().equals(email))
+                .filter(user -> user.email().equals(email))
                 .findFirst()
                 .ifPresent(this::enableUser);
     }
@@ -56,7 +56,7 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
 
     @StoreParams("user")
     public void enableUser(UserEntity user) {
-        user.setEnabled(true);
+        user.enabled(true);
     }
 
     @NonNull
@@ -81,7 +81,7 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
     @NonNull
     public Optional<UserState> findByEmail(@NotBlank @NonNull String email) {
         return rootProvider.root().getUsers().stream()
-                .filter(user -> user.getEmail().equals(email))
+                .filter(user -> user.email().equals(email))
                 .map(EclipseStoreUser::userStateOfEntity)
                 .findFirst();
     }
@@ -91,22 +91,22 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
         return new UserState() {
             @Override
             public String getId() {
-                return user.getId();
+                return user.id();
             }
 
             @Override
             public boolean isEnabled() {
-                return user.isEnabled();
+                return user.enabled();
             }
 
             @Override
             public String getEmail() {
-                return user.getEmail();
+                return user.email();
             }
 
             @Override
             public String getPassword() {
-                return user.getEncodedPassword();
+                return user.encodedPassword();
             }
         };
     }

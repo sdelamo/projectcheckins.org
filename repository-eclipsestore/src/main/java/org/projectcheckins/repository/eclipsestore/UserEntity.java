@@ -6,6 +6,7 @@ import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 
 import jakarta.validation.constraints.NotNull;
+import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.Format;
 import org.projectcheckins.core.forms.TimeFormat;
 
@@ -16,16 +17,21 @@ import java.util.List;
 import java.util.TimeZone;
 
 @Introspected
-public class UserEntity {
-    private @NotBlank String id;
+public class UserEntity implements Profile {
+
+    @NotBlank
+    private String id;
 
     @NotBlank
     private String email;
 
     boolean enabled;
+
     @NotBlank
     private String encodedPassword;
-    @NonNull List<String> authorities = new ArrayList<>();
+
+    @NonNull
+    private List<String> authorities;
 
     @NotNull
     private TimeZone timeZone;
@@ -77,107 +83,115 @@ public class UserEntity {
         this.lastName = lastName;
     }
 
-    public String getId() {
+    public String id() {
         return id;
     }
 
-    public void setId(String id) {
+    public void id(String id) {
         this.id = id;
     }
 
-    public String getEmail() {
+    public String email() {
         return email;
     }
 
-    public void setEmail(String email) {
+    public void email(String email) {
         this.email = email;
     }
 
-    public boolean isEnabled() {
+    public boolean enabled() {
         return enabled;
     }
 
-    public void setEnabled(boolean enabled) {
+    public void enabled(boolean enabled) {
         this.enabled = enabled;
     }
 
-    public String getEncodedPassword() {
+    public String encodedPassword() {
         return encodedPassword;
     }
 
-    public void setEncodedPassword(String encodedPassword) {
+    public void encodedPassword(String encodedPassword) {
         this.encodedPassword = encodedPassword;
     }
 
-    public List<String> getAuthorities() {
+    public List<String> authorities() {
         return authorities;
     }
 
-    public void setAuthorities(List<String> authorities) {
+    public void authorities(List<String> authorities) {
         this.authorities = authorities;
     }
 
-    public TimeZone getTimeZone() {
+    @Override
+    public TimeZone timeZone() {
         return timeZone;
     }
 
-    public void setTimeZone(TimeZone timeZone) {
+    public void timeZone(TimeZone timeZone) {
         this.timeZone = timeZone;
     }
 
-    public DayOfWeek getFirstDayOfWeek() {
+    @Override
+    public DayOfWeek firstDayOfWeek() {
         return firstDayOfWeek;
     }
 
-    public void setFirstDayOfWeek(DayOfWeek firstDayOfWeek) {
+    public void firstDayOfWeek(DayOfWeek firstDayOfWeek) {
         this.firstDayOfWeek = firstDayOfWeek;
     }
 
-    public LocalTime getBeginningOfDay() {
+    @Override
+    public LocalTime beginningOfDay() {
         return beginningOfDay;
     }
 
-    public void setBeginningOfDay(LocalTime beginningOfDay) {
+    public void beginningOfDay(LocalTime beginningOfDay) {
         this.beginningOfDay = beginningOfDay;
     }
 
-    public LocalTime getEndOfDay() {
+    @Override
+    public LocalTime endOfDay() {
         return endOfDay;
     }
 
-    public void setEndOfDay(LocalTime endOfDay) {
+    public void endOfDay(LocalTime endOfDay) {
         this.endOfDay = endOfDay;
     }
 
-    public TimeFormat getTimeFormat() {
+    @Override
+    public TimeFormat timeFormat() {
         return timeFormat;
     }
 
-    public void setTimeFormat(TimeFormat timeFormat) {
+    public void timeFormat(TimeFormat timeFormat) {
         this.timeFormat = timeFormat;
     }
 
-    public String getFirstName() {
+    @Override
+    public String firstName() {
         return firstName;
     }
 
-    public void setFirstName(String firstName) {
+    public void firstName(String firstName) {
         this.firstName = firstName;
     }
 
-    public String getLastName() {
+    @Override
+    public String lastName() {
         return lastName;
     }
 
-    public void setLastName(String lastName) {
+    public void lastName(String lastName) {
         this.lastName = lastName;
     }
 
-    public Format getFormat() {
+    @Override
+    public Format format() {
         return format;
     }
 
-    public void setFormat(Format format) {
+    public void format(Format format) {
         this.format = format;
     }
 }

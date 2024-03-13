@@ -25,7 +25,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.Question;
+import org.projectcheckins.core.forms.QuestionRecord;
 import org.projectcheckins.core.forms.QuestionSave;
 import org.projectcheckins.core.forms.QuestionUpdate;
 import org.projectcheckins.core.repositories.QuestionRepository;
@@ -93,32 +93,32 @@ class QuestionControllerFormTest {
     @Replaces(QuestionRepository.class)
     static class QuestionRepositoryMock implements QuestionRepository {
 
-        Map<String, Question> questions = new HashMap<>();
+        Map<String, QuestionRecord> questions = new HashMap<>();
 
         @Override
         @NonNull
         public String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant) {
             String id = "xxx";
-            questions.put(id, new Question(id, questionSave.title(), questionSave.schedule()));
+            questions.put(id, new QuestionRecord(id, questionSave.title(), questionSave.schedule()));
             return id;
         }
 
         @Override
         @NonNull
-        public Optional<Question> findById(@NotBlank String id, @Nullable Tenant tenant) {
+        public Optional<QuestionRecord> findById(@NotBlank String id, @Nullable Tenant tenant) {
             return Optional.ofNullable(questions.get(id));
         }
 
         @Override
         public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
             if (questions.containsKey(questionUpdate.id())) {
-                questions.put(questionUpdate.id(), new Question(questionUpdate.id(), questionUpdate.title(), questionUpdate.schedule()));
+                questions.put(questionUpdate.id(), new QuestionRecord(questionUpdate.id(), questionUpdate.title(), questionUpdate.schedule()));
             }
         }
 
         @Override
         @NonNull
-        public List<Question> findAll(@Nullable Tenant tenant) {
+        public List<QuestionRecord> findAll(@Nullable Tenant tenant) {
             return questions.values().stream().toList();
         }
 

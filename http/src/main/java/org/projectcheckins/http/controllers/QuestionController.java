@@ -18,7 +18,7 @@ import io.micronaut.views.fields.FormGenerator;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.projectcheckins.core.forms.Question;
+import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.QuestionSave;
 import org.projectcheckins.core.forms.QuestionUpdate;
 import org.projectcheckins.core.repositories.QuestionRepository;

@@ -13,9 +13,9 @@
             <th th:text="#{profile.email}"></th>
             <td th:text="${profile.email}"></td>
         </tr>
-        <tr th:if="${profile.getFullName()}">
+        <tr th:if="${profile.fullName}">
             <th th:text="#{profile.fullName}"></th>
-            <td th:text="${profile.getFullName()}"></td>
+            <td th:text="${profile.fullName}"></td>
         </tr>
         <tr>
             <th th:text="#{profile.timeZone}"></th>

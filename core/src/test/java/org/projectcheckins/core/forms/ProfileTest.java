@@ -18,7 +18,7 @@ class ProfileTest {
 
     @Test
     void fieldsCannotBeNull(Validator validator) {
-        assertThat(validator.validate(new Profile("email", null, null, null, null, null, null, null, null)))
+        assertThat(validator.validate(new ProfileRecord("email", null, null, null, null, null, null, null, null)))
                 .hasMalformedEmailViolation("email")
                 .hasNotNullViolation("timeZone")
                 .hasNotNullViolation("firstDayOfWeek")
@@ -30,26 +30,26 @@ class ProfileTest {
 
     @Test
     void validProfile(Validator validator) {
-        assertThat(validator.validate(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,null, null)))
+        assertThat(validator.validate(new ProfileRecord("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,null, null)))
                 .isValid();
     }
 
     @Test
     void fullName() {
-        assertThat(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "Sergio", "del Amo"))
-                .extracting(Profile::getFullName)
+        assertThat(new ProfileRecord("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "Sergio", "del Amo"))
+                .extracting(ProfileRecord::fullName)
                 .isEqualTo("Sergio del Amo");
     }
 
     @Test
     void profileIsAnnotatedWithSerdeableDeserializable(SerdeIntrospections serdeIntrospections) {
-        assertThatCode(() -> serdeIntrospections.getDeserializableIntrospection(Argument.of(Profile.class)))
+        assertThatCode(() -> serdeIntrospections.getDeserializableIntrospection(Argument.of(ProfileRecord.class)))
                 .doesNotThrowAnyException();
     }
 
     @Test
     void profileIsAnnotatedWithSerdeableSerializable(SerdeIntrospections serdeIntrospections) {
-        assertThatCode(() -> serdeIntrospections.getSerializableIntrospection(Argument.of(Profile.class)))
+        assertThatCode(() -> serdeIntrospections.getSerializableIntrospection(Argument.of(ProfileRecord.class)))
                 .doesNotThrowAnyException();
     }
 

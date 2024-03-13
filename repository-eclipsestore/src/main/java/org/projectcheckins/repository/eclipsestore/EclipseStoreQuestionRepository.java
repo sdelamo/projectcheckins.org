@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.exceptions.QuestionNotFoundException;
-import org.projectcheckins.core.forms.Question;
 import org.projectcheckins.core.forms.QuestionSave;
 import org.projectcheckins.core.forms.QuestionUpdate;
 import org.projectcheckins.core.idgeneration.IdGenerator;
@@ -35,9 +34,9 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
     public String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant) {
         QuestionEntity entity = new QuestionEntity();
         String id = idGenerator.generate();
-        entity.setId(id);
-        entity.setTitle(questionSave.title());
-        entity.setSchedule(questionSave.schedule());
+        entity.id(id);
+        entity.title(questionSave.title());
+        entity.schedule(questionSave.schedule());
         rootProvider.root().getQuestions().add(entity);
         save(rootProvider.root().getQuestions());
         return id;
@@ -45,41 +44,33 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
 
     @Override
     @NonNull
-    public Optional<Question> findById(@NotBlank String id, @Nullable Tenant tenant) {
-        return findEntityById(id)
-                .map(this::questionOfEntity);
+    public Optional<QuestionEntity> findById(@NotBlank String id, @Nullable Tenant tenant) {
+        return findEntityById(id);
     }
 
     @Override
     public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
         QuestionEntity question = findEntityById(questionUpdate.id()).orElseThrow(QuestionNotFoundException::new);
-        question.setTitle(questionUpdate.title());
-        question.setSchedule(questionUpdate.schedule());
+        question.title(questionUpdate.title());
+        question.schedule(questionUpdate.schedule());
         save(question);
     }
 
     @Override
-    public List<Question> findAll(@Nullable Tenant tenant) {
-        return rootProvider.root().getQuestions().stream().map(this::questionOfEntity).toList();
+    public List<QuestionEntity> findAll(@Nullable Tenant tenant) {
+        return rootProvider.root().getQuestions().stream().toList();
     }
 
     @Override
     public void deleteById(@NotBlank String id, @Nullable Tenant tenant) {
-        rootProvider.root().getQuestions().removeIf(q -> q.getId().equals(id));
+        rootProvider.root().getQuestions().removeIf(q -> q.id().equals(id));
         save(rootProvider.root().getQuestions());
-    }
-
-    private Question questionOfEntity(QuestionEntity entity) {
-        return new Question(
-            entity.getId(),
-            entity.getTitle(),
-            entity.getSchedule());
     }
 
     public Optional<QuestionEntity> findEntityById(String id) {
         return rootProvider.root().getQuestions()
                 .stream()
-                .filter(q -> q.getId().equals(id))
+                .filter(q -> q.id().equals(id))
                 .findFirst();
     }
 

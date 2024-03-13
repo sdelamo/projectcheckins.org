@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.TimeZone;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.forms.Format;
-import org.projectcheckins.core.forms.Profile;
+import org.projectcheckins.core.forms.ProfileRecord;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.forms.TimeFormat;
 import org.projectcheckins.core.repositories.ProfileRepository;
@@ -87,8 +87,8 @@ class ProfileControllerTest {
   static class ProfileRepositoryMock implements ProfileRepository {
 
     @Override
-    public Optional<Profile> findByAuthentication(Authentication authentication, Tenant tenant) {
-      return Optional.of(new Profile(
+    public Optional<ProfileRecord> findByAuthentication(Authentication authentication, Tenant tenant) {
+      return Optional.of(new ProfileRecord(
               authentication.getAttributes().get("email").toString(),
               TimeZone.getDefault(),
               DayOfWeek.MONDAY,

@@ -12,7 +12,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 
 import org.projectcheckins.core.exceptions.UserNotFoundException;
-import org.projectcheckins.core.forms.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.repositories.ProfileRepository;
 
@@ -26,8 +25,8 @@ class EclipseStoreProfileRepository implements ProfileRepository {
 
   @Override
   @NonNull
-  public Optional<Profile> findByAuthentication(@NotNull Authentication authentication, @Nullable Tenant tenant) {
-    return findFirst(authentication).map(this::fromEntity);
+  public Optional<UserEntity> findByAuthentication(@NotNull Authentication authentication, @Nullable Tenant tenant) {
+    return findFirst(authentication);
   }
 
   @Override
@@ -42,31 +41,17 @@ class EclipseStoreProfileRepository implements ProfileRepository {
 
   private Optional<UserEntity> findFirst(Authentication authentication) {
     final String name = authentication.getName();
-    return rootProvider.root().getUsers().stream().filter(u -> u.getId().equals(name)).findFirst();
+    return rootProvider.root().getUsers().stream().filter(u -> u.id().equals(name)).findFirst();
   }
 
   private UserEntity updateEntity(UserEntity entity, ProfileUpdate profileUpdate) {
-    entity.setTimeZone(profileUpdate.timeZone());
-    entity.setFirstDayOfWeek(profileUpdate.firstDayOfWeek());
-    entity.setBeginningOfDay(profileUpdate.beginningOfDay());
-    entity.setEndOfDay(profileUpdate.endOfDay());
-    entity.setTimeFormat(profileUpdate.timeFormat());
-    entity.setFirstName(profileUpdate.firstName());
-    entity.setLastName(profileUpdate.lastName());
+    entity.timeZone(profileUpdate.timeZone());
+    entity.firstDayOfWeek(profileUpdate.firstDayOfWeek());
+    entity.beginningOfDay(profileUpdate.beginningOfDay());
+    entity.endOfDay(profileUpdate.endOfDay());
+    entity.timeFormat(profileUpdate.timeFormat());
+    entity.firstName(profileUpdate.firstName());
+    entity.lastName(profileUpdate.lastName());
     return entity;
-  }
-
-  private Profile fromEntity(UserEntity entity) {
-    return new Profile(
-            entity.getEmail(),
-        entity.getTimeZone(),
-        entity.getFirstDayOfWeek(),
-        entity.getBeginningOfDay(),
-        entity.getEndOfDay(),
-        entity.getTimeFormat(),
-        entity.getFormat(),
-        entity.getFirstName(),
-        entity.getLastName()
-    );
   }
 }

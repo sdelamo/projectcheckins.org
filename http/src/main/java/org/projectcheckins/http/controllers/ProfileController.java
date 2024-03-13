@@ -17,7 +17,7 @@ import java.net.URI;
 import java.util.Map;
 import org.projectcheckins.annotations.GetHtml;
 import org.projectcheckins.annotations.PostForm;
-import org.projectcheckins.core.forms.Profile;
+import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.repositories.ProfileRepository;
 

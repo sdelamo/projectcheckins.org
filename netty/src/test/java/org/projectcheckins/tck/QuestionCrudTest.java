@@ -11,7 +11,7 @@ import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.Question;
+import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.test.BrowserRequest;
 import java.util.Map;
@@ -32,7 +32,7 @@ class QuestionCrudTest {
                 "timeZone", TimeZone.getDefault().getID()));
         assertThatCode(() -> client.exchange(request))
             .doesNotThrowAnyException();
-        Optional<Question> questionOptional = questionRepository.findAll()
+        Optional<? extends Question> questionOptional = questionRepository.findAll()
                 .stream()
                 .filter(q -> q.title().equals("What are working on?"))
                 .findFirst();

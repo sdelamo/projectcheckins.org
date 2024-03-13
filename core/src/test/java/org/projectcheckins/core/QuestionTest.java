@@ -8,46 +8,46 @@ import io.micronaut.serde.SerdeIntrospections;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.validation.validator.Validator;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.Question;
+import org.projectcheckins.core.forms.QuestionRecord;
 
 @MicronautTest
 class QuestionTest {
 
     @Test
     void idCannotBeBlank(Validator validator) {
-        assertThat(validator.validate(new Question(null, "What are you working on", "schedule")))
+        assertThat(validator.validate(new QuestionRecord(null, "What are you working on", "schedule")))
             .fieldNotBlank("id");
-        assertThat(validator.validate(new Question("", "What are you working on", "schedule")))
+        assertThat(validator.validate(new QuestionRecord("", "What are you working on", "schedule")))
             .fieldNotBlank("id");
-        assertThat(validator.validate(new Question("xxx", "What are you working on", "schedule")))
+        assertThat(validator.validate(new QuestionRecord("xxx", "What are you working on", "schedule")))
             .isValid();
     }
 
     @Test
     void titleCannotBeBlank(Validator validator) {
-        assertThat(validator.validate(new Question("xxx", null, "schedule")))
+        assertThat(validator.validate(new QuestionRecord("xxx", null, "schedule")))
             .fieldNotBlank("title");
-        assertThat(validator.validate(new Question("xxx", "", "schedule")))
+        assertThat(validator.validate(new QuestionRecord("xxx", "", "schedule")))
             .fieldNotBlank("title");
     }
 
     @Test
     void scheduleCannotBeBlank(Validator validator) {
-        assertThat(validator.validate(new Question("xxx", "What are you working on", null)))
+        assertThat(validator.validate(new QuestionRecord("xxx", "What are you working on", null)))
                 .fieldNotBlank("schedule");
-        assertThat(validator.validate(new Question("xxx", "What are you working on", "")))
+        assertThat(validator.validate(new QuestionRecord("xxx", "What are you working on", "")))
                 .fieldNotBlank("schedule");
     }
 
     @Test
     void questionSaveIsAnnotatedWithSerdeableDeserializable(SerdeIntrospections serdeIntrospections) {
-        assertThatCode(() -> serdeIntrospections.getDeserializableIntrospection(Argument.of(Question.class)))
+        assertThatCode(() -> serdeIntrospections.getDeserializableIntrospection(Argument.of(QuestionRecord.class)))
             .doesNotThrowAnyException();
     }
 
     @Test
     void questionSaveIsAnnotatedWithSerdeableSerializable(SerdeIntrospections serdeIntrospections) {
-        assertThatCode(() -> serdeIntrospections.getSerializableIntrospection(Argument.of(Question.class)))
+        assertThatCode(() -> serdeIntrospections.getSerializableIntrospection(Argument.of(QuestionRecord.class)))
             .doesNotThrowAnyException();
     }
 }

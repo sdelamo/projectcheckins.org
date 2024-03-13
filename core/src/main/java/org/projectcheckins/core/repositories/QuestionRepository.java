@@ -6,7 +6,7 @@ import io.micronaut.multitenancy.Tenant;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.projectcheckins.core.forms.Question;
+import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.QuestionSave;
 import org.projectcheckins.core.forms.QuestionUpdate;
 
@@ -19,12 +19,12 @@ public interface QuestionRepository {
     String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant);
 
     @NonNull
-    Optional<Question> findById(@NotBlank String id, @Nullable Tenant tenant);
+    Optional<? extends Question> findById(@NotBlank String id, @Nullable Tenant tenant);
 
     void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant);
 
     @NonNull
-    List<Question> findAll(@Nullable Tenant tenant);
+    List<? extends Question> findAll(@Nullable Tenant tenant);
 
     void deleteById(@NotBlank String id, @Nullable Tenant tenant);
 
@@ -34,7 +34,7 @@ public interface QuestionRepository {
     }
 
     @NonNull
-    default Optional<Question> findById(@NotBlank String id) {
+    default Optional<? extends Question> findById(@NotBlank String id) {
         return findById(id, null);
     }
 
@@ -43,7 +43,7 @@ public interface QuestionRepository {
     }
 
     @NonNull
-    default List<Question> findAll() {
+    default List<? extends Question> findAll() {
         return findAll(null);
     }
 

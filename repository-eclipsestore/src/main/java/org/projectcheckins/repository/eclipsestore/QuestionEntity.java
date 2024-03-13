@@ -1,8 +1,9 @@
 package org.projectcheckins.repository.eclipsestore;
 
 import jakarta.validation.constraints.NotBlank;
+import org.projectcheckins.core.api.Question;
 
-public class QuestionEntity {
+public class QuestionEntity implements Question {
     @NotBlank
     private String id;
 
@@ -12,27 +13,30 @@ public class QuestionEntity {
     @NotBlank
     private String schedule;
 
-    public String getId() {
+    @Override
+    public String id() {
         return id;
     }
 
-    public void setId(String id) {
+    public void id(String id) {
         this.id = id;
     }
 
-    public String getTitle() {
+    @Override
+    public String title() {
         return title;
     }
 
-    public void setTitle(String title) {
+    public void title(String title) {
         this.title = title;
     }
 
-    public String getSchedule() {
+    @Override
+    public String schedule() {
         return schedule;
     }
 
-    public void setSchedule(String schedule) {
+    public void schedule(String schedule) {
         this.schedule = schedule;
     }
 }

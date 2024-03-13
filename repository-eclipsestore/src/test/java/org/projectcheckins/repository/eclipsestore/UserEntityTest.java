@@ -34,7 +34,7 @@ class UserEntityTest {
                 .hasFieldOrPropertyWithValue("email", "email@projectcheckins.org")
                 .hasFieldOrPropertyWithValue("encodedPassword", "password")
                 .hasFieldOrPropertyWithValue("enabled", false)
-                .satisfies(u -> assertThat(u.getAuthorities()).isEmpty())
+                .satisfies(u -> assertThat(u.authorities()).isEmpty())
                 .hasFieldOrPropertyWithValue("timeZone", TimeZone.getDefault())
                 .hasFieldOrPropertyWithValue("firstDayOfWeek", DayOfWeek.SUNDAY)
                 .hasFieldOrPropertyWithValue("beginningOfDay", LocalTime.of(9, 0))
@@ -44,26 +44,26 @@ class UserEntityTest {
                 .hasFieldOrPropertyWithValue("firstName", "first name")
                 .hasFieldOrPropertyWithValue("lastName", "last name");
 
-        user.setId("newId");
-        user.setEmail("newEmail@projectcheckins.org");
-        user.setEnabled(true);
-        user.setEncodedPassword("newPassword");
-        user.setAuthorities(Collections.singletonList("ROLE_USER"));
-        user.setTimeZone(TimeZone.getTimeZone("Europe/Madrid"));
-        user.setFirstDayOfWeek(DayOfWeek.MONDAY);
-        user.setBeginningOfDay(LocalTime.of(8, 0));
-        user.setEndOfDay(LocalTime.of(17, 30));
-        user.setTimeFormat(TimeFormat.TWENTY_FOUR_HOUR_CLOCK);
-        user.setFormat(Format.WYSIWYG);
-        user.setFirstName("FIRST NAME");
-        user.setLastName("LAST NAME");
+        user.id("newId");
+        user.email("newEmail@projectcheckins.org");
+        user.enabled(true);
+        user.encodedPassword("newPassword");
+        user.authorities(Collections.singletonList("ROLE_USER"));
+        user.timeZone(TimeZone.getTimeZone("Europe/Madrid"));
+        user.firstDayOfWeek(DayOfWeek.MONDAY);
+        user.beginningOfDay(LocalTime.of(8, 0));
+        user.endOfDay(LocalTime.of(17, 30));
+        user.timeFormat(TimeFormat.TWENTY_FOUR_HOUR_CLOCK);
+        user.format(Format.WYSIWYG);
+        user.firstName("FIRST NAME");
+        user.lastName("LAST NAME");
 
         assertThat(user)
                 .hasFieldOrPropertyWithValue("id", "newId")
                 .hasFieldOrPropertyWithValue("email", "newEmail@projectcheckins.org")
                 .hasFieldOrPropertyWithValue("encodedPassword", "newPassword")
                 .hasFieldOrPropertyWithValue("enabled", true)
-                .satisfies(u -> assertThat(u.getAuthorities()).containsExactly("ROLE_USER"))
+                .satisfies(u -> assertThat(u.authorities()).containsExactly("ROLE_USER"))
                 .hasFieldOrPropertyWithValue("timeZone", TimeZone.getTimeZone("Europe/Madrid"))
                 .hasFieldOrPropertyWithValue("firstDayOfWeek", DayOfWeek.MONDAY)
                 .hasFieldOrPropertyWithValue("beginningOfDay", LocalTime.of(8, 0))
