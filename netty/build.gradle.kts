@@ -10,6 +10,7 @@ repositories {
 
 dependencies {
     developmentOnly(project(":devseeddata"))
+    runtimeOnly(project(":assets"))
     implementation(project(":thymeleaf-fieldset"))
     implementation(project(":security-http"))
     implementation(project(":http"))

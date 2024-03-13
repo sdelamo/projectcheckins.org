@@ -1,5 +1,6 @@
 rootProject.name = "projectcheckins"
 include("annotations")
+include("assets")
 include("devseeddata")
 include("bootstrap")
 include("code-coverage-report")
