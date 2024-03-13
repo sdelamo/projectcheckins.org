@@ -18,6 +18,10 @@ dependencies {
     developmentOnly("io.micronaut.security:micronaut-security-jwt")
     runtimeOnly("ch.qos.logback:logback-classic")
 
+    // JUnit Testing
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
     // HTTP Client
     testImplementation("io.micronaut:micronaut-http-client-jdk")
 

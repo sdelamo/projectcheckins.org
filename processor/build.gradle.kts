@@ -10,7 +10,12 @@ dependencies {
     implementation("io.micronaut.views:micronaut-views-core")
     implementation("io.micronaut.security:micronaut-security-annotations")
 
+    // JUnit Testing
+    testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Logging
     testRuntimeOnly("ch.qos.logback:logback-classic")
 
     // AssertJ
