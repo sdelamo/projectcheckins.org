@@ -24,6 +24,7 @@ import io.micronaut.security.authentication.provider.HttpRequestAuthenticationPr
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -57,6 +58,8 @@ class ProfileControllerTest {
     assertThat(client.exchange(BrowserRequest.POST("/profile/update", auth, Map.of(
         "timeZone", TimeZone.getDefault().getID(),
         "firstDayOfWeek", DayOfWeek.MONDAY.name(),
+        "beginningOfDay", "09:00",
+        "endOfDay", "16:30",
         "timeFormat", TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
             "format", Format.WYSIWYG,
         "firstName", "Guillermo",
@@ -85,7 +88,17 @@ class ProfileControllerTest {
 
     @Override
     public Optional<Profile> findByAuthentication(Authentication authentication, Tenant tenant) {
-      return Optional.of(new Profile(authentication.getAttributes().get("email").toString(), TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "first name", "last name"));
+      return Optional.of(new Profile(
+              authentication.getAttributes().get("email").toString(),
+              TimeZone.getDefault(),
+              DayOfWeek.MONDAY,
+              LocalTime.of(9, 0),
+              LocalTime.of(16, 30),
+              TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
+              Format.MARKDOWN,
+              "first name",
+              "last name"
+      ));
     }
 
     @Override

@@ -48,6 +48,8 @@ class EclipseStoreProfileRepository implements ProfileRepository {
   private UserEntity updateEntity(UserEntity entity, ProfileUpdate profileUpdate) {
     entity.setTimeZone(profileUpdate.timeZone());
     entity.setFirstDayOfWeek(profileUpdate.firstDayOfWeek());
+    entity.setBeginningOfDay(profileUpdate.beginningOfDay());
+    entity.setEndOfDay(profileUpdate.endOfDay());
     entity.setTimeFormat(profileUpdate.timeFormat());
     entity.setFirstName(profileUpdate.firstName());
     entity.setLastName(profileUpdate.lastName());
@@ -59,6 +61,8 @@ class EclipseStoreProfileRepository implements ProfileRepository {
             entity.getEmail(),
         entity.getTimeZone(),
         entity.getFirstDayOfWeek(),
+        entity.getBeginningOfDay(),
+        entity.getEndOfDay(),
         entity.getTimeFormat(),
         entity.getFormat(),
         entity.getFirstName(),

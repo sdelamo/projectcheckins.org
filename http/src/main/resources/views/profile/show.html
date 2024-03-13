@@ -26,6 +26,14 @@
             <td th:text="${profile.firstDayOfWeek}"></td>
         </tr>
         <tr>
+            <th th:text="#{profile.beginningOfDay}"></th>
+            <td th:text="${profile.beginningOfDay}"></td>
+        </tr>
+        <tr>
+            <th th:text="#{profile.endOfDay}"></th>
+            <td th:text="${profile.endOfDay}"></td>
+        </tr>
+        <tr>
             <th th:text="#{profile.timeFormat}">
             <td><span th:replace="~{profile/_timeFormat :: timeFormat(${profile.timeFormat})}"></span></td>
         </tr>

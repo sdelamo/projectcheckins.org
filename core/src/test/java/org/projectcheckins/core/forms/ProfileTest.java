@@ -7,6 +7,7 @@ import jakarta.validation.Validator;
 import org.junit.jupiter.api.Test;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.TimeZone;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -17,23 +18,25 @@ class ProfileTest {
 
     @Test
     void fieldsCannotBeNull(Validator validator) {
-        assertThat(validator.validate(new Profile("email", null, null, null, null, null, null)))
+        assertThat(validator.validate(new Profile("email", null, null, null, null, null, null, null, null)))
                 .hasMalformedEmailViolation("email")
                 .hasNotNullViolation("timeZone")
                 .hasNotNullViolation("firstDayOfWeek")
+                .hasNotNullViolation("beginningOfDay")
+                .hasNotNullViolation("endOfDay")
                 .hasNotNullViolation("timeFormat")
                 .hasNotNullViolation("format");
     }
 
     @Test
     void validProfile(Validator validator) {
-        assertThat(validator.validate(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,null, null)))
+        assertThat(validator.validate(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,null, null)))
                 .isValid();
     }
 
     @Test
     void fullName() {
-        assertThat(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "Sergio", "del Amo"))
+        assertThat(new Profile("delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "Sergio", "del Amo"))
                 .extracting(Profile::getFullName)
                 .isEqualTo("Sergio del Amo");
     }

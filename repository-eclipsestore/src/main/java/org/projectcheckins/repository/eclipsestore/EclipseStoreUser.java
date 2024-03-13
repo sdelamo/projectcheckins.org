@@ -68,6 +68,8 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
                 userSave.authorities(),
                 profileConfiguration.getTimeZone(),
                 profileConfiguration.getFirstDayOfWeek(),
+                profileConfiguration.getBeginningOfDay(),
+                profileConfiguration.getEndOfDay(),
                 profileConfiguration.getTimeFormat(),
                 profileConfiguration.getFormat(),
                 null,

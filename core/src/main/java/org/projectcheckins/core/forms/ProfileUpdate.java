@@ -7,11 +7,14 @@ import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.TimeZone;
 
 @Serdeable
 public record ProfileUpdate(@NotNull @Select(fetcher = TimeZoneFetcher.class) TimeZone timeZone,
                             @NotNull DayOfWeek firstDayOfWeek,
+                            @NotNull LocalTime beginningOfDay,
+                            @NotNull LocalTime endOfDay,
                             @NotNull TimeFormat timeFormat,
                             @NotNull Format format,
                             @Nullable String firstName,
