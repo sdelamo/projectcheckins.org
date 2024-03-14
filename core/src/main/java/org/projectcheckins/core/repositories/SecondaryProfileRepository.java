@@ -6,11 +6,13 @@ import io.micronaut.context.env.Environment;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.authentication.Authentication;
 import jakarta.inject.Singleton;
+import org.projectcheckins.annotations.Generated;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 
 import java.util.Optional;
 
+@Generated // "ignore for jacoco"
 @Requires(env = Environment.TEST)
 @Secondary
 @Singleton

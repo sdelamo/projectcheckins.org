@@ -34,14 +34,14 @@ class EclipseStoreProfileRepositoryTest {
             .hasFieldOrPropertyWithValue("firstDayOfWeek", MONDAY)
             .hasFieldOrPropertyWithValue("timeFormat", TimeFormat.TWENTY_FOUR_HOUR_CLOCK));
 
-    profileRepository.update(rightAuth, new ProfileUpdate(TimeZone.getDefault(), SUNDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWELVE_HOUR_CLOCK, Format.MARKDOWN, "first name", "last name"));
+    profileRepository.update(rightAuth, new ProfileUpdate(TimeZone.getDefault(), SUNDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWELVE_HOUR_CLOCK, Format.WYSIWYG, "first name", "last name"));
     assertThat(profileRepository.findByAuthentication(rightAuth))
         .hasValueSatisfying(p -> assertThat(p)
             .hasFieldOrPropertyWithValue("firstDayOfWeek", SUNDAY)
             .hasFieldOrPropertyWithValue("beginningOfDay", LocalTime.of(9, 0))
             .hasFieldOrPropertyWithValue("endOfDay", LocalTime.of(16, 30))
             .hasFieldOrPropertyWithValue("timeFormat", TimeFormat.TWELVE_HOUR_CLOCK)
-            .hasFieldOrPropertyWithValue("format", Format.MARKDOWN)
+            .hasFieldOrPropertyWithValue("format", Format.WYSIWYG)
             .hasFieldOrPropertyWithValue("firstName", "first name")
             .hasFieldOrPropertyWithValue("lastName", "last name"));
     assertThatThrownBy(() -> profileRepository.update(wrongAuth, new ProfileUpdate(TimeZone.getDefault(), SUNDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,"first name", "last name")))

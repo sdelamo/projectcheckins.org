@@ -2,15 +2,19 @@ package org.projectcheckins.http.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.projectcheckins.test.AbstractAuthenticationFetcher.SDELAMO;
 import static org.projectcheckins.test.AssertUtils.redirection;
+import static org.projectcheckins.test.HttpClientResponseExceptionAssert.*;
 
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
+import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpHeaders;
+import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.BlockingHttpClient;
@@ -19,28 +23,59 @@ import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
+import io.micronaut.security.authentication.Authentication;
+import io.micronaut.security.filters.AuthenticationFetcher;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.QuestionRecord;
-import org.projectcheckins.core.forms.QuestionSave;
-import org.projectcheckins.core.forms.QuestionUpdate;
+import org.projectcheckins.core.api.Profile;
+import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.QuestionRepository;
+import org.projectcheckins.core.repositories.SecondaryProfileRepository;
+import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
+import org.projectcheckins.test.HttpClientResponseExceptionAssert;
+import org.reactivestreams.Publisher;
 
 import java.net.URI;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.*;
 
 @Property(name = "micronaut.http.client.follow-redirects", value = StringUtils.FALSE)
-@Property(name = "micronaut.security.filter.enabled", value = StringUtils.FALSE)
 @Property(name = "spec.name", value = "QuestionControllerFormTest")
 @MicronautTest
 class QuestionControllerFormTest {
+    @Requires(property = "spec.name", value = "QuestionControllerFormTest")
+    @Singleton
+    static class AuthenticationFetcherMock extends AbstractAuthenticationFetcher {
+    }
+
+    @Requires(property = "spec.name", value = "QuestionControllerFormTest")
+    @Singleton
+    static class ProfileRepositoryMock extends SecondaryProfileRepository {
+        @Override
+        public Optional<? extends Profile> findByAuthentication(Authentication authentication, Tenant tenant) {
+            return Optional.of(new ProfileRecord(SDELAMO.getAttributes().get("email").toString(),
+                    TimeZone.getDefault(),
+                    DayOfWeek.MONDAY,
+                    LocalTime.of(9, 0),
+                    LocalTime.of(16, 30),
+                    TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
+                    Format.WYSIWYG,
+                    null,
+                    null));
+        }
+    }
+
     @Test
-    void crud(@Client("/") HttpClient httpClient, QuestionRepository questionRepository) {
+    void crud(@Client("/") HttpClient httpClient,
+              QuestionRepository questionRepository,
+              AuthenticationFetcherMock authenticationFetcher) {
+        authenticationFetcher.setAuthentication(SDELAMO);
         BlockingHttpClient client = httpClient.toBlocking();
         String title = "What are working on?";
         HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", Map.of(
@@ -76,10 +111,8 @@ class QuestionControllerFormTest {
             .doesNotContain(title)
             .contains(updatedTitle);
 
-        assertThatThrownBy(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "yyy", "title", "What are working on?", "schedule", "schedule", "timeZone", TimeZone.getDefault().getID()))))
-            .isInstanceOf(HttpClientResponseException.class)
-            .extracting(e -> ((HttpClientResponseException)e).getStatus())
-            .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThatThrowsHttpClientResponseException(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "yyy", "title", "What are working on?", "schedule", "schedule", "timeZone", TimeZone.getDefault().getID()))))
+                .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY);
 
         URI deleteUri = UriBuilder.of("/question").path(id).path("delete").build();
         assertThat(client.exchange(BrowserRequest.POST(deleteUri.toString(), Collections.emptyMap())))

@@ -2,8 +2,8 @@ package org.projectcheckins.notification;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import org.projectcheckins.core.forms.Profile;
-import org.projectcheckins.core.forms.Question;
+import org.projectcheckins.core.api.Profile;
+import org.projectcheckins.core.api.Question;
 
 /**
  * Sends notifications about questions to specific user profiles.

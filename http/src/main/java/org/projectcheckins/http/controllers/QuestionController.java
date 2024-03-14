@@ -5,6 +5,7 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.authentication.Authentication;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -19,6 +20,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Question;
+import org.projectcheckins.core.forms.AnswerSaveFormGenerator;
+import org.projectcheckins.core.forms.Format;
 import org.projectcheckins.core.forms.QuestionSave;
 import org.projectcheckins.core.forms.QuestionUpdate;
 import org.projectcheckins.core.repositories.QuestionRepository;
@@ -31,7 +34,7 @@ import java.util.function.Function;
 class QuestionController {
 
     private static final String QUESTION = "question";
-    private static final String PATH = ApiConstants.SLASH + QUESTION;
+    public static final String PATH = ApiConstants.SLASH + QUESTION;
 
     private static final String MODEL_QUESTIONS = "questions";
     private static final String MODEL_QUESTION = "question";
@@ -49,7 +52,7 @@ class QuestionController {
 
     // SHOW
     private static final String PATH_SHOW = PATH + ApiConstants.PATH_SHOW;
-    private static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_SHOW).build();
+    public static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_SHOW).build();
     private static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
 
     // EDIT
@@ -62,14 +65,19 @@ class QuestionController {
 
     // DELETE
     private static final String PATH_DELETE = PATH + ApiConstants.PATH_DELETE;
+    private static final String ANSWER_FORM = "answerForm";
 
     private final FormGenerator formGenerator;
     private final QuestionRepository questionRepository;
 
+    private final AnswerSaveFormGenerator answerSaveFormGenerator;
+
     QuestionController(FormGenerator formGenerator,
-                       QuestionRepository questionRepository) {
+                       QuestionRepository questionRepository,
+                       AnswerSaveFormGenerator answerSaveFormGenerator) {
         this.formGenerator = formGenerator;
         this.questionRepository = questionRepository;
+        this.answerSaveFormGenerator = answerSaveFormGenerator;
     }
 
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
@@ -89,9 +97,15 @@ class QuestionController {
     }
 
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW)
-    HttpResponse<?> questionShow(@PathVariable @NotBlank String id, @Nullable Tenant tenant) {
+    HttpResponse<?> questionShow(@PathVariable @NotBlank String id,
+                                 @NonNull Authentication authentication,
+                                 @Nullable Tenant tenant) {
+        Form answerFormSave = answerSaveFormGenerator.generate((Function<Format, String>) format -> AnswerController.URI_BUILDER_ANSWER_SAVE.apply(id, format).toString(), authentication);
         return questionRepository.findById(id, tenant)
-                .map(question -> HttpResponse.ok(Map.of(MODEL_QUESTION, question)))
+                .map(question -> HttpResponse.ok(Map.of(
+                        MODEL_QUESTION, question,
+                        ANSWER_FORM, answerFormSave
+                )))
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 

@@ -18,6 +18,11 @@
         </tr>
         </tbody>
     </table>
+
+    <th:block th:if="${answerForm}">
+        <form th:replace="~{fieldset/form :: form(${answerForm})}"></form>
+    </th:block>
+
 </main>
 </body>
 </html>

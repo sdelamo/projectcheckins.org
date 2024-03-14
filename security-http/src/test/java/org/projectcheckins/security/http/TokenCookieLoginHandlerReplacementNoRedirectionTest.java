@@ -21,8 +21,10 @@ import io.micronaut.security.authentication.provider.HttpRequestExecutorAuthenti
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
 import org.junit.jupiter.api.Test;
+import org.projectcheckins.test.HttpClientResponseExceptionAssert;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.projectcheckins.test.HttpClientResponseExceptionAssert.assertThatThrowsHttpClientResponseException;
 
 @Property(name = "micronaut.security.authentication", value="cookie")
 @Property(name = "micronaut.http.client.follow-redirects", value = StringUtils.FALSE)
@@ -35,11 +37,9 @@ class TokenCookieLoginHandlerReplacementNoRedirectionTest {
     @Test
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
-        assertThatThrownBy(() -> client.exchange(HttpRequest.POST("/login", new UsernamePasswordCredentials("watson@example.com", "password"))))
-            .isInstanceOf(HttpClientResponseException.class)
-            .hasFieldOrPropertyWithValue("status", HttpStatus.UNAUTHORIZED)
-            .extracting(e -> ((HttpClientResponseException) e).getResponse().getHeaders().get(HttpHeaders.LOCATION))
-            .isNull();
+        assertThatThrowsHttpClientResponseException(() -> client.exchange(HttpRequest.POST("/login", new UsernamePasswordCredentials("watson@example.com", "password"))))
+                .hasStatus(HttpStatus.UNAUTHORIZED)
+                .doesNotHaveHeader(HttpHeaders.LOCATION);
     }
 
     @Requires(property = "spec.name", value="TokenCookieLoginHandlerReplacementTest")

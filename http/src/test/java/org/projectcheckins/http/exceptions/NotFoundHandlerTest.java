@@ -22,8 +22,10 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.exceptions.QuestionNotFoundException;
 import org.projectcheckins.test.BrowserRequest;
+import org.projectcheckins.test.HttpClientResponseExceptionAssert;
 
 import static org.projectcheckins.test.AssertUtils.status;
+import static org.projectcheckins.test.HttpClientResponseExceptionAssert.*;
 
 @MicronautTest
 @Property(name = "spec.name", value = "NotFoundHandlerTest")
@@ -33,10 +35,8 @@ class NotFoundHandlerTest {
     void notFoundJson(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
         HttpRequest<?> request = HttpRequest.GET("/notFound/throwing");
-        assertThatThrownBy(() -> client.exchange(request, String.class))
-            .isInstanceOf(HttpClientResponseException.class)
-            .extracting(e -> ((HttpClientResponseException)e).getStatus())
-            .isEqualTo(HttpStatus.NOT_FOUND);
+        assertThatThrowsHttpClientResponseException(() -> client.exchange(request, String.class))
+                .hasStatus(HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -45,11 +45,9 @@ class NotFoundHandlerTest {
         HttpRequest<?> request = BrowserRequest.GET("/notFound/throwing/html");
         Argument<String> ok = Argument.of(String.class);
         Argument<String> ko = Argument.of(String.class);
-        assertThatThrownBy(() -> client.exchange(request, ok, ko))
-            .isInstanceOf(HttpClientResponseException.class)
-            .extracting(e -> ((HttpClientResponseException)e).getResponse())
-            .matches(status(HttpStatus.NOT_FOUND))
-            .matches(htmlBody("Not Found"));
+        HttpClientResponseExceptionAssert.assertThatThrowsHttpClientResponseException(() -> client.exchange(request, ok, ko))
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .bodyHtmlContains("Not Found");
     }
 
     @Controller

@@ -50,6 +50,7 @@ class EclipseStoreProfileRepository implements ProfileRepository {
     entity.beginningOfDay(profileUpdate.beginningOfDay());
     entity.endOfDay(profileUpdate.endOfDay());
     entity.timeFormat(profileUpdate.timeFormat());
+    entity.format(profileUpdate.format());
     entity.firstName(profileUpdate.firstName());
     entity.lastName(profileUpdate.lastName());
     return entity;

@@ -1,8 +1,8 @@
 package org.projectcheckins.notification.logger;
 
 import jakarta.inject.Singleton;
-import org.projectcheckins.core.forms.Profile;
-import org.projectcheckins.core.forms.Question;
+import org.projectcheckins.core.api.Profile;
+import org.projectcheckins.core.api.Question;
 import org.projectcheckins.notification.Notifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +23,6 @@ public class LoggerNotifier implements Notifier {
      */
     @Override
     public void notify(Question question, Profile profile) {
-        LOG.info("Asking user: {} question: {}", profile.getFullName(), question.title());
+        LOG.info("Asking user: {} question: {}", profile.fullName(), question.title());
     }
 }
