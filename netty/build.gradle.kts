@@ -31,6 +31,9 @@ dependencies {
 
     // Persistence
     implementation(project(":repository-eclipsestore"))
+
+    // Notifications
+    implementation(project(":notification-logger"))
 }
 application {
     mainClass.set("org.projectcheckins.netty.Application")
