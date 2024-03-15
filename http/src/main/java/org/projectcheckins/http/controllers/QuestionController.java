@@ -100,7 +100,7 @@ class QuestionController {
     HttpResponse<?> questionShow(@PathVariable @NotBlank String id,
                                  @NonNull Authentication authentication,
                                  @Nullable Tenant tenant) {
-        Form answerFormSave = answerSaveFormGenerator.generate((Function<Format, String>) format -> AnswerController.URI_BUILDER_ANSWER_SAVE.apply(id, format).toString(), authentication);
+        Form answerFormSave = answerSaveFormGenerator.generate(id, format -> AnswerController.URI_BUILDER_ANSWER_SAVE.apply(id, format).toString(), authentication);
         return questionRepository.findById(id, tenant)
                 .map(question -> HttpResponse.ok(Map.of(
                         MODEL_QUESTION, question,

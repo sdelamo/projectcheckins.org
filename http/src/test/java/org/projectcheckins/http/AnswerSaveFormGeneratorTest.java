@@ -22,6 +22,7 @@ import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 import org.projectcheckins.test.WritableUtils;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Collections;
 import java.util.Map;
@@ -45,8 +46,9 @@ class AnswerSaveFormGeneratorTest {
             case MARKDOWN -> "/answer/save/markdown";
             case WYSIWYG -> "/answer/save/wysiwyg";
         };
+        String questionId = "xxx";
         Authentication authentication = Authentication.build(USER_ID_MARKDOWN);
-        assertThat(renderForm(formatFunction, authentication, formGenerator, viewsRenderer))
+        assertThat(renderForm(questionId, formatFunction, authentication, formGenerator, viewsRenderer))
                 .hasValueSatisfying(h -> assertThat(h)
                         .contains("action=\"/answer/save/markdown\"")
                         .contains("type=\"hidden\" name=\"questionId\"")
@@ -55,21 +57,22 @@ class AnswerSaveFormGeneratorTest {
                 );
 
         authentication = Authentication.build(USER_ID_WYSIWYG);
-        assertThat(renderForm(formatFunction, authentication, formGenerator, viewsRenderer))
+        assertThat(renderForm(questionId, formatFunction, authentication, formGenerator, viewsRenderer))
                 .hasValueSatisfying(h -> assertThat(h)
                         .contains("action=\"/answer/save/wysiwyg\"")
                         .contains("type=\"hidden\" name=\"questionId\"")
-                        .contains("input type=\"date\" name=\"answerDate\"")
+                        .contains("input type=\"date\" name=\"answerDate\" value=\"" + LocalDate.now() + "\"")
                         .contains("type=\"hidden\" name=\"html\"")
                         .contains("<trix-editor input=\"html\"></trix-editor>")
                 );
     }
 
-    private static Optional<String> renderForm(Function<Format, String> formatFunction,
+    private static Optional<String> renderForm(String questionId,
+                                               Function<Format, String> formatFunction,
                                                Authentication authentication,
                                                AnswerSaveFormGenerator formGenerator,
                               ViewsRenderer<Map<String, Object>, HttpRequest<?>> viewsRenderer) {
-        Form form = formGenerator.generate(formatFunction, authentication);
+        Form form = formGenerator.generate(questionId, formatFunction, authentication);
         return renderForm(form, viewsRenderer);
     }
 
