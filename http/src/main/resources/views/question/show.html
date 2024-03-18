@@ -10,14 +10,7 @@
     <a th:href="@{|/question/${question.id}/edit|}" th:text="#{question.edit}"></a>
 
     <h1 th:text="${question.title}"></h1>
-    <table class="table">
-        <tbody>
-        <tr>
-            <th th:text="#{question.schedule}"></th>
-            <td th:text="${question.schedule}"></td>
-        </tr>
-        </tbody>
-    </table>
+
 
     <th:block th:if="${answerForm}">
         <form th:replace="~{fieldset/form :: form(${answerForm})}"></form>

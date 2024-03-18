@@ -12,6 +12,7 @@ import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.util.StringUtils;
+import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
@@ -25,16 +26,21 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Profile;
+import org.projectcheckins.core.api.QuestionSave;
+import org.projectcheckins.core.api.QuestionUpdate;
 import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
+import org.projectcheckins.test.HttpClientResponseExceptionAssert;
 
+import java.net.URI;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.Optional;
 import java.util.TimeZone;
 
@@ -69,10 +75,28 @@ class QuestionControllerTest {
               AuthenticationFetcherMock authenticationFetcher) {
         authenticationFetcher.setAuthentication(SDELAMO);
         BlockingHttpClient client = httpClient.toBlocking();
+        String questionId = "xxx";
+
+        // SAVE with errors
+        URI saveUri = UriBuilder.of("/question").path("save").build();
+        String savePayloadWithErrors = "title=&howOften=DAILY_ON&onceAWeekDay=MONDAY&everyOtherWeekDay=MONDAY&onceAMonthOnTheFirstDay=MONDAY&timeOfDay=END";
+        HttpClientResponseExceptionAssert.assertThatThrowsHttpClientResponseException(() -> client.exchange(BrowserRequest.POST(saveUri, savePayloadWithErrors)))
+                .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                .bodyHtmlTest(html -> html.contains("must not be blank")) // title missing
+                .bodyHtmlTest(html -> html.contains("You must select at least one day")); // days missing when selecting DAILY_ON
+
+        // UPDATE with errors
+        URI updateUri = UriBuilder.of("/question").path(questionId).path("update").build();
+        String updatePayloadWithErrors = "id="+ questionId + "&title=&howOften=DAILY_ON&onceAWeekDay=MONDAY&everyOtherWeekDay=MONDAY&onceAMonthOnTheFirstDay=MONDAY&timeOfDay=END";
+        HttpClientResponseExceptionAssert.assertThatThrowsHttpClientResponseException(() -> client.exchange(BrowserRequest.POST(updateUri, updatePayloadWithErrors)))
+                .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                .bodyHtmlTest(html -> html.contains("must not be blank")) // title missing
+                .bodyHtmlTest(html -> html.contains("You must select at least one day")); // days missing when selecting DAILY_ON
+
         assertThat(client.exchange(BrowserRequest.GET("/question/list"), String.class))
             .matches(htmlPage());
 
-        assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("xxx").path("edit").build()), String.class))
+        assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("edit").build()), String.class))
             .matches(htmlPage());
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("yyy").path("edit").build()), String.class))
@@ -102,7 +126,7 @@ class QuestionControllerTest {
         @NonNull
         public Optional<QuestionRecord> findById(@NotBlank String id, @Nullable Tenant tenant) {
             if (id.equals("xxx")) {
-                return Optional.of(new QuestionRecord("xxx", "What are working on?", "schedule"));
+                return Optional.of(new QuestionRecord("xxx", "What are working on?", HowOften.DAILY_ON, Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), TimeOfDay.END));
             }
             return Optional.empty();
         }

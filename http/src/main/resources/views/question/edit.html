@@ -6,7 +6,8 @@
 </head>
 <body>
 <main>
-    <form th:replace="~{fieldset/form :: form(${form})}"></form>
+    <form th:replace="~{question/_edit :: edit(${fieldset})}"/>
+
 </main>
 </body>
 </html>

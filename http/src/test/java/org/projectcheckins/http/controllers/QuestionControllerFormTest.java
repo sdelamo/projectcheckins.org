@@ -32,6 +32,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Profile;
+import org.projectcheckins.core.api.QuestionSave;
+import org.projectcheckins.core.api.QuestionUpdate;
 import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
@@ -77,10 +79,8 @@ class QuestionControllerFormTest {
               AuthenticationFetcherMock authenticationFetcher) {
         authenticationFetcher.setAuthentication(SDELAMO);
         BlockingHttpClient client = httpClient.toBlocking();
-        String title = "What are working on?";
-        HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", Map.of(
-                "title", title,
-                "schedule", "schedule")));
+        String title = "What are you working on?";
+        HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", "title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END"));
         assertThat(saveResponse)
             .matches(redirection(s -> s.startsWith("/question") && s.endsWith("/show")));
 
@@ -101,17 +101,18 @@ class QuestionControllerFormTest {
 
         String updatedTitle = "What did you do today?";
         URI updateUri = UriBuilder.of("/question").path(id).path("update").build();
-        assertThat(client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of(
-                "id", id,
-                "title", updatedTitle,
-                "schedule", "schedule"))))
+        String updateBody = "id=" + id + "&title="+updatedTitle+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END";
+
+        assertThat(client.exchange(BrowserRequest.POST(updateUri.toString(), updateBody)))
             .matches(redirection(s -> s.equals("/question/" + id + "/show")));
 
         assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class))
             .doesNotContain(title)
             .contains(updatedTitle);
 
-        assertThatThrowsHttpClientResponseException(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), Map.of("id", "yyy", "title", "What are working on?", "schedule", "schedule", "timeZone", TimeZone.getDefault().getID()))))
+        String updateBodyWithNotMatchingId = "id=yyy&title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END";
+
+        assertThatThrowsHttpClientResponseException(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), updateBodyWithNotMatchingId)))
                 .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY);
 
         URI deleteUri = UriBuilder.of("/question").path(id).path("delete").build();
@@ -130,9 +131,9 @@ class QuestionControllerFormTest {
 
         @Override
         @NonNull
-        public String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant) {
+        public String save(@NotNull @Valid QuestionSave form, @Nullable Tenant tenant) {
             String id = "xxx";
-            questions.put(id, new QuestionRecord(id, questionSave.title(), questionSave.schedule()));
+            questions.put(id, new QuestionRecord(id, form.title(), form.howOften(), form.days(), form.timeOfDay()));
             return id;
         }
 
@@ -143,9 +144,9 @@ class QuestionControllerFormTest {
         }
 
         @Override
-        public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
-            if (questions.containsKey(questionUpdate.id())) {
-                questions.put(questionUpdate.id(), new QuestionRecord(questionUpdate.id(), questionUpdate.title(), questionUpdate.schedule()));
+        public void update(@NotNull @Valid QuestionUpdate form, @Nullable Tenant tenant) {
+            if (questions.containsKey(form.id())) {
+                questions.put(form.id(), new QuestionRecord(form.id(),form.title(), form.howOften(), form.days(), form.timeOfDay()));
             }
         }
 

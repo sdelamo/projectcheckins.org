@@ -1,0 +1,107 @@
+<th:block th:fragment="fieldset(fieldset)" xmlns:th="http://www.thymeleaf.org">
+<div data-controller="questionform">
+    <div class="mb-3">
+        <label for="title" class="form-label" th:text="#{question.title}"></label>
+        <input type="text" class="form-control"
+               th:attr="aria-describedby=${fieldset.hasError('title')}?|titleValidationServerFeedback|"
+               th:classappend="${fieldset.hasError('title')} ? is-invalid"
+               id="title"
+               name="title"
+               th:value="${fieldset.title}"
+               required/>
+        <th:block th:if="${fieldset.hasError('title')}">
+            <div th:replace="~{fieldset/errors :: errors('title', ${fieldset.getError('title')})}"></div>
+        </th:block>
+    </div>
+    <div class="row">
+        <p><label th:text="#{howOften}"></label></p>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="howOften"  th:checked="${fieldset.howOften == @org.projectcheckins.core.forms.HowOften@DAILY_ON}" id="howOftenDailyOn" value="DAILY_ON"
+                   data-action="click->questionform#dailyOn" checked>
+            <label class="form-check-label" for="howOftenDailyOn" th:text="#{howOften.dailyOnce}"></label>
+        </div>
+        <div id="dailyOnDayPicker" class="d-block" data-questionform-target="dailyOnDayPicker">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dailyOnDayMonday" name="dailyOnDay"
+                       th:checked="${fieldset.dailyOnDay.contains(@java.time.DayOfWeek@MONDAY)}"
+                       value="MONDAY">
+                <label class="form-check-label" for="dailyOnDayMonday" th:text="#{dayofweek.monday}"></label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dailyOnDayTuesday" name="dailyOnDay"
+                       th:checked="${fieldset.dailyOnDay.contains(@java.time.DayOfWeek@TUESDAY)}"
+                       value="TUESDAY">
+                <label class="form-check-label" for="dailyOnDayTuesday" th:text="#{dayofweek.tuesday}"></label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dailyOnDayWednesday" name="dailyOnDay"
+                       th:checked="${fieldset.dailyOnDay.contains(@java.time.DayOfWeek@WEDNESDAY)}"
+                       value="WEDNESDAY">
+                <label class="form-check-label" for="dailyOnDayWednesday" th:text="#{dayofweek.wednesday}"></label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dailyOnDayThursday" name="dailyOnDay"
+                       th:checked="${fieldset.dailyOnDay.contains(@java.time.DayOfWeek@THURSDAY)}"
+                       value="THURSDAY">
+                <label class="form-check-label" for="dailyOnDayThursday" th:text="#{dayofweek.thursday}"></label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dailyOnDayFriday" name="dailyOnDay"
+                       th:checked="${fieldset.dailyOnDay.contains(@java.time.DayOfWeek@FRIDAY)}"
+                       value="FRIDAY">
+                <label class="form-check-label" for="dailyOnDayFriday" th:text="#{dayofweek.friday}"></label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dailyOnDaySaturday" name="dailyOnDay"
+                       th:checked="${fieldset.dailyOnDay.contains(@java.time.DayOfWeek@SATURDAY)}"
+                       value="SATURDAY">
+                <label class="form-check-label" for="dailyOnDaySaturday" th:text="#{dayofweek.saturday}"></label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dailyOnDaySunday" name="dailyOnDay"
+                       th:checked="${fieldset.dailyOnDay.contains(@java.time.DayOfWeek@SUNDAY)}"
+                       value="SUNDAY">
+                <label class="form-check-label" for="dailyOnDaySunday" th:text="#{dayofweek.sunday}"></label>
+            </div>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="howOften"  th:checked="${fieldset.howOften == @org.projectcheckins.core.forms.HowOften@ONCE_A_WEEK}" id="howOftenOnceAWeek" value="ONCE_A_WEEK"
+                   data-action="click->questionform#onceWeek">
+            <label class="form-check-label" for="howOftenOnceAWeek" th:text="#{howOften.onceAWeek}"></label>
+        </div>
+        <div th:replace="~{question/_dayOfWeekRadios :: dayOfWeekRadios('onceAWeek', 'onceAWeekDay', ${fieldset.onceAWeekDay})}"/>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="howOften"  th:checked="${fieldset.howOften == @org.projectcheckins.core.forms.HowOften@EVERY_OTHER_WEEK}" id="howOftenEveryOtherWeek"
+                   value="EVERY_OTHER_WEEK" data-action="click->questionform#everyOtherWeek">
+            <label class="form-check-label" for="howOftenEveryOtherWeek" th:text="#{howOften.everyOtherWeek}"></label>
+        </div>
+        <div th:replace="~{question/_dayOfWeekRadios :: dayOfWeekRadios('everyOtherWeek', 'everyOtherWeekDay', ${fieldset.everyOtherWeekDay})}"/>
+
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="howOften"  th:checked="${fieldset.howOften == @org.projectcheckins.core.forms.HowOften@ONCE_A_MONTH_ON_THE_FIRST}" id="howOftenOnceAMonthOnTheFirst"
+                   value="ONCE_A_MONTH_ON_THE_FIRST" data-action="click->questionform#onceAMonthOnTheFirst">
+            <label class="form-check-label" for="howOftenOnceAMonthOnTheFirst" th:text="#{howOften.onceAMonthOnTheFirstDay}"></label>
+        </div>
+        <div th:replace="~{question/_dayOfWeekRadios :: dayOfWeekRadios('onceAMonthOnTheFirst', 'onceAMonthOnTheFirstDay', ${fieldset.onceAMonthOnTheFirstDay})}"/>
+
+    </div>
+    <div class="row mt-3">
+        <p><label th:text="#{timeOfDay}"></label></p>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="timeOfDay" id="timeOfDayBeginning" value="BEGINNING" th:checked="${fieldset.timeOfDay == @org.projectcheckins.core.forms.TimeOfDay@BEGINNING}">
+            <label class="form-check-label" for="timeOfDayBeginning">Beginning of the day</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="timeOfDay" id="timeOfDayEnd" value="END"  th:checked="${fieldset.timeOfDay == @org.projectcheckins.core.forms.TimeOfDay@END}">
+            <label class="form-check-label" for="timeOfDayEnd">End of the day</label>
+        </div>
+    </div>
+    <th:block th:if="${fieldset.hasErrors()}">
+        <th:block th:each="error : ${fieldset.errors()}">
+            <div class="alert alert-danger" role="alert">
+                <span th:if="${error.code()}" th:text="${#strings.defaultString(#messages.msgOrNull(error.code()),error.defaultMessage())}"></span>
+                <span th:unless="${error.code()}" th:text="${error.defaultMessage()}"></span>
+            </div>
+        </th:block>
+    </th:block>
+</div>

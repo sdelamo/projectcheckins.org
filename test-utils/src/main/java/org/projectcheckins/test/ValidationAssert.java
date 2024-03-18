@@ -1,7 +1,6 @@
 package org.projectcheckins.test;
 
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
 
@@ -42,9 +41,21 @@ public class ValidationAssert<T> extends AbstractAssert<ValidationAssert<T>, Set
         return this;
     }
 
+    public ValidationAssert<T> hasNotEmptyViolation(String name) {
+        expectedViolationMessage(name, "must not be empty");
+        return this;
+    }
+
     private void expectedViolationMessage(String name, String message) {
         Assertions.assertThat(actual)
                 .anyMatch(x -> x.getPropertyPath().toString().equals(name))
+                .extracting(ConstraintViolation::getMessage)
+                .anyMatch(message::equals);
+    }
+
+
+    public void hasErrorMessage(String message) {
+        Assertions.assertThat(actual)
                 .extracting(ConstraintViolation::getMessage)
                 .anyMatch(message::equals);
     }

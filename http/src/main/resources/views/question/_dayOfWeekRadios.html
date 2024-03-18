@@ -1,0 +1,12 @@
+<th:block th:fragment="dayOfWeekRadios(prefix,name,value)" xmlns:th="http://www.thymeleaf.org">
+<div th:id="@{|${prefix}DayPicker|}" class="d-none"
+     th:data-questionform-target="@{|${prefix}DayPicker|}">
+    <div th:replace="~{question/_dayOfWeekRadio :: dayOfWeekRadio(${prefix},${name},${value},'Monday','MONDAY','dayofweek.monday')}"/>
+    <div th:replace="~{question/_dayOfWeekRadio :: dayOfWeekRadio(${prefix},${name},${value},'Tuesday','TUESDAY','dayofweek.tuesday')}"/>
+    <div th:replace="~{question/_dayOfWeekRadio :: dayOfWeekRadio(${prefix},${name},${value},'Wednesday','WEDNESDAY','dayofweek.wednesday')}"/>
+    <div th:replace="~{question/_dayOfWeekRadio :: dayOfWeekRadio(${prefix},${name},${value},'Thursday','THURSDAY','dayofweek.thursday')}"/>
+    <div th:replace="~{question/_dayOfWeekRadio :: dayOfWeekRadio(${prefix},${name},${value},'Friday','FRIDAY','dayofweek.friday')}"/>
+    <div th:replace="~{question/_dayOfWeekRadio :: dayOfWeekRadio(${prefix},${name},${value},'Saturday','SATURDAY','dayofweek.saturday')}"/>
+    <div th:replace="~{question/_dayOfWeekRadio :: dayOfWeekRadio(${prefix},${name},${value},'Sunday','SUNDAY','dayofweek.sunday')}"/>
+</div>
+</th:block>

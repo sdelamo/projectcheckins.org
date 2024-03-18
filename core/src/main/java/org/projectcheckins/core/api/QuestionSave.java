@@ -9,12 +9,8 @@ import org.projectcheckins.core.forms.TimeOfDay;
 import java.time.DayOfWeek;
 import java.util.Set;
 
-public interface Question {
-
-    @NotBlank String id();
-
+public interface QuestionSave {
     @NotBlank String title();
-
     @NotNull HowOften howOften();
     @NotEmpty Set<DayOfWeek> days();
     @NotNull TimeOfDay timeOfDay();

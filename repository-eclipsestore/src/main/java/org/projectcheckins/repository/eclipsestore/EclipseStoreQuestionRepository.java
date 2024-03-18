@@ -10,8 +10,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.exceptions.QuestionNotFoundException;
-import org.projectcheckins.core.forms.QuestionSave;
-import org.projectcheckins.core.forms.QuestionUpdate;
+import org.projectcheckins.core.api.QuestionSave;
+import org.projectcheckins.core.api.QuestionUpdate;
 import org.projectcheckins.core.idgeneration.IdGenerator;
 import org.projectcheckins.core.repositories.QuestionRepository;
 
@@ -36,7 +36,9 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
         String id = idGenerator.generate();
         entity.id(id);
         entity.title(questionSave.title());
-        entity.schedule(questionSave.schedule());
+        entity.howOften(questionSave.howOften());
+        entity.days(questionSave.days());
+        entity.timeOfDay(questionSave.timeOfDay());
         rootProvider.root().getQuestions().add(entity);
         save(rootProvider.root().getQuestions());
         return id;
@@ -52,7 +54,9 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
     public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
         QuestionEntity question = findEntityById(questionUpdate.id()).orElseThrow(QuestionNotFoundException::new);
         question.title(questionUpdate.title());
-        question.schedule(questionUpdate.schedule());
+        question.howOften(questionUpdate.howOften());
+        question.days(questionUpdate.days());
+        question.timeOfDay(questionUpdate.timeOfDay());
         save(question);
     }
 

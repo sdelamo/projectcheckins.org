@@ -19,6 +19,55 @@
             })
         })();
     </script>
+    <script type="module">
+        import {Application, Controller} from "/assets/javascripts/stimulus-3.2.1.js"
+
+        window.Stimulus = Application.start()
+
+        Stimulus.register("questionform", class extends Controller {
+            static targets = ["dailyOnDayPicker", "onceAWeekDayPicker", "everyOtherWeekDayPicker", "onceAMonthOnTheFirstDayPicker"]
+            hide(el) {
+                el.classList.add("d-none")
+                el.classList.remove("d-block")
+            }
+
+            show(el) {
+                el.classList.add("d-block")
+                el.classList.remove("d-none")
+            }
+
+            dailyOn() {
+                console.log("Daily On");
+                this.show(this.dailyOnDayPickerTarget);
+                this.hide(this.onceAWeekDayPickerTarget);
+                this.hide(this.everyOtherWeekDayPickerTarget);
+                this.hide(this.onceAMonthOnTheFirstDayPickerTarget);
+            }
+
+            onceWeek() {
+                console.log("Once a Week");
+                this.hide(this.dailyOnDayPickerTarget);
+                this.show(this.onceAWeekDayPickerTarget);
+                this.hide(this.everyOtherWeekDayPickerTarget);
+                this.hide(this.onceAMonthOnTheFirstDayPickerTarget);
+            }
+
+            everyOtherWeek() {
+                console.log("Every Other Week");
+                this.hide(this.dailyOnDayPickerTarget);
+                this.hide(this.onceAWeekDayPickerTarget);
+                this.show(this.everyOtherWeekDayPickerTarget);
+                this.hide(this.onceAMonthOnTheFirstDayPickerTarget);
+            }
+
+            onceAMonthOnTheFirst() {
+                this.hide(this.dailyOnDayPickerTarget);
+                this.hide(this.onceAWeekDayPickerTarget);
+                this.hide(this.everyOtherWeekDayPickerTarget);
+                this.show(this.onceAMonthOnTheFirstDayPickerTarget);
+            }
+        })
+    </script>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary"  th:if="${security}">

@@ -12,6 +12,10 @@ public final class BrowserRequest {
     private BrowserRequest() {
     }
 
+    public static <T> MutableHttpRequest<T> POST(URI uri, T body) {
+        return POST(uri.toString(), body);
+    }
+
     public static <T> MutableHttpRequest<T> POST(String uri, T body) {
         Objects.requireNonNull(uri, "Argument [uri] is required");
         return HttpRequestFactory.INSTANCE.post(uri, body)

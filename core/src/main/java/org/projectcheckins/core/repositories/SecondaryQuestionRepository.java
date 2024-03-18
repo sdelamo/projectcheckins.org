@@ -7,8 +7,8 @@ import io.micronaut.multitenancy.Tenant;
 import jakarta.inject.Singleton;
 import org.projectcheckins.annotations.Generated;
 import org.projectcheckins.core.api.Question;
-import org.projectcheckins.core.forms.QuestionSave;
-import org.projectcheckins.core.forms.QuestionUpdate;
+import org.projectcheckins.core.api.QuestionSave;
+import org.projectcheckins.core.api.QuestionUpdate;
 
 import java.util.List;
 import java.util.Optional;

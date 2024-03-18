@@ -8,6 +8,7 @@ import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
@@ -18,9 +19,7 @@ import jakarta.inject.Singleton;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.api.Question;
-import org.projectcheckins.core.forms.Format;
-import org.projectcheckins.core.forms.ProfileRecord;
-import org.projectcheckins.core.forms.TimeFormat;
+import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 import org.projectcheckins.security.RegisterService;
@@ -30,10 +29,7 @@ import org.projectcheckins.test.BrowserRequest;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TimeZone;
+import java.util.*;
 
 @MicronautTest
 @Property(name = "spec.name", value = "QuestionCrudTest")
@@ -53,10 +49,10 @@ class QuestionCrudTest {
         Authentication authentication = Authentication.build(userId, Collections.emptyList(), Collections.singletonMap("email", email));
         authenticationFetcher.setAuthentication(authentication);
         BlockingHttpClient client = httpClient.toBlocking();
-        HttpRequest<?> request = BrowserRequest.POST("/question/save", Map.of(
-                "title", "What are working on?",
-                "schedule", "schedule",
-                "timeZone", TimeZone.getDefault().getID()));
+
+        String title = "What are working on?";
+        String body = "title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END";
+        HttpRequest<?> request = BrowserRequest.POST("/question/save", body);
         assertThatCode(() -> client.exchange(request))
             .doesNotThrowAnyException();
         Optional<? extends Question> questionOptional = questionRepository.findAll()
