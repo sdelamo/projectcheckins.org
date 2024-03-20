@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.QuestionUpdate;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ public record QuestionUpdateForm(@NonNull String id,
                                  @NotBlank String title,
                                  @NotNull HowOften howOften,
                                  @NotNull TimeOfDay timeOfDay,
+                                 @NotNull LocalTime fixedTime,
                                  @Nullable Set<DayOfWeek> dailyOnDay,
                                  @Nullable DayOfWeek onceAWeekDay,
                                  @Nullable DayOfWeek everyOtherWeekDay,
@@ -33,11 +35,12 @@ public record QuestionUpdateForm(@NonNull String id,
                               @NotBlank String title,
                               @NotNull HowOften howOften,
                               @NotNull TimeOfDay timeOfDay,
+                              @NotNull LocalTime fixedTime,
                               @Nullable Set<DayOfWeek> dailyOnDay,
                               @Nullable DayOfWeek onceAWeekDay,
                               @Nullable DayOfWeek everyOtherWeekDay,
                               @Nullable DayOfWeek onceAMonthOnTheFirstDay) {
-        this(id, title, howOften, timeOfDay, dailyOnDay, onceAWeekDay, everyOtherWeekDay, onceAMonthOnTheFirstDay, null, null);
+        this(id, title, howOften, timeOfDay, fixedTime, dailyOnDay, onceAWeekDay, everyOtherWeekDay, onceAMonthOnTheFirstDay, null, null);
     }
 
     @NonNull
@@ -47,6 +50,7 @@ public record QuestionUpdateForm(@NonNull String id,
                 form.title(),
                 form.howOften(),
                 form.timeOfDay(),
+                form.fixedTime(),
                 form.dailyOnDay() != null ? form.dailyOnDay : Collections.emptySet(),
                 form.onceAWeekDay(),
                 form.everyOtherWeekDay(),

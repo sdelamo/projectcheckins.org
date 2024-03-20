@@ -39,6 +39,7 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
         entity.howOften(questionSave.howOften());
         entity.days(questionSave.days());
         entity.timeOfDay(questionSave.timeOfDay());
+        entity.fixedTime(questionSave.fixedTime());
         rootProvider.root().getQuestions().add(entity);
         save(rootProvider.root().getQuestions());
         return id;
@@ -57,6 +58,7 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
         question.howOften(questionUpdate.howOften());
         question.days(questionUpdate.days());
         question.timeOfDay(questionUpdate.timeOfDay());
+        question.fixedTime(questionUpdate.fixedTime());
         save(question);
     }
 

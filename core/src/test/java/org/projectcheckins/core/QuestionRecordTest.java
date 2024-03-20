@@ -13,6 +13,7 @@ import org.projectcheckins.core.forms.QuestionRecord;
 import org.projectcheckins.core.forms.TimeOfDay;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.Set;
 
@@ -21,17 +22,18 @@ class QuestionRecordTest {
 
     @Test
     void questionRecordValidation(Validator validator) {
-        assertThat(validator.validate(new QuestionRecord(null, null, null, null, null)))
+        assertThat(validator.validate(new QuestionRecord(null, null, null, null, null, null)))
                 .hasNotBlankViolation("id")
                 .hasNotBlankViolation("title")
                 .hasNotNullViolation("howOften")
                 .hasNotNullViolation("days")
-                .hasNotNullViolation("timeOfDay");
-        assertThat(validator.validate(new QuestionRecord("", "", null, Collections.emptySet(), null)))
+                .hasNotNullViolation("timeOfDay")
+                .hasNotNullViolation("fixedTime");
+        assertThat(validator.validate(new QuestionRecord("", "", null, Collections.emptySet(), null, null)))
                 .hasNotBlankViolation("id")
                 .hasNotBlankViolation("title")
                 .hasNotEmptyViolation("days");
-        assertThat(validator.validate(new QuestionRecord("xxx", "What are you working on", HowOften.DAILY_ON, Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), TimeOfDay.END)))
+        assertThat(validator.validate(new QuestionRecord("xxx", "What are you working on", HowOften.DAILY_ON, Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), TimeOfDay.END, LocalTime.of(16, 30))))
                 .isValid();
     }
 

@@ -9,6 +9,7 @@ import org.projectcheckins.core.forms.HowOften;
 import org.projectcheckins.core.forms.TimeOfDay;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Set;
 
 public class QuestionEntity implements Question {
@@ -26,6 +27,9 @@ public class QuestionEntity implements Question {
 
     @NotNull
     private TimeOfDay timeOfDay;
+
+    @NotNull
+    private LocalTime fixedTime;
 
     @Override
     public String id() {
@@ -59,6 +63,12 @@ public class QuestionEntity implements Question {
         return timeOfDay;
     }
 
+    @Override
+    @NonNull
+    public LocalTime fixedTime() {
+        return fixedTime;
+    }
+
     public void title(String title) {
         this.title = title;
     }
@@ -73,5 +83,9 @@ public class QuestionEntity implements Question {
 
     public void timeOfDay(@NonNull TimeOfDay timeOfDay) {
         this.timeOfDay = timeOfDay;
+    }
+
+    public void fixedTime(@NonNull LocalTime fixedTime) {
+        this.fixedTime = fixedTime;
     }
 }

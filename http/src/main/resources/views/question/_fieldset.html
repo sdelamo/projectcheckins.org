@@ -88,12 +88,24 @@
     <div class="row mt-3">
         <p><label th:text="#{timeOfDay}"></label></p>
         <div class="form-check">
-            <input class="form-check-input" type="radio" name="timeOfDay" id="timeOfDayBeginning" value="BEGINNING" th:checked="${fieldset.timeOfDay == @org.projectcheckins.core.forms.TimeOfDay@BEGINNING}">
+            <input class="form-check-input" type="radio" name="timeOfDay" id="timeOfDayBeginning" value="BEGINNING" th:checked="${fieldset.timeOfDay == @org.projectcheckins.core.forms.TimeOfDay@BEGINNING}"
+                   data-action="click->questionform#timeOfDayBeginning">
             <label class="form-check-label" for="timeOfDayBeginning">Beginning of the day</label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="radio" name="timeOfDay" id="timeOfDayEnd" value="END"  th:checked="${fieldset.timeOfDay == @org.projectcheckins.core.forms.TimeOfDay@END}">
+            <input class="form-check-input" type="radio" name="timeOfDay" id="timeOfDayEnd" value="END"  th:checked="${fieldset.timeOfDay == @org.projectcheckins.core.forms.TimeOfDay@END}"
+                   data-action="click->questionform#timeOfDayEnd">
             <label class="form-check-label" for="timeOfDayEnd">End of the day</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="timeOfDay" id="timeOfDayFixedTime" value="FIXED"  th:checked="${fieldset.timeOfDay == @org.projectcheckins.core.forms.TimeOfDay@FIXED}"
+                   data-action="click->questionform#timeOfDayFixedTime">
+            <label class="form-check-label" for="timeOfDayFixedTime">Fixed time</label>
+            <div id="fixedTimePicker" class="d-none" data-questionform-target="fixedTimePicker">
+                <div class="form-check form-check-inline">
+                    <input type="time" name="fixedTime" th:value="${fieldset.fixedTime}" id="fixedTime" required class="form-control"/>
+                </div>
+            </div>
         </div>
     </div>
     <th:block th:if="${fieldset.hasErrors()}">

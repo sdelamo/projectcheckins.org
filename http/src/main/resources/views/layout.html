@@ -25,7 +25,7 @@
         window.Stimulus = Application.start()
 
         Stimulus.register("questionform", class extends Controller {
-            static targets = ["dailyOnDayPicker", "onceAWeekDayPicker", "everyOtherWeekDayPicker", "onceAMonthOnTheFirstDayPicker"]
+            static targets = ["dailyOnDayPicker", "onceAWeekDayPicker", "everyOtherWeekDayPicker", "onceAMonthOnTheFirstDayPicker", "fixedTimePicker"]
             hide(el) {
                 el.classList.add("d-none")
                 el.classList.remove("d-block")
@@ -65,6 +65,18 @@
                 this.hide(this.onceAWeekDayPickerTarget);
                 this.hide(this.everyOtherWeekDayPickerTarget);
                 this.show(this.onceAMonthOnTheFirstDayPickerTarget);
+            }
+
+            timeOfDayBeginning() {
+                this.hide(this.fixedTimePickerTarget);
+            }
+
+            timeOfDayEnd() {
+                this.hide(this.fixedTimePickerTarget);
+            }
+
+            timeOfDayFixedTime() {
+                this.show(this.fixedTimePickerTarget);
             }
         })
     </script>

@@ -10,6 +10,7 @@ import org.projectcheckins.core.forms.QuestionUpdateForm;
 import org.projectcheckins.core.forms.TimeOfDay;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Set;
 
 @MicronautTest
@@ -19,7 +20,7 @@ class EclipseStoreQuestionRepositoryTest {
     void testCrud(EclipseStoreQuestionRepository questionRepository) {
 
         String title = "What are working on?";
-        String id = questionRepository.save(new QuestionSaveForm(title, HowOften.DAILY_ON, TimeOfDay.END,
+        String id = questionRepository.save(new QuestionSaveForm(title, HowOften.DAILY_ON, TimeOfDay.END, LocalTime.of(16, 30),
                 Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), null, null, null
                 ));
         assertThat(questionRepository.findAll())
@@ -30,7 +31,7 @@ class EclipseStoreQuestionRepositoryTest {
             .hasValueSatisfying(q -> q.title().equals(title));
 
         String updatedTitle = "What are you working on this week?";
-        questionRepository.update(new QuestionUpdateForm(id, updatedTitle, HowOften.DAILY_ON, TimeOfDay.END,
+        questionRepository.update(new QuestionUpdateForm(id, updatedTitle, HowOften.DAILY_ON, TimeOfDay.END, LocalTime.of(16, 30),
                 Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), null, null, null
                 ));
         assertThat(questionRepository.findById(id))

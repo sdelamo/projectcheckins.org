@@ -7,6 +7,7 @@ import org.projectcheckins.core.forms.HowOften;
 import org.projectcheckins.core.forms.TimeOfDay;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Set;
 
 public interface Question {
@@ -18,4 +19,5 @@ public interface Question {
     @NotNull HowOften howOften();
     @NotEmpty Set<DayOfWeek> days();
     @NotNull TimeOfDay timeOfDay();
+    @NotNull LocalTime fixedTime();
 }

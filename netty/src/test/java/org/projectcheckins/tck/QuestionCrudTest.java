@@ -51,7 +51,7 @@ class QuestionCrudTest {
         BlockingHttpClient client = httpClient.toBlocking();
 
         String title = "What are working on?";
-        String body = "title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END";
+        String body = "title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30";
         HttpRequest<?> request = BrowserRequest.POST("/question/save", body);
         assertThatCode(() -> client.exchange(request))
             .doesNotThrowAnyException();
