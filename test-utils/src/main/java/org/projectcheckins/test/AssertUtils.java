@@ -10,6 +10,7 @@ import org.assertj.core.api.ThrowableAssert;
 
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -46,7 +47,11 @@ public final class AssertUtils {
     }
 
     public static Predicate<HttpResponse<?>> htmlBody(String expected) {
-        return htmlBody(html -> html.contains("<!DOCTYPE html>"));
+        return htmlBody(html -> html.contains(expected));
+    }
+
+    public static Predicate<HttpResponse<?>> htmlBody(Pattern regex) {
+        return htmlBody(html -> regex.matcher(html).find());
     }
 
     public static Predicate<HttpResponse<?>> htmlBody() {

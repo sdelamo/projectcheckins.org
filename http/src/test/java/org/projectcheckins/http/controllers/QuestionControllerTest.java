@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 
 @Property(name = "micronaut.http.client.follow-redirects", value = StringUtils.FALSE)
 @Property(name = "spec.name", value = "QuestionControllerTest")
@@ -107,9 +108,8 @@ class QuestionControllerTest {
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("create").build()), String.class))
             .matches(htmlPage())
-            .matches(htmlBody("""
-                <input type="text" name="title"""));
-
+            .matches(htmlBody(Pattern.compile("""
+                <input type="text" class="form-control"\\s*id="title""")));
     }
 
     @Requires(property = "spec.name", value = "QuestionControllerTest")

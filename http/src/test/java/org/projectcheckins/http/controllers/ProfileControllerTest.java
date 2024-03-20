@@ -95,9 +95,9 @@ class ProfileControllerTest {
               LocalTime.of(9, 0),
               LocalTime.of(16, 30),
               TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
-              Format.MARKDOWN,
-              "first name",
-              "last name"
+              Format.WYSIWYG,
+              "Guillermo",
+              "Calvo"
       ));
     }
 
