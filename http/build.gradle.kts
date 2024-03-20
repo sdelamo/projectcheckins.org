@@ -3,6 +3,7 @@ plugins {
 }
 dependencies {
     api(project(":core"))
+    api(project(":bootstrap"))
 
     // OpenAPI https://micronaut-projects.github.io/micronaut-openapi/latest/guide/
     annotationProcessor("io.micronaut.openapi:micronaut-openapi")

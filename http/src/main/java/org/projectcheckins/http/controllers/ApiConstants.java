@@ -13,6 +13,7 @@ public interface ApiConstants {
     String PATH_VARIABLE_ID = "{id}";
 
     String SLASH = "/";
+    String DOT = ".";
     String ACTION_DELETE = "delete";
 
     String ACTION_SHOW = "show";
@@ -35,4 +36,5 @@ public interface ApiConstants {
     String PATH_UPDATE = SLASH + PATH_VARIABLE_ID + SLASH + ACTION_UPDATE;
     String PATH_LIST = SLASH + ACTION_LIST;
     String MODEL_FORM = "form";
+    String MODEL_BREADCRUMBS = "breadcrumbs";
 }

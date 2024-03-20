@@ -108,6 +108,8 @@ class QuestionControllerTest {
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("create").build()), String.class))
             .matches(htmlPage())
+            .matches(htmlBody("""
+                <li class="breadcrumb-item"><a href="/question/list">"""))
             .matches(htmlBody(Pattern.compile("""
                 <input type="text" class="form-control"\\s*id="title""")));
     }

@@ -26,6 +26,7 @@ import io.micronaut.security.rules.SecurityRule;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.QuestionRepository;
@@ -47,10 +48,12 @@ class QuestionController {
     // LIST
     public static final String PATH_LIST = PATH + ApiConstants.PATH_LIST;
     private static final String VIEW_LIST = PATH + ApiConstants.VIEW_LIST;
+    private static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(Message.of("Questions", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_LIST), PATH_LIST);
 
     // CREATE
     private static final String PATH_CREATE = PATH + ApiConstants.PATH_CREATE;
     private static final String VIEW_CREATE = PATH + ApiConstants.VIEW_CREATE;
+    private static final Breadcrumb BREADCRUMB_CREATE = new Breadcrumb(Message.of("New Question", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_CREATE));
 
     // SAVE
     private static final String PATH_SAVE = PATH + ApiConstants.PATH_SAVE;
@@ -91,7 +94,8 @@ class QuestionController {
 
     @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE)
     Map<String, Object> questionCreate() {
-        return Map.of(MODEL_FIELDSET, new QuestionSaveForm(null));
+        return Map.of(MODEL_FIELDSET, new QuestionSaveForm(null),
+                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_CREATE));
     }
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionSave(@NonNull @NotNull @Valid @Body QuestionSaveForm form,
