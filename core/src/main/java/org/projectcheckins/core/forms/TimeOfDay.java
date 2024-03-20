@@ -10,7 +10,7 @@ public enum TimeOfDay {
     END((t, p) -> p.endOfDay()),
     FIXED((t, p) -> t);
 
-    private final BiFunction<LocalTime, Profile, LocalTime> function;
+    private transient final BiFunction<LocalTime, Profile, LocalTime> function;
 
     TimeOfDay(BiFunction<LocalTime, Profile, LocalTime> function) {
         this.function = function;
