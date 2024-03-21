@@ -98,7 +98,9 @@ class QuestionControllerTest {
             .matches(htmlPage());
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("edit").build()), String.class))
-            .matches(htmlPage());
+            .matches(htmlPage())
+            .matches(htmlBody("""
+                <li class="breadcrumb-item"><a href="/question/list">"""));
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("yyy").path("edit").build()), String.class))
             .matches(redirection("/notFound"));

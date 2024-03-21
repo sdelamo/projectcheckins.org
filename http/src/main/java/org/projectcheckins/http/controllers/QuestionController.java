@@ -62,10 +62,12 @@ class QuestionController {
     private static final String PATH_SHOW = PATH + ApiConstants.PATH_SHOW;
     public static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_SHOW).build();
     private static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
+    private static final Function<Question, Breadcrumb> BREADCRUMB_SHOW = question -> new Breadcrumb(Message.of(question.title()), PATH_SHOW_BUILDER.andThen(URI::toString).apply(question.id()));
 
     // EDIT
     private static final String PATH_EDIT = PATH + ApiConstants.PATH_EDIT;
     private static final String VIEW_EDIT = PATH + ApiConstants.VIEW_EDIT;
+    private static final Breadcrumb BREADCRUMB_EDIT = new Breadcrumb(Message.of("Edit Question", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_EDIT));
 
     // UPDATE
     private static final String PATH_UPDATE = PATH + ApiConstants.PATH_UPDATE;
@@ -185,7 +187,8 @@ class QuestionController {
                 question.howOften() == HowOften.EVERY_OTHER_WEEK ? question.days().stream().findFirst().orElseThrow() : DayOfWeek.MONDAY,
                 question.howOften() == HowOften.ONCE_A_MONTH_ON_THE_FIRST ? question.days().stream().findFirst().orElseThrow() : DayOfWeek.MONDAY
         );
-        return Map.of(MODEL_QUESTION, question, MODEL_FIELDSET, fieldset);
+        return Map.of(MODEL_QUESTION, question, MODEL_FIELDSET, fieldset,
+                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_SHOW.apply(question), BREADCRUMB_EDIT));
     }
 
 }
