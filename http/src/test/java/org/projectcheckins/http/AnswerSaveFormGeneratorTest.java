@@ -99,7 +99,7 @@ class AnswerSaveFormGeneratorTest {
 
         @NonNull
         private Profile createProfile(@NonNull Format format) {
-            return new ProfileRecord("delamos@unityfoundation.io",
+            return new ProfileRecord("id", "delamos@unityfoundation.io",
                     TimeZone.getDefault(),
                     DayOfWeek.MONDAY,
                     LocalTime.of(9, 0),

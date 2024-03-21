@@ -10,6 +10,7 @@ import org.projectcheckins.annotations.Generated;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 
+import java.util.List;
 import java.util.Optional;
 
 @Generated // "ignore for jacoco"
@@ -17,6 +18,12 @@ import java.util.Optional;
 @Secondary
 @Singleton
 public class SecondaryProfileRepository implements ProfileRepository {
+
+    @Override
+    public List<? extends Profile> list(Tenant tenant) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
     @Override
     public Optional<? extends Profile> findByAuthentication(Authentication authentication, Tenant tenant) {
         throw new UnsupportedOperationException("Not implemented");

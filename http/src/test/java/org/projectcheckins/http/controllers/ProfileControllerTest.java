@@ -25,6 +25,7 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -87,8 +88,25 @@ class ProfileControllerTest {
   static class ProfileRepositoryMock implements ProfileRepository {
 
     @Override
+    public List<ProfileRecord> list(Tenant tenant) {
+      return List.of(new ProfileRecord(
+              "id",
+              "calvog@unityfoundation.io",
+              TimeZone.getDefault(),
+              DayOfWeek.MONDAY,
+              LocalTime.of(9, 0),
+              LocalTime.of(16, 30),
+              TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
+              Format.WYSIWYG,
+              "Guillermo",
+              "Calvo"
+      ));
+    }
+
+    @Override
     public Optional<ProfileRecord> findByAuthentication(Authentication authentication, Tenant tenant) {
       return Optional.of(new ProfileRecord(
+              authentication.getName(),
               authentication.getAttributes().get("email").toString(),
               TimeZone.getDefault(),
               DayOfWeek.MONDAY,

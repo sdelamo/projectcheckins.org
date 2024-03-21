@@ -14,6 +14,7 @@ import java.util.TimeZone;
 
 @Serdeable
 public record ProfileRecord(
+        @NonNull @NotBlank String id,
         @NonNull @NotBlank @Email String email,
         @NotNull TimeZone timeZone,
         @NotNull DayOfWeek firstDayOfWeek,

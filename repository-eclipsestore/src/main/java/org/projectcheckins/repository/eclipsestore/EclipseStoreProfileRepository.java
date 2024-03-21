@@ -9,6 +9,7 @@ import io.micronaut.security.authentication.Authentication;
 import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Optional;
 
 import org.projectcheckins.core.exceptions.UserNotFoundException;
@@ -21,6 +22,12 @@ class EclipseStoreProfileRepository implements ProfileRepository {
 
   public EclipseStoreProfileRepository(RootProvider<Data> rootProvider) {
     this.rootProvider = rootProvider;
+  }
+
+  @Override
+  @NonNull
+  public List<UserEntity> list(@Nullable Tenant tenant) {
+    return rootProvider.root().getUsers();
   }
 
   @Override
