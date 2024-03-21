@@ -112,6 +112,7 @@ class QuestionController {
         return questionRepository.findById(id, tenant)
                 .map(question -> HttpResponse.ok(Map.of(
                         MODEL_QUESTION, question,
+                        ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
                         ANSWER_FORM, answerFormSave
                 )))
                 .orElseGet(NotFoundController::notFoundRedirect);

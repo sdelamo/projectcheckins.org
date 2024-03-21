@@ -104,7 +104,9 @@ class QuestionControllerTest {
             .matches(redirection("/notFound"));
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("xxx").path("show").build()), String.class))
-            .matches(htmlPage());
+            .matches(htmlPage())
+            .matches(htmlBody("""
+                <li class="breadcrumb-item"><a href="/question/list">"""));
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("create").build()), String.class))
             .matches(htmlPage())
