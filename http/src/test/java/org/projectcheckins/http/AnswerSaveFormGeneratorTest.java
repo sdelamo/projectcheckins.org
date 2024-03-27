@@ -88,10 +88,10 @@ class AnswerSaveFormGeneratorTest {
     static class ProfileRepositoryReplacement extends SecondaryProfileRepository {
 
         @Override
-        public Optional<? extends Profile> findByAuthentication(Authentication authentication, Tenant tenant) {
-            if (authentication.getName().equals(USER_ID_MARKDOWN)) {
+        public Optional<? extends Profile> findById(String id, Tenant tenant) {
+            if (id.equals(USER_ID_MARKDOWN)) {
                 return Optional.of(createProfile(Format.MARKDOWN));
-            } else if (authentication.getName().equals(USER_ID_WYSIWYG)) {
+            } else if (id.equals(USER_ID_WYSIWYG)) {
                 return Optional.of(createProfile(Format.WYSIWYG));
             }
             return Optional.empty();

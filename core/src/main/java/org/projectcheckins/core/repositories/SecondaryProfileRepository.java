@@ -25,7 +25,7 @@ public class SecondaryProfileRepository implements ProfileRepository {
     }
 
     @Override
-    public Optional<? extends Profile> findByAuthentication(Authentication authentication, Tenant tenant) {
+    public Optional<? extends Profile> findById(String id, Tenant tenant) {
         throw new UnsupportedOperationException("Not implemented");
     }
 

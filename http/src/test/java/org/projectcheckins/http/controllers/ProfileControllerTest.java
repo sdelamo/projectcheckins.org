@@ -104,10 +104,10 @@ class ProfileControllerTest {
     }
 
     @Override
-    public Optional<ProfileRecord> findByAuthentication(Authentication authentication, Tenant tenant) {
+    public Optional<ProfileRecord> findById(String id, Tenant tenant) {
       return Optional.of(new ProfileRecord(
-              authentication.getName(),
-              authentication.getAttributes().get("email").toString(),
+              id,
+              "calvog@unityfoundation.io",
               TimeZone.getDefault(),
               DayOfWeek.MONDAY,
               LocalTime.of(9, 0),

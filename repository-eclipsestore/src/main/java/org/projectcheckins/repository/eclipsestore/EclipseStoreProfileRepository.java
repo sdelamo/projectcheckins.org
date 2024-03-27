@@ -8,6 +8,7 @@ import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.authentication.Authentication;
 import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
@@ -32,8 +33,8 @@ class EclipseStoreProfileRepository implements ProfileRepository {
 
   @Override
   @NonNull
-  public Optional<UserEntity> findByAuthentication(@NotNull Authentication authentication, @Nullable Tenant tenant) {
-    return findFirst(authentication);
+  public Optional<UserEntity> findById(@NotBlank String id, @Nullable Tenant tenant) {
+    return findFirst(id);
   }
 
   @Override
@@ -47,8 +48,11 @@ class EclipseStoreProfileRepository implements ProfileRepository {
   }
 
   private Optional<UserEntity> findFirst(Authentication authentication) {
-    final String name = authentication.getName();
-    return rootProvider.root().getUsers().stream().filter(u -> u.id().equals(name)).findFirst();
+    return findFirst(authentication.getName());
+  }
+
+  private Optional<UserEntity> findFirst(String id) {
+    return rootProvider.root().getUsers().stream().filter(u -> u.id().equals(id)).findFirst();
   }
 
   private UserEntity updateEntity(UserEntity entity, ProfileUpdate profileUpdate) {

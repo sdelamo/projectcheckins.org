@@ -60,7 +60,7 @@ class QuestionControllerFormTest {
     @Singleton
     static class ProfileRepositoryMock extends SecondaryProfileRepository {
         @Override
-        public Optional<? extends Profile> findByAuthentication(Authentication authentication, Tenant tenant) {
+        public Optional<? extends Profile> findById(String id, Tenant tenant) {
             return Optional.of(new ProfileRecord(SDELAMO.getName(), SDELAMO.getAttributes().get("email").toString(),
                     TimeZone.getDefault(),
                     DayOfWeek.MONDAY,
