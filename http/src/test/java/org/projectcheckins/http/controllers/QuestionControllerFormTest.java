@@ -32,9 +32,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Profile;
+import org.projectcheckins.core.api.PublicProfile;
 import org.projectcheckins.core.api.QuestionSave;
 import org.projectcheckins.core.api.QuestionUpdate;
 import org.projectcheckins.core.forms.*;
+import org.projectcheckins.core.repositories.ProfileRepository;
 import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
@@ -60,6 +62,19 @@ class QuestionControllerFormTest {
     @Singleton
     static class ProfileRepositoryMock extends SecondaryProfileRepository {
         @Override
+        public List<? extends Profile> list(Tenant tenant) {
+            return List.of(new ProfileRecord(SDELAMO.getName(), SDELAMO.getAttributes().get("email").toString(),
+                    TimeZone.getDefault(),
+                    DayOfWeek.MONDAY,
+                    LocalTime.of(9, 0),
+                    LocalTime.of(16, 30),
+                    TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
+                    Format.WYSIWYG,
+                    null,
+                    null));
+        }
+
+        @Override
         public Optional<? extends Profile> findById(String id, Tenant tenant) {
             return Optional.of(new ProfileRecord(SDELAMO.getName(), SDELAMO.getAttributes().get("email").toString(),
                     TimeZone.getDefault(),
@@ -80,7 +95,7 @@ class QuestionControllerFormTest {
         authenticationFetcher.setAuthentication(SDELAMO);
         BlockingHttpClient client = httpClient.toBlocking();
         String title = "What are you working on?";
-        HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", "title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30"));
+        HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", "title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1"));
         assertThat(saveResponse)
             .matches(redirection(s -> s.startsWith("/question") && s.endsWith("/show")));
 
@@ -101,7 +116,7 @@ class QuestionControllerFormTest {
 
         String updatedTitle = "What did you do today?";
         URI updateUri = UriBuilder.of("/question").path(id).path("update").build();
-        String updateBody = "id=" + id + "&title="+updatedTitle+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30";
+        String updateBody = "id=" + id + "&title="+updatedTitle+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1";
 
         assertThat(client.exchange(BrowserRequest.POST(updateUri.toString(), updateBody)))
             .matches(redirection(s -> s.equals("/question/" + id + "/show")));
@@ -110,7 +125,7 @@ class QuestionControllerFormTest {
             .doesNotContain(title)
             .contains(updatedTitle);
 
-        String updateBodyWithNotMatchingId = "id=yyy&title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30";
+        String updateBodyWithNotMatchingId = "id=yyy&title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1";
 
         assertThatThrowsHttpClientResponseException(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), updateBodyWithNotMatchingId)))
                 .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -133,7 +148,7 @@ class QuestionControllerFormTest {
         @NonNull
         public String save(@NotNull @Valid QuestionSave form, @Nullable Tenant tenant) {
             String id = "xxx";
-            questions.put(id, new QuestionRecord(id, form.title(), form.howOften(), form.days(), form.timeOfDay(), form.fixedTime()));
+            questions.put(id, new QuestionRecord(id, form.title(), form.howOften(), form.days(), form.timeOfDay(), form.fixedTime(), form.respondents()));
             return id;
         }
 
@@ -146,7 +161,7 @@ class QuestionControllerFormTest {
         @Override
         public void update(@NotNull @Valid QuestionUpdate form, @Nullable Tenant tenant) {
             if (questions.containsKey(form.id())) {
-                questions.put(form.id(), new QuestionRecord(form.id(),form.title(), form.howOften(), form.days(), form.timeOfDay(), form.fixedTime()));
+                questions.put(form.id(), new QuestionRecord(form.id(),form.title(), form.howOften(), form.days(), form.timeOfDay(), form.fixedTime(), form.respondents()));
             }
         }
 

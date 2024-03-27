@@ -9,6 +9,8 @@
     <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
     <a th:href="@{|/question/${question.id}/edit|}" th:text="#{question.edit}"></a>
 
+    <div th:replace="~{question/_summary :: summary(${question})}"/>
+
     <h1 th:text="${question.title}"></h1>
 
 

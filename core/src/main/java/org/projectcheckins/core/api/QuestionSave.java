@@ -16,4 +16,5 @@ public interface QuestionSave {
     @NotEmpty Set<DayOfWeek> days();
     @NotNull TimeOfDay timeOfDay();
     @NotNull LocalTime fixedTime();
+    @NotEmpty Set<? extends Respondent> respondents();
 }

@@ -8,6 +8,7 @@ import jakarta.inject.Singleton;
 public class NotEmptyMessages extends StaticMessageSource {
 
     public static final String NOT_EMPTY_DAYS_MESSAGE = "You must select at least one day.";
+    public static final String NOT_EMPTY_RESPONDENTS_MESSAGE = "You must select at least one respondent.";
 
     private static final String MESSAGE_SUFFIX = ".message";
 
@@ -17,5 +18,6 @@ public class NotEmptyMessages extends StaticMessageSource {
     @PostConstruct
     void init() {
         addMessage(NotEmptyDays.class.getName() + MESSAGE_SUFFIX, NotEmptyMessages.NOT_EMPTY_DAYS_MESSAGE);
+        addMessage(NotEmptyRespondents.class.getName() + MESSAGE_SUFFIX, NotEmptyMessages.NOT_EMPTY_RESPONDENTS_MESSAGE);
     }
 }

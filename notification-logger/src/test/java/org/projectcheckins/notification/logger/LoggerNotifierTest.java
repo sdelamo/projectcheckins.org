@@ -25,7 +25,7 @@ class LoggerNotifierTest {
     void notify(LoggerNotifier notifier) {
         final Question question = new QuestionRecord("id", "title", HowOften.DAILY_ON,
                 Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
-                TimeOfDay.END, LocalTime.of(16, 30));
+                TimeOfDay.END, LocalTime.of(16, 30), Set.of(new RespondentRecord("profileId")));
         final Profile profile = new ProfileRecord("id", "email@example.com", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 9), LocalTime.of(16, 0), TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "Guillermo", "Calvo");
         final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
         ((Logger) LoggerFactory.getLogger(LoggerNotifier.class)).addAppender(listAppender);

@@ -54,9 +54,10 @@ public class ValidationAssert<T> extends AbstractAssert<ValidationAssert<T>, Set
     }
 
 
-    public void hasErrorMessage(String message) {
+    public ValidationAssert<T> hasErrorMessage(String message) {
         Assertions.assertThat(actual)
                 .extracting(ConstraintViolation::getMessage)
                 .anyMatch(message::equals);
+        return this;
     }
 }

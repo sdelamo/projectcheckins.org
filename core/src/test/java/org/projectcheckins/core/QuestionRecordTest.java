@@ -10,6 +10,7 @@ import io.micronaut.validation.validator.Validator;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.forms.HowOften;
 import org.projectcheckins.core.forms.QuestionRecord;
+import org.projectcheckins.core.forms.RespondentRecord;
 import org.projectcheckins.core.forms.TimeOfDay;
 
 import java.time.DayOfWeek;
@@ -22,18 +23,20 @@ class QuestionRecordTest {
 
     @Test
     void questionRecordValidation(Validator validator) {
-        assertThat(validator.validate(new QuestionRecord(null, null, null, null, null, null)))
+        assertThat(validator.validate(new QuestionRecord(null, null, null, null, null, null, null)))
                 .hasNotBlankViolation("id")
                 .hasNotBlankViolation("title")
                 .hasNotNullViolation("howOften")
                 .hasNotNullViolation("days")
                 .hasNotNullViolation("timeOfDay")
-                .hasNotNullViolation("fixedTime");
-        assertThat(validator.validate(new QuestionRecord("", "", null, Collections.emptySet(), null, null)))
+                .hasNotNullViolation("fixedTime")
+                .hasNotNullViolation("respondents");
+        assertThat(validator.validate(new QuestionRecord("", "", null, Collections.emptySet(), null, null, Collections.emptySet())))
                 .hasNotBlankViolation("id")
                 .hasNotBlankViolation("title")
-                .hasNotEmptyViolation("days");
-        assertThat(validator.validate(new QuestionRecord("xxx", "What are you working on", HowOften.DAILY_ON, Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), TimeOfDay.END, LocalTime.of(16, 30))))
+                .hasNotEmptyViolation("days")
+                .hasNotEmptyViolation("respondents");
+        assertThat(validator.validate(new QuestionRecord("xxx", "What are you working on", HowOften.DAILY_ON, Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), TimeOfDay.END, LocalTime.of(16, 30), Set.of(new RespondentRecord("userId")))))
                 .isValid();
     }
 

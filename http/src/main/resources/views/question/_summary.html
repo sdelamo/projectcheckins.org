@@ -1,0 +1,52 @@
+<th:block th:fragment="summary(question)" xmlns:th="http://www.thymeleaf.org">
+    <div id="question-summary">
+
+        <th:block th:switch="${question.respondents.size}">
+            <th:block th:case="1"
+                      th:text="#{summary.respondents.one}"/>
+            <th:block th:case="*"
+                      th:text="#{summary.respondents.many(${question.respondents.size})}"/>
+        </th:block>
+
+        <th:block th:switch="${question.howOften}" th:with="
+            days=${question.days},
+            firstDay=${days.stream().findFirst().orElseThrow()},
+            firstDayName=${#messages.msgOrNull('dayofweek.' + firstDay.toString().toLowerCase())},
+            mondayToFriday=${days.size == 5 && !days.contains(@java.time.DayOfWeek@SATURDAY) && !days.contains(@java.time.DayOfWeek@SUNDAY)}">
+            <th:block th:case="${@org.projectcheckins.core.forms.HowOften@DAILY_ON}">
+                <th:block th:if="${days.size == 1}"
+                          th:text="#{summary.howOften.weekly(${firstDayName})}"/>
+                <th:block th:if="${days.size == 7}"
+                          th:text="#{summary.howOften.every.day}"/>
+                <th:block th:if="${mondayToFriday}"
+                          th:text="#{summary.howOften.every.weekday}"/>
+                <th:block th:unless="${days.size == 1 || days.size == 7 || mondayToFriday}">
+                    <th:block th:text="#{summary.howOften.daily}"/>
+                    <th:block th:each="day, status : ${days.stream().sorted().toList()}">
+                        <th:block th:if="${!status.first && status.last}"
+                                  th:text="#{summary.howOften.and}"/>
+                        <th:block th:with="dayName=${#messages.msgOrNull('dayofweek.' + day.toString().toLowerCase())}"
+                                th:text="${dayName}"/><th:block th:if="${!status.last && status.size > 2}"
+                                                                th:text="#{summary.howOften.comma}"/>
+                    </th:block>
+                </th:block>
+            </th:block>
+            <th:block th:case="${@org.projectcheckins.core.forms.HowOften@ONCE_A_WEEK}"
+                      th:text="#{summary.howOften.weekly(${firstDayName})}"/>
+            <th:block th:case="${@org.projectcheckins.core.forms.HowOften@EVERY_OTHER_WEEK}"
+                      th:text="#{summary.howOften.every.other(${firstDayName})}"/>
+            <th:block th:case="${@org.projectcheckins.core.forms.HowOften@ONCE_A_MONTH_ON_THE_FIRST}"
+                      th:text="#{summary.howOften.monthly(${firstDayName})}"/>
+        </th:block>
+
+        <th:block th:switch="${question.timeOfDay}">
+            <th:block th:case="${@org.projectcheckins.core.forms.TimeOfDay@BEGINNING}"
+                      th:text="#{summary.timeOfDay.beginning}"/>
+            <th:block th:case="${@org.projectcheckins.core.forms.TimeOfDay@END}"
+                      th:text="#{summary.timeOfDay.end}"/>
+            <th:block th:case="${@org.projectcheckins.core.forms.TimeOfDay@FIXED}"
+                      th:text="#{summary.timeOfDay.fixed(${question.fixedTime})}"/>
+        </th:block>
+
+    </div>
+</th:block>

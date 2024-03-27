@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Question;
+import org.projectcheckins.core.api.Respondent;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -17,6 +18,7 @@ public record QuestionRecord(
         @NotNull HowOften howOften,
         @NotEmpty Set<DayOfWeek> days,
         @NotNull TimeOfDay timeOfDay,
-        @NotNull LocalTime fixedTime
+        @NotNull LocalTime fixedTime,
+        @NotEmpty Set<? extends Respondent> respondents
 ) implements Question {
 }

@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.QuestionSave;
+import org.projectcheckins.core.api.Respondent;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 @NotEmptyDays
+@NotEmptyRespondents
 @Serdeable
 public record QuestionSaveForm(@NotBlank String title,
                                @NotNull HowOften howOften,
@@ -29,6 +31,7 @@ public record QuestionSaveForm(@NotBlank String title,
                                @Nullable DayOfWeek onceAWeekDay,
                                @Nullable DayOfWeek everyOtherWeekDay,
                                @Nullable DayOfWeek onceAMonthOnTheFirstDay,
+                               @Nullable Set<String> respondentIds,
                                @Nullable Map<String, List<Message>> fieldErrors,
                                @Nullable List<Message> errors) implements QuestionSave, QuestionForm {
 
@@ -43,6 +46,7 @@ public record QuestionSaveForm(@NotBlank String title,
                 form.onceAWeekDay(),
                 form.everyOtherWeekDay(),
                 form.onceAMonthOnTheFirstDay(),
+                form.respondentIds() != null ? form.respondentIds() : Collections.emptySet(),
                 errors.fieldErrors(),
                 errors.errors());
     }
@@ -52,6 +56,11 @@ public record QuestionSaveForm(@NotBlank String title,
         return QuestionForm.super.days();
     }
 
+    @Override
+    public Set<? extends Respondent> respondents() {
+        return QuestionForm.super.respondents();
+    }
+
     public QuestionSaveForm(@NonNull String title,
                             @NonNull HowOften howOften,
                             @NonNull TimeOfDay timeOfDay,
@@ -59,11 +68,12 @@ public record QuestionSaveForm(@NotBlank String title,
                             @Nullable Set<DayOfWeek> dailyOnDay,
                             @Nullable DayOfWeek onceAWeekDay,
                             @Nullable DayOfWeek everyOtherWeekDay,
-                            @Nullable DayOfWeek onceAMonthOnTheFirstDay) {
-        this(title, howOften, timeOfDay, fixedTime, dailyOnDay, onceAWeekDay, everyOtherWeekDay, onceAMonthOnTheFirstDay, null, null);
+                            @Nullable DayOfWeek onceAMonthOnTheFirstDay,
+                            @Nullable Set<String> respondents) {
+        this(title, howOften, timeOfDay, fixedTime, dailyOnDay, onceAWeekDay, everyOtherWeekDay, onceAMonthOnTheFirstDay, respondents, null, null);
     }
 
     public QuestionSaveForm(String title) {
-        this(title, HowOften.DAILY_ON, TimeOfDay.END, LocalTime.of(16, 30), Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), DayOfWeek.MONDAY, DayOfWeek.MONDAY, DayOfWeek.MONDAY, null, null);
+        this(title, HowOften.DAILY_ON, TimeOfDay.END, LocalTime.of(16, 30), Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), DayOfWeek.MONDAY, DayOfWeek.MONDAY, DayOfWeek.MONDAY, Collections.emptySet(), null, null);
     }
 }

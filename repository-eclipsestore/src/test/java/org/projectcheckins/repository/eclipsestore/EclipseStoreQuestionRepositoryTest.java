@@ -21,7 +21,7 @@ class EclipseStoreQuestionRepositoryTest {
 
         String title = "What are working on?";
         String id = questionRepository.save(new QuestionSaveForm(title, HowOften.DAILY_ON, TimeOfDay.END, LocalTime.of(16, 30),
-                Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), null, null, null
+                Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), null, null, null, Set.of("profileId")
                 ));
         assertThat(questionRepository.findAll())
             .anyMatch(q -> q.title().equals(title));
@@ -32,7 +32,7 @@ class EclipseStoreQuestionRepositoryTest {
 
         String updatedTitle = "What are you working on this week?";
         questionRepository.update(new QuestionUpdateForm(id, updatedTitle, HowOften.DAILY_ON, TimeOfDay.END, LocalTime.of(16, 30),
-                Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), null, null, null
+                Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), null, null, null, Set.of("profileId")
                 ));
         assertThat(questionRepository.findById(id))
             .isNotEmpty()

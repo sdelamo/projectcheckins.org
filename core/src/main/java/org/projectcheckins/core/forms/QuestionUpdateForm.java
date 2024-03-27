@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.QuestionUpdate;
+import org.projectcheckins.core.api.Respondent;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 @NotEmptyDays
+@NotEmptyRespondents
 @Serdeable
 public record QuestionUpdateForm(@NonNull String id,
                                  @NotBlank String title,
@@ -28,6 +30,7 @@ public record QuestionUpdateForm(@NonNull String id,
                                  @Nullable DayOfWeek onceAWeekDay,
                                  @Nullable DayOfWeek everyOtherWeekDay,
                                  @Nullable DayOfWeek onceAMonthOnTheFirstDay,
+                                 @Nullable Set<String> respondentIds,
                                  @Nullable Map<String, List<Message>> fieldErrors,
                                  @Nullable List<Message> errors) implements QuestionUpdate, QuestionForm {
 
@@ -39,8 +42,9 @@ public record QuestionUpdateForm(@NonNull String id,
                               @Nullable Set<DayOfWeek> dailyOnDay,
                               @Nullable DayOfWeek onceAWeekDay,
                               @Nullable DayOfWeek everyOtherWeekDay,
-                              @Nullable DayOfWeek onceAMonthOnTheFirstDay) {
-        this(id, title, howOften, timeOfDay, fixedTime, dailyOnDay, onceAWeekDay, everyOtherWeekDay, onceAMonthOnTheFirstDay, null, null);
+                              @Nullable DayOfWeek onceAMonthOnTheFirstDay,
+                              @Nullable Set<String> respondents) {
+        this(id, title, howOften, timeOfDay, fixedTime, dailyOnDay, onceAWeekDay, everyOtherWeekDay, onceAMonthOnTheFirstDay, respondents, null, null);
     }
 
     @NonNull
@@ -55,6 +59,7 @@ public record QuestionUpdateForm(@NonNull String id,
                 form.onceAWeekDay(),
                 form.everyOtherWeekDay(),
                 form.onceAMonthOnTheFirstDay(),
+                form.respondentIds() != null ? form.respondentIds() : Collections.emptySet(),
                 errors.fieldErrors(),
                 errors.errors());
     }
@@ -63,5 +68,10 @@ public record QuestionUpdateForm(@NonNull String id,
     @NotEmpty
     public Set<DayOfWeek> days() {
         return QuestionForm.super.days();
+    }
+
+    @Override
+    public Set<? extends Respondent> respondents() {
+        return QuestionForm.super.respondents();
     }
 }

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Question;
+import org.projectcheckins.core.api.Respondent;
 import org.projectcheckins.core.forms.HowOften;
 import org.projectcheckins.core.forms.TimeOfDay;
 
@@ -32,6 +33,9 @@ public class QuestionEntity implements Question {
 
     @NotNull
     private LocalTime fixedTime;
+
+    @NotEmpty
+    private Set<RespondentEntity> respondents;
 
     @Override
     public String id() {
@@ -71,6 +75,12 @@ public class QuestionEntity implements Question {
         return fixedTime;
     }
 
+    @Override
+    @NotEmpty
+    public Set<RespondentEntity> respondents() {
+        return respondents;
+    }
+
     public void title(String title) {
         this.title = title;
     }
@@ -89,5 +99,9 @@ public class QuestionEntity implements Question {
 
     public void fixedTime(@NonNull LocalTime fixedTime) {
         this.fixedTime = fixedTime;
+    }
+
+    public void respondents(@NotEmpty Set<? extends Respondent> respondents) {
+        this.respondents = RespondentEntity.toEntities(respondents);
     }
 }
