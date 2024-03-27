@@ -10,7 +10,9 @@ import org.projectcheckins.core.forms.TimeOfDay;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class QuestionEntity implements Question {
     @NotBlank
@@ -23,7 +25,7 @@ public class QuestionEntity implements Question {
     private HowOften howOften;
 
     @NotEmpty
-    private Set<DayOfWeek> days;
+    private List<DayOfWeek> days;
 
     @NotNull
     private TimeOfDay timeOfDay;
@@ -54,7 +56,7 @@ public class QuestionEntity implements Question {
     @Override
     @NotEmpty
     public Set<DayOfWeek> days() {
-        return days;
+        return days.stream().collect(Collectors.toSet());
     }
 
     @Override
@@ -78,7 +80,7 @@ public class QuestionEntity implements Question {
     }
 
     public void days(@NotEmpty Set<DayOfWeek> days) {
-        this.days = days;
+        this.days = days.stream().toList();
     }
 
     public void timeOfDay(@NonNull TimeOfDay timeOfDay) {
