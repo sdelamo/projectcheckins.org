@@ -5,11 +5,16 @@ import io.micronaut.core.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.Set;
 
 public interface QuestionForm extends ValidatedFieldset {
     @NotNull HowOften howOften();
+    @NotNull
+    TimeOfDay timeOfDay();
+    @NotNull
+    LocalTime fixedTime();
     @Nullable
     Set<DayOfWeek> dailyOnDay();
     @Nullable
