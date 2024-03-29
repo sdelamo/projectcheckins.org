@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.time.DayOfWeek.*;
+import static java.time.ZonedDateTime.now;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.projectcheckins.core.forms.HowOften.*;
 import static org.projectcheckins.core.forms.TimeOfDay.*;
@@ -30,8 +31,8 @@ class QuestionSummaryTest {
 
     static final LocalTime TEN_SHARP = LocalTime.of(10, 0);
     static final LocalTime TWELVE_THIRTY = LocalTime.of(12, 30);
-    static final Respondent RESPONDENT_1 = new RespondentRecord("user1");
-    static final Respondent RESPONDENT_2 = new RespondentRecord("user2");
+    static final Respondent RESPONDENT_1 = new RespondentRecord("user1", now());
+    static final Respondent RESPONDENT_2 = new RespondentRecord("user2", now());
     static final Set<Respondent> ONE_PERSON = Set.of(RESPONDENT_1);
     static final Set<Respondent> TWO_PEOPLE = Set.of(RESPONDENT_1, RESPONDENT_2);
 

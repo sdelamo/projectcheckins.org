@@ -3,12 +3,12 @@ package org.projectcheckins.core.repositories;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.multitenancy.Tenant;
+import io.micronaut.validation.Validated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Question;
-import org.projectcheckins.core.api.QuestionSave;
-import org.projectcheckins.core.api.QuestionUpdate;
+import org.projectcheckins.core.forms.Saved;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,12 +16,13 @@ import java.util.Optional;
 public interface QuestionRepository {
 
     @NonNull
-    String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant);
+    String save(@NotNull @Valid Question questionSave, @Nullable Tenant tenant);
 
     @NonNull
     Optional<? extends Question> findById(@NotBlank String id, @Nullable Tenant tenant);
 
-    void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant);
+    @Validated(groups = Saved.class)
+    void update(@NotNull @Valid Question questionUpdate, @Nullable Tenant tenant);
 
     @NonNull
     List<? extends Question> findAll(@Nullable Tenant tenant);
@@ -29,7 +30,7 @@ public interface QuestionRepository {
     void deleteById(@NotBlank String id, @Nullable Tenant tenant);
 
     @NonNull
-    default String save(@NotNull @Valid QuestionSave questionSave) {
+    default String save(@NotNull @Valid Question questionSave) {
         return save(questionSave, null);
     }
 
@@ -38,7 +39,8 @@ public interface QuestionRepository {
         return findById(id, null);
     }
 
-    default void update(@NotNull @Valid QuestionUpdate questionUpdate) {
+    @Validated(groups = Saved.class)
+    default void update(@NotNull @Valid Question questionUpdate) {
         update(questionUpdate, null);
     }
 

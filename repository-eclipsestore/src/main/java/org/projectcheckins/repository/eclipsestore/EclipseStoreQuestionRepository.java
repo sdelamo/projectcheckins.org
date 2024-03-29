@@ -10,8 +10,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.exceptions.QuestionNotFoundException;
-import org.projectcheckins.core.api.QuestionSave;
-import org.projectcheckins.core.api.QuestionUpdate;
+import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.idgeneration.IdGenerator;
 import org.projectcheckins.core.repositories.QuestionRepository;
 
@@ -31,7 +30,7 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
 
     @Override
     @NonNull
-    public String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant) {
+    public String save(@NotNull @Valid Question questionSave, @Nullable Tenant tenant) {
         QuestionEntity entity = new QuestionEntity();
         String id = idGenerator.generate();
         entity.id(id);
@@ -53,7 +52,7 @@ class EclipseStoreQuestionRepository implements QuestionRepository {
     }
 
     @Override
-    public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
+    public void update(@NotNull @Valid Question questionUpdate, @Nullable Tenant tenant) {
         QuestionEntity question = findEntityById(questionUpdate.id()).orElseThrow(QuestionNotFoundException::new);
         question.title(questionUpdate.title());
         question.howOften(questionUpdate.howOften());

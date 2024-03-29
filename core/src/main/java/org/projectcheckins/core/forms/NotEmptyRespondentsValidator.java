@@ -1,6 +1,7 @@
 package org.projectcheckins.core.forms;
 
 import io.micronaut.core.annotation.Introspected;
+import io.micronaut.core.util.CollectionUtils;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -8,6 +9,6 @@ import jakarta.validation.ConstraintValidatorContext;
 class NotEmptyRespondentsValidator implements ConstraintValidator<NotEmptyRespondents, QuestionForm> {
     @Override
     public boolean isValid(QuestionForm value, ConstraintValidatorContext context) {
-        return !value.respondents().isEmpty();
+        return CollectionUtils.isNotEmpty(value.respondentIds());
     }
 }

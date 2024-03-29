@@ -7,8 +7,6 @@ import io.micronaut.multitenancy.Tenant;
 import jakarta.inject.Singleton;
 import org.projectcheckins.annotations.Generated;
 import org.projectcheckins.core.api.Question;
-import org.projectcheckins.core.api.QuestionSave;
-import org.projectcheckins.core.api.QuestionUpdate;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +17,7 @@ import java.util.Optional;
 @Secondary
 public class SecondaryQuestionRepository implements QuestionRepository {
     @Override
-    public String save(QuestionSave questionSave, Tenant tenant) {
+    public String save(Question questionSave, Tenant tenant) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
@@ -29,7 +27,7 @@ public class SecondaryQuestionRepository implements QuestionRepository {
     }
 
     @Override
-    public void update(QuestionUpdate questionUpdate, Tenant tenant) {
+    public void update(Question questionUpdate, Tenant tenant) {
         throw new UnsupportedOperationException("Not implemented");
     }
 

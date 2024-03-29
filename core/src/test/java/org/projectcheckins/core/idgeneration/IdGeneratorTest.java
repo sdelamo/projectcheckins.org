@@ -1,10 +1,9 @@
-package org.projectcheckins.core;
+package org.projectcheckins.core.idgeneration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.idgeneration.IdGenerator;
 
 import java.util.HashSet;
 import java.util.Set;

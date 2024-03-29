@@ -1,11 +1,8 @@
 package org.projectcheckins.http.controllers;
 
 import io.micronaut.core.annotation.Nullable;
-import io.micronaut.core.beans.BeanIntrospection;
-import io.micronaut.core.beans.BeanProperty;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MediaType;
-import io.micronaut.http.MutableHttpResponse;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.multitenancy.Tenant;
@@ -13,7 +10,6 @@ import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
-import io.micronaut.views.fields.messages.ConstraintViolationUtils;
 import io.micronaut.views.fields.messages.Message;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.ConstraintViolationException;
@@ -30,13 +26,15 @@ import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.api.Respondent;
 import org.projectcheckins.core.forms.*;
-import org.projectcheckins.core.repositories.ProfileRepository;
-import org.projectcheckins.core.repositories.QuestionRepository;
+import org.projectcheckins.core.services.QuestionService;
 
 import java.net.URI;
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Controller
@@ -75,7 +73,7 @@ class QuestionController {
 
     // UPDATE
     private static final String PATH_UPDATE = PATH + ApiConstants.PATH_UPDATE;
-    private static final String REGEX_UPDATE = "^\\/question\\/.*\\/update$";
+    private static final Pattern REGEX_UPDATE = Pattern.compile("^\\/question\\/(.*)\\/update$");
     private static final Function<String, URI> PATH_UPDATE_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_UPDATE).build();
 
     // DELETE
@@ -83,35 +81,37 @@ class QuestionController {
     private static final String ANSWER_FORM = "answerForm";
     public static final String MODEL_FIELDSET = "fieldset";
 
-    private final QuestionRepository questionRepository;
-
-    private final ProfileRepository profileRepository;
-
+    private final QuestionService questionService;
     private final AnswerSaveFormGenerator answerSaveFormGenerator;
 
-    QuestionController(QuestionRepository questionRepository,
-                       ProfileRepository profileRepository,
+    QuestionController(QuestionService questionService,
                        AnswerSaveFormGenerator answerSaveFormGenerator) {
-        this.questionRepository = questionRepository;
-        this.profileRepository = profileRepository;
+        this.questionService = questionService;
         this.answerSaveFormGenerator = answerSaveFormGenerator;
     }
 
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
     Map<String, Object> questionList(@Nullable Tenant tenant) {
-        return Map.of(MODEL_QUESTIONS, questionRepository.findAll(tenant));
+        return Map.of(MODEL_QUESTIONS, questionService.findAll(tenant));
     }
 
     @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE)
     Map<String, Object> questionCreate(@Nullable Tenant tenant) {
-        return Map.of(MODEL_FIELDSET, new QuestionSaveForm(null),
-                MODEL_RESPONDENTS, profileRepository.list(tenant),
-                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_CREATE));
+        final QuestionForm form = QuestionFormRecord.of(new QuestionRecord(
+                null,
+                "",
+                HowOften.DAILY_ON,
+                Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
+                TimeOfDay.END,
+                LocalTime.of(16, 30),
+                Collections.emptySet()
+        ));
+        return saveModel(form, tenant);
     }
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionSave(@NonNull @NotNull @Valid @Body QuestionSaveForm form,
+    HttpResponse<?> questionSave(@NonNull @NotNull @Valid @Body QuestionFormRecord form,
                                  @Nullable Tenant tenant) {
-        String id = questionRepository.save(form, tenant);
+        String id = questionService.save(form, tenant);
         return HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
@@ -120,7 +120,7 @@ class QuestionController {
                                  @NonNull Authentication authentication,
                                  @Nullable Tenant tenant) {
         Form answerFormSave = answerSaveFormGenerator.generate(id, format -> AnswerController.URI_BUILDER_ANSWER_SAVE.apply(id, format).toString(), authentication);
-        return questionRepository.findById(id, tenant)
+        return questionService.findById(id, tenant)
                 .map(question -> HttpResponse.ok(Map.of(
                         MODEL_QUESTION, question,
                         ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
@@ -135,26 +135,23 @@ class QuestionController {
     @Secured(SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionEdit(@PathVariable @NotBlank String id,
                                  @Nullable Tenant tenant) {
-        return questionRepository.findById(id, tenant)
-                .map(question -> HttpResponse.ok(new ModelAndView<>(VIEW_EDIT, updateModel(question, tenant))))
+        return questionService.findById(id, tenant)
+                .map(question -> HttpResponse.ok(new ModelAndView<>(VIEW_EDIT, updateModel(question, QuestionFormRecord.of(question), tenant))))
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
     @PostForm(uri = PATH_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionUpdate(@PathVariable @NotBlank String id,
-                                   @NonNull @NotNull @Valid @Body QuestionUpdateForm form,
+                                   @NonNull @NotNull @Valid @Body QuestionFormRecord form,
                                    @Nullable Tenant tenant) {
-        if (!id.equals(form.id())) {
-            return HttpResponse.unprocessableEntity();
-        }
-        questionRepository.update(form, tenant);
+        questionService.update(id, form, tenant);
         return HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
     @PostForm(uri = PATH_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionDelete(@PathVariable @NotBlank String id,
                                    @Nullable Tenant tenant) {
-        questionRepository.deleteById(id, tenant);
+        questionService.deleteById(id, tenant);
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
@@ -162,46 +159,44 @@ class QuestionController {
     public HttpResponse<?> onConstraintViolationException(HttpRequest<?> request,
                                                           @Nullable Tenant tenant,
                                                           ConstraintViolationException ex) {
+        final Matcher matcher = REGEX_UPDATE.matcher(request.getPath());
         if (request.getPath().equals(PATH_SAVE)) {
-            return request.getBody(QuestionSaveForm.class)
+            return request.getBody(QuestionForm.class)
                     .map(form -> HttpResponse.unprocessableEntity()
-                            .body(new ModelAndView<>(VIEW_CREATE,
-                                    Map.of(MODEL_FIELDSET, QuestionSaveForm.of(form, ex),
-                                            MODEL_RESPONDENTS, profileRepository.list(tenant)))))
+                            .body(new ModelAndView<>(VIEW_CREATE, saveModel(QuestionFormRecord.of(form, ex), tenant))))
                     .orElseGet(HttpResponse::serverError);
-        } else if (request.getPath().matches(REGEX_UPDATE)) {
-            Optional<QuestionUpdateForm> updateFormOptional = request.getBody(QuestionUpdateForm.class);
+        } else if (matcher.find()) {
+            final String id = matcher.group(1);
+            Optional<QuestionFormRecord> updateFormOptional = request.getBody(QuestionFormRecord.class);
             if (updateFormOptional.isEmpty()) {
                 return HttpResponse.serverError();
             }
-            QuestionUpdateForm form = updateFormOptional.get();
-            return questionRepository.findById(form.id(), tenant)
+            QuestionForm form = updateFormOptional.get();
+            return questionService.findById(id, tenant)
                     .map(question -> HttpResponse.unprocessableEntity()
-                            .body(new ModelAndView<>(VIEW_EDIT,
-                                    Map.of(MODEL_QUESTION, question,
-                                            MODEL_FIELDSET, QuestionUpdateForm.of(form, ex),
-                                            MODEL_RESPONDENTS, profileRepository.list(tenant)))))
+                            .body(new ModelAndView<>(VIEW_EDIT, updateModel(question, QuestionFormRecord.of(form, ex), tenant))))
                     .orElseGet(NotFoundController::notFoundRedirect);
         }
         return HttpResponse.serverError();
     }
 
     @NonNull
-    private Map<String, Object> updateModel(@NonNull Question question, @Nullable Tenant tenant) {
-        QuestionUpdateForm fieldset = new QuestionUpdateForm(question.id(),
-                question.title(),
-                question.howOften(),
-                question.timeOfDay(),
-                question.fixedTime(),
-                question.howOften() == HowOften.DAILY_ON ? question.days() : Collections.singleton(DayOfWeek.MONDAY),
-                question.howOften() == HowOften.ONCE_A_WEEK ? question.days().stream().findFirst().orElseThrow() : DayOfWeek.MONDAY,
-                question.howOften() == HowOften.EVERY_OTHER_WEEK ? question.days().stream().findFirst().orElseThrow() : DayOfWeek.MONDAY,
-                question.howOften() == HowOften.ONCE_A_MONTH_ON_THE_FIRST ? question.days().stream().findFirst().orElseThrow() : DayOfWeek.MONDAY,
-                question.respondents().stream().map(Respondent::id).collect(Collectors.toSet())
-        );
-        return Map.of(MODEL_QUESTION, question, MODEL_FIELDSET, fieldset,
+    private Map<String, Object> updateModel(@NonNull Question question, @NonNull QuestionForm fieldset, @Nullable Tenant tenant) {
+        return Map.of(
+                MODEL_QUESTION, question,
+                MODEL_FIELDSET, fieldset,
                 ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_SHOW.apply(question), BREADCRUMB_EDIT),
-                MODEL_RESPONDENTS, profileRepository.list(tenant));
+                MODEL_RESPONDENTS, questionService.listAvailableRespondents(tenant)
+        );
+    }
+
+    @NonNull
+    private Map<String, Object> saveModel(@NonNull QuestionForm fieldset, Tenant tenant) {
+        return Map.of(
+                MODEL_FIELDSET, fieldset,
+                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_CREATE),
+                MODEL_RESPONDENTS, questionService.listAvailableRespondents(tenant)
+        );
     }
 
 }

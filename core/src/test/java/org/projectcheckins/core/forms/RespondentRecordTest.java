@@ -1,12 +1,12 @@
-package org.projectcheckins.core;
+package org.projectcheckins.core.forms;
 
 import io.micronaut.core.type.Argument;
 import io.micronaut.serde.SerdeIntrospections;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.validation.validator.Validator;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.RespondentRecord;
 
+import static java.time.ZonedDateTime.now;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.projectcheckins.test.ValidationAssert.assertThat;
 
@@ -15,11 +15,12 @@ class RespondentRecordTest {
 
     @Test
     void respondentRecordValidation(Validator validator) {
-        assertThat(validator.validate(new RespondentRecord(null)))
+        assertThat(validator.validate(new RespondentRecord(null, null)))
+                .hasNotBlankViolation("id")
+                .hasNotNullViolation("nextExecution");
+        assertThat(validator.validate(new RespondentRecord("", null)))
                 .hasNotBlankViolation("id");
-        assertThat(validator.validate(new RespondentRecord("")))
-                .hasNotBlankViolation("id");
-        assertThat(validator.validate(new RespondentRecord("PROFILE ID")))
+        assertThat(validator.validate(new RespondentRecord("id", now())))
                 .isValid();
     }
 

@@ -33,8 +33,7 @@ import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.api.PublicProfile;
-import org.projectcheckins.core.api.QuestionSave;
-import org.projectcheckins.core.api.QuestionUpdate;
+import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.ProfileRepository;
 import org.projectcheckins.core.repositories.QuestionRepository;
@@ -116,7 +115,7 @@ class QuestionControllerFormTest {
 
         String updatedTitle = "What did you do today?";
         URI updateUri = UriBuilder.of("/question").path(id).path("update").build();
-        String updateBody = "id=" + id + "&title="+updatedTitle+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1";
+        String updateBody = "title="+updatedTitle+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1";
 
         assertThat(client.exchange(BrowserRequest.POST(updateUri.toString(), updateBody)))
             .matches(redirection(s -> s.equals("/question/" + id + "/show")));
@@ -124,11 +123,6 @@ class QuestionControllerFormTest {
         assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class))
             .doesNotContain(title)
             .contains(updatedTitle);
-
-        String updateBodyWithNotMatchingId = "id=yyy&title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1";
-
-        assertThatThrowsHttpClientResponseException(() -> client.exchange(BrowserRequest.POST(updateUri.toString(), updateBodyWithNotMatchingId)))
-                .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY);
 
         URI deleteUri = UriBuilder.of("/question").path(id).path("delete").build();
         assertThat(client.exchange(BrowserRequest.POST(deleteUri.toString(), Collections.emptyMap())))
@@ -146,7 +140,7 @@ class QuestionControllerFormTest {
 
         @Override
         @NonNull
-        public String save(@NotNull @Valid QuestionSave form, @Nullable Tenant tenant) {
+        public String save(@NotNull @Valid Question form, @Nullable Tenant tenant) {
             String id = "xxx";
             questions.put(id, new QuestionRecord(id, form.title(), form.howOften(), form.days(), form.timeOfDay(), form.fixedTime(), form.respondents()));
             return id;
@@ -159,7 +153,7 @@ class QuestionControllerFormTest {
         }
 
         @Override
-        public void update(@NotNull @Valid QuestionUpdate form, @Nullable Tenant tenant) {
+        public void update(@NotNull @Valid Question form, @Nullable Tenant tenant) {
             if (questions.containsKey(form.id())) {
                 questions.put(form.id(), new QuestionRecord(form.id(),form.title(), form.howOften(), form.days(), form.timeOfDay(), form.fixedTime(), form.respondents()));
             }

@@ -1,5 +1,6 @@
 package org.projectcheckins.http.controllers;
 
+import static java.time.ZonedDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.projectcheckins.test.AbstractAuthenticationFetcher.SDELAMO;
 import static org.projectcheckins.test.AssertUtils.htmlPage;
@@ -26,8 +27,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Profile;
-import org.projectcheckins.core.api.QuestionSave;
-import org.projectcheckins.core.api.QuestionUpdate;
+import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
@@ -101,7 +101,7 @@ class QuestionControllerTest {
 
         // UPDATE with errors
         URI updateUri = UriBuilder.of("/question").path(questionId).path("update").build();
-        String updatePayloadWithErrors = "id="+ questionId + "&title=&howOften=DAILY_ON&onceAWeekDay=MONDAY&everyOtherWeekDay=MONDAY&onceAMonthOnTheFirstDay=MONDAY&timeOfDay=END";
+        String updatePayloadWithErrors = "title=&howOften=DAILY_ON&onceAWeekDay=MONDAY&everyOtherWeekDay=MONDAY&onceAMonthOnTheFirstDay=MONDAY&timeOfDay=END";
         HttpClientResponseExceptionAssert.assertThatThrowsHttpClientResponseException(() -> client.exchange(BrowserRequest.POST(updateUri, updatePayloadWithErrors)))
                 .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY)
                 .bodyHtmlTest(html -> html.contains("must not be blank")) // title missing
@@ -139,7 +139,7 @@ class QuestionControllerTest {
     static class QuestionRepositoryMock implements QuestionRepository {
         @Override
         @NonNull
-        public String save(@NotNull @Valid QuestionSave questionSave, @Nullable Tenant tenant) {
+        public String save(@NotNull @Valid Question questionSave, @Nullable Tenant tenant) {
             return "xxx";
         }
 
@@ -147,13 +147,13 @@ class QuestionControllerTest {
         @NonNull
         public Optional<QuestionRecord> findById(@NotBlank String id, @Nullable Tenant tenant) {
             if (id.equals("xxx")) {
-                return Optional.of(new QuestionRecord("xxx", "What are working on?", HowOften.DAILY_ON, Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), TimeOfDay.END, LocalTime.of(16, 30), Set.of(new RespondentRecord("user1"))));
+                return Optional.of(new QuestionRecord("xxx", "What are working on?", HowOften.DAILY_ON, Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), TimeOfDay.END, LocalTime.of(16, 30), Set.of(new RespondentRecord("user1", now()))));
             }
             return Optional.empty();
         }
 
         @Override
-        public void update(@NotNull @Valid QuestionUpdate questionUpdate, @Nullable Tenant tenant) {
+        public void update(@NotNull @Valid Question questionUpdate, @Nullable Tenant tenant) {
 
         }
 

@@ -13,7 +13,7 @@ import java.util.Set;
 
 @Serdeable
 public record QuestionRecord(
-        @NotBlank String id,
+        @NotBlank(groups = Saved.class) String id,
         @NotBlank String title,
         @NotNull HowOften howOften,
         @NotEmpty Set<DayOfWeek> days,

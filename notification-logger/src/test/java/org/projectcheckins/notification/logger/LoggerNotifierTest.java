@@ -15,6 +15,7 @@ import java.time.LocalTime;
 import java.util.Set;
 import java.util.TimeZone;
 
+import static java.time.ZonedDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -25,7 +26,7 @@ class LoggerNotifierTest {
     void notify(LoggerNotifier notifier) {
         final Question question = new QuestionRecord("id", "title", HowOften.DAILY_ON,
                 Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
-                TimeOfDay.END, LocalTime.of(16, 30), Set.of(new RespondentRecord("profileId")));
+                TimeOfDay.END, LocalTime.of(16, 30), Set.of(new RespondentRecord("id", now())));
         final Profile profile = new ProfileRecord("id", "email@example.com", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 9), LocalTime.of(16, 0), TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "Guillermo", "Calvo");
         final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
         ((Logger) LoggerFactory.getLogger(LoggerNotifier.class)).addAppender(listAppender);

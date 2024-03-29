@@ -1,4 +1,4 @@
-package org.projectcheckins.core;
+package org.projectcheckins.core.forms;
 
 import static java.lang.String.format;
 import static java.util.TimeZone.getDefault;
@@ -8,7 +8,6 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.views.fields.elements.Option;
 import java.util.TimeZone;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.TimeZoneFetcher;
 
 @MicronautTest
 class TimeZoneFetcherTest {
