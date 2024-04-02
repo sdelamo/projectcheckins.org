@@ -3,6 +3,7 @@ package org.projectcheckins.http.controllers;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.NonNull;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpStatus;
@@ -10,13 +11,14 @@ import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.uri.UriBuilder;
-import io.micronaut.security.authentication.Authentication;
+import io.micronaut.multitenancy.Tenant;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.forms.AnswerSave;
+import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.forms.Format;
 import org.projectcheckins.core.repositories.SecondaryAnswerRepository;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
@@ -31,7 +33,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @MicronautTest
 @Property(name = "spec.name", value = "AnswerControllerTest")
@@ -100,14 +101,16 @@ class AnswerControllerTest {
     @Singleton
     static class AnswerRepositoryMock extends SecondaryAnswerRepository {
 
-        private List<AnswerSave> answers = new ArrayList<>();
+        private List<Answer> answers = new ArrayList<>();
         @Override
-        public void save(@NonNull @NotNull Authentication authentication,
-                         @NonNull @NotNull @Valid AnswerSave answerSave) {
-            this.answers.add(answerSave);
+        @NonNull
+        public String save(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
+            final String id = "xxx";
+            this.answers.add(answer);
+            return id;
         }
 
-        public List<AnswerSave> getAnswers() {
+        public List<Answer> getAnswers() {
             return answers;
         }
     }

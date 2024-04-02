@@ -4,12 +4,16 @@ import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.annotation.Secondary;
 import io.micronaut.context.env.Environment;
 import io.micronaut.core.annotation.NonNull;
-import io.micronaut.security.authentication.Authentication;
+import io.micronaut.core.annotation.Nullable;
+import io.micronaut.multitenancy.Tenant;
 import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.annotations.Generated;
-import org.projectcheckins.core.forms.AnswerSave;
+import org.projectcheckins.core.api.Answer;
+
+import java.util.List;
 
 
 @Generated // "ignore for jacoco"
@@ -18,8 +22,16 @@ import org.projectcheckins.core.forms.AnswerSave;
 @Singleton
 public class SecondaryAnswerRepository implements AnswerRepository {
     @Override
-    public void save(@NonNull @NotNull Authentication authentication,
-                     @NonNull @NotNull @Valid AnswerSave answerSave) {
+    @NonNull
+    public String save(@NotNull @Valid Answer answer,
+                       @Nullable Tenant tenant) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    @NonNull
+    public List<? extends Answer> findByQuestionId(@NotBlank String questionId,
+                                                   @Nullable Tenant tenant) {
         throw new UnsupportedOperationException("Not implemented");
     }
 }

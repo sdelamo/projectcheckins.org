@@ -9,10 +9,16 @@ public class Data {
     @NonNull
     private List<QuestionEntity> questions = new ArrayList<>();
     @NonNull
+    private List<AnswerEntity> answers = new ArrayList<>();
+    @NonNull
     private List<UserEntity> users = new ArrayList<>();
 
     public List<QuestionEntity> getQuestions() {
         return questions;
+    }
+
+    public List<AnswerEntity> getAnswers() {
+        return answers;
     }
 
     public List<UserEntity> getUsers() {
