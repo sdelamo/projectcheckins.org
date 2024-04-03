@@ -19,16 +19,17 @@ import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
-import io.micronaut.security.authentication.Authentication;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
+import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.*;
+import org.projectcheckins.core.repositories.AnswerRepository;
 import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
@@ -37,7 +38,9 @@ import org.projectcheckins.test.HttpClientResponseExceptionAssert;
 
 import java.net.URI;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -86,6 +89,7 @@ class QuestionControllerTest {
 
     @Test
     void crud(@Client("/") HttpClient httpClient,
+              AnswerRepository answerRepository,
               AuthenticationFetcherMock authenticationFetcher) {
         authenticationFetcher.setAuthentication(SDELAMO);
         BlockingHttpClient client = httpClient.toBlocking();
@@ -118,10 +122,14 @@ class QuestionControllerTest {
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("yyy").path("edit").build()), String.class))
             .matches(redirection("/notFound"));
 
+        answerRepository.save(new AnswerRecord("zzz", "yyy", SDELAMO.getName(), LocalDate.now(), Format.MARKDOWN, "This is *my* answer."), null);
+
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("xxx").path("show").build()), String.class))
             .matches(htmlPage())
             .matches(htmlBody(Pattern.compile("""
                 Asking 1 person\\s*every weekday\\s*at the end of the day.""")))
+            .matches(htmlBody("This is <em>my</em> answer."))
+            .matches(htmlBody("/question/yyy/answer/zzz/edit"))
             .matches(htmlBody("""
                 <li class="breadcrumb-item"><a href="/question/list">"""));
 
@@ -166,6 +174,25 @@ class QuestionControllerTest {
         @Override
         public void deleteById(@NotBlank String id, @Nullable Tenant tenant) {
 
+        }
+    }
+
+    @Requires(property = "spec.name", value = "QuestionControllerTest")
+    @Singleton
+    @Replaces(AnswerRepository.class)
+    static class AnswerRepositoryMock implements AnswerRepository {
+
+        List<Answer> answers = new ArrayList<>();
+
+        @Override
+        public String save(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
+            answers.add(answer);
+            return "zzz";
+        }
+
+        @Override
+        public List<? extends Answer> findByQuestionId(@NotBlank String questionId, @Nullable Tenant tenant) {
+            return answers;
         }
     }
 }

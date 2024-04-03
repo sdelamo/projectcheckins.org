@@ -31,12 +31,14 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
+import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.api.PublicProfile;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.ProfileRepository;
 import org.projectcheckins.core.repositories.QuestionRepository;
+import org.projectcheckins.core.repositories.SecondaryAnswerRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
@@ -168,6 +170,16 @@ class QuestionControllerFormTest {
         @Override
         public void deleteById(@NotBlank String id, @Nullable Tenant tenant) {
             questions.remove(id);
+        }
+    }
+
+    @Requires(property = "spec.name", value = "QuestionControllerFormTest")
+    @Singleton
+    static class AnswerRepositoryMock extends SecondaryAnswerRepository {
+        @Override
+        public List<? extends Answer> findByQuestionId(@NotBlank String questionId,
+                                                       @Nullable Tenant tenant) {
+            return Collections.emptyList();
         }
     }
 }

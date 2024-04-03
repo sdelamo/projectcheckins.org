@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Answer;
+import org.projectcheckins.core.api.AnswerView;
 import org.projectcheckins.core.forms.AnswerSave;
 
 import java.util.List;
@@ -18,5 +19,5 @@ public interface AnswerService {
     String save(@NotNull Authentication authentication, @NotNull @Valid AnswerSave answerSave, @Nullable Tenant tenant);
 
     @NonNull
-    List<? extends Answer> findByQuestionId(@NotBlank String questionId, @Nullable Tenant tenant);
+    List<? extends AnswerView> findByQuestionId(@NotBlank String questionId, @NotNull Authentication authentication, @Nullable Tenant tenant);
 }

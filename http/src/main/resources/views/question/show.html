@@ -18,6 +18,8 @@
         <form th:replace="~{fieldset/form :: form(${answerForm})}"></form>
     </th:block>
 
+    <div th:replace="~{question/_answers :: answers(${answers})}"/>
+
 </main>
 </body>
 </html>

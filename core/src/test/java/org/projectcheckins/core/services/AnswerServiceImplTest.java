@@ -16,13 +16,17 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Answer;
+import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.AnswerSave;
 import org.projectcheckins.core.forms.Format;
 import org.projectcheckins.core.repositories.AnswerRepository;
+import org.projectcheckins.core.repositories.ProfileRepository;
 import org.projectcheckins.core.repositories.SecondaryAnswerRepository;
+import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,7 +48,7 @@ class AnswerServiceImplTest {
         final AnswerSave answerSave = new AnswerSave(questionId, LocalDate.now(), Format.MARKDOWN, "Lorem ipsum");
         assertThat(answerService.save(auth, answerSave, null))
                 .isNotBlank();
-        assertThat(answerService.findByQuestionId(questionId, null))
+        assertThat(answerService.findByQuestionId(questionId, auth, null))
                 .isNotEmpty();
     }
 
@@ -67,6 +71,16 @@ class AnswerServiceImplTest {
         public List<? extends Answer> findByQuestionId(@NotBlank String questionId,
                                                        @Nullable Tenant tenant) {
             return answers.stream().filter(a -> a.questionId().equals(questionId)).toList();
+        }
+    }
+
+    @Requires(property = "spec.name", value = "AnswerServiceImplTest")
+    @Singleton
+    @Replaces(ProfileRepository.class)
+    static class ProfileRepositoryMock extends SecondaryProfileRepository {
+        @Override
+        public List<? extends Profile> list(Tenant tenant) {
+            return Collections.emptyList();
         }
     }
 }

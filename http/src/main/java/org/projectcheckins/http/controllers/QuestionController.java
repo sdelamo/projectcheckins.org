@@ -26,6 +26,7 @@ import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.api.Respondent;
 import org.projectcheckins.core.forms.*;
+import org.projectcheckins.core.services.AnswerService;
 import org.projectcheckins.core.services.QuestionService;
 
 import java.net.URI;
@@ -46,6 +47,7 @@ class QuestionController {
     private static final String MODEL_QUESTIONS = "questions";
     private static final String MODEL_QUESTION = "question";
     private static final String MODEL_RESPONDENTS = "respondents";
+    private static final String MODEL_ANSWERS = "answers";
 
     // LIST
     public static final String PATH_LIST = PATH + ApiConstants.PATH_LIST;
@@ -82,11 +84,14 @@ class QuestionController {
     public static final String MODEL_FIELDSET = "fieldset";
 
     private final QuestionService questionService;
+    private final AnswerService answerService;
     private final AnswerSaveFormGenerator answerSaveFormGenerator;
 
     QuestionController(QuestionService questionService,
+                       AnswerService answerService,
                        AnswerSaveFormGenerator answerSaveFormGenerator) {
         this.questionService = questionService;
+        this.answerService = answerService;
         this.answerSaveFormGenerator = answerSaveFormGenerator;
     }
 
@@ -124,6 +129,7 @@ class QuestionController {
                 .map(question -> HttpResponse.ok(Map.of(
                         MODEL_QUESTION, question,
                         ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
+                        MODEL_ANSWERS, answerService.findByQuestionId(id, authentication, tenant),
                         ANSWER_FORM, answerFormSave
                 )))
                 .orElseGet(NotFoundController::notFoundRedirect);

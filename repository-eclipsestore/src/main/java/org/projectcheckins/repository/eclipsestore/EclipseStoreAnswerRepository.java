@@ -9,9 +9,9 @@ import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.util.Comparator;
 import java.util.List;
 import org.projectcheckins.core.api.Answer;
-import org.projectcheckins.core.forms.AnswerMarkdownSave;
 import org.projectcheckins.core.idgeneration.IdGenerator;
 import org.projectcheckins.core.repositories.AnswerRepository;
 
@@ -19,6 +19,9 @@ import static java.util.Comparator.comparing;
 
 @Singleton
 class EclipseStoreAnswerRepository implements AnswerRepository {
+
+    private static final Comparator<AnswerEntity> CHRONOLOGICALLY = comparing(AnswerEntity::answerDate);
+
     private final RootProvider<Data> rootProvider;
     private final IdGenerator idGenerator;
 
@@ -43,7 +46,7 @@ class EclipseStoreAnswerRepository implements AnswerRepository {
                                                    @Nullable Tenant tenant) {
         return rootProvider.root().getAnswers().stream()
                 .filter(a -> a.questionId().equals(questionId))
-                .sorted(comparing(AnswerEntity::answerDate))
+                .sorted(CHRONOLOGICALLY.reversed())
                 .toList();
     }
 
