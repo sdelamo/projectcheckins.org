@@ -16,24 +16,54 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Answer;
+import org.projectcheckins.core.api.AnswerView;
 import org.projectcheckins.core.api.Profile;
-import org.projectcheckins.core.forms.AnswerSave;
-import org.projectcheckins.core.forms.Format;
+import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.AnswerRepository;
 import org.projectcheckins.core.repositories.ProfileRepository;
 import org.projectcheckins.core.repositories.SecondaryAnswerRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalTime;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
 
 @Property(name = "spec.name", value = "AnswerServiceImplTest")
 @MicronautTest(startApplication = false)
 class AnswerServiceImplTest {
+
+    static final Profile USER_1 = new ProfileRecord(
+            "user1",
+            "user1@email.com",
+            TimeZone.getDefault(),
+            DayOfWeek.MONDAY,
+            LocalTime.of(9, 0),
+            LocalTime.of(16, 30),
+            TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
+            Format.MARKDOWN,
+            "Code",
+            "Monkey"
+            );
+
+    static final Profile USER_2 = new ProfileRecord(
+            "user2",
+            "user2@email.com",
+            TimeZone.getDefault(),
+            DayOfWeek.SUNDAY,
+            LocalTime.of(9, 0),
+            LocalTime.of(16, 30),
+            TimeFormat.TWELVE_HOUR_CLOCK,
+            Format.WYSIWYG,
+            null,
+            null
+            );
+
+    static final Answer ANSWER_1 = new AnswerRecord("answer1", "question1", USER_1.id(), LocalDate.of(2024, 1, 1), Format.MARKDOWN, "Lorem *ipsum*.");
+    static final Answer ANSWER_2 = new AnswerRecord("answer2", "question1", USER_2.id(), LocalDate.of(2024, 1, 2), Format.WYSIWYG, "Hello <strong>world</strong>.");
 
     @Inject
     AnswerServiceImpl answerService;
@@ -41,15 +71,68 @@ class AnswerServiceImplTest {
     @Inject
     AnswerRepository answerRepository;
 
+    @Inject
+    ProfileRepository profileRepository;
+
     @Test
     void testSave() {
-        final Authentication auth = new ClientAuthentication("user1", null);
+        final Authentication auth = new ClientAuthentication(USER_1.id(), null);
         final String questionId = "question1";
         final AnswerSave answerSave = new AnswerSave(questionId, LocalDate.now(), Format.MARKDOWN, "Lorem ipsum");
         assertThat(answerService.save(auth, answerSave, null))
                 .isNotBlank();
         assertThat(answerService.findByQuestionId(questionId, auth, null))
                 .isNotEmpty();
+    }
+
+    @Test
+    void testShow() {
+        final Authentication auth1 = new ClientAuthentication(USER_1.id(), null);
+
+        final String answerId1 = answerRepository.save(ANSWER_1, null);
+        final Optional<? extends AnswerView> optionalAnswerView1 = answerService.findById(answerId1, auth1, null);
+        assertThat(optionalAnswerView1).isNotEmpty();
+        final AnswerView answerView1 = optionalAnswerView1.get();
+        assertThat(answerView1)
+                .hasFieldOrPropertyWithValue("isEditable", true)
+                .extracting("html", STRING).contains("Lorem <em>ipsum</em>.");
+        assertThat(answerView1.respondent())
+                .hasFieldOrPropertyWithValue("id", USER_1.id());
+        assertThat(answerView1.answer())
+                .hasFieldOrPropertyWithValue("id", answerId1)
+                .hasFieldOrPropertyWithValue("questionId", ANSWER_1.questionId())
+                .hasFieldOrPropertyWithValue("respondentId", ANSWER_1.respondentId())
+                .hasFieldOrPropertyWithValue("answerDate", ANSWER_1.answerDate())
+                .hasFieldOrPropertyWithValue("format", ANSWER_1.format())
+                .hasFieldOrPropertyWithValue("text", ANSWER_1.text());
+
+        final String answerId2 = answerRepository.save(ANSWER_2, null);
+        final Optional<? extends AnswerView> optionalAnswerView2 = answerService.findById(answerId2, auth1, null);
+        assertThat(optionalAnswerView2).isNotEmpty();
+        final AnswerView answerView2 = optionalAnswerView2.get();
+        assertThat(answerView2)
+                .hasFieldOrPropertyWithValue("isEditable", false)
+                .hasFieldOrPropertyWithValue("html", "Hello <strong>world</strong>.");
+        assertThat(answerView2.respondent())
+                .hasFieldOrPropertyWithValue("id", ANSWER_2.respondentId());
+        assertThat(answerView2.answer())
+                .hasFieldOrPropertyWithValue("id", answerId2)
+                .hasFieldOrPropertyWithValue("questionId", ANSWER_2.questionId())
+                .hasFieldOrPropertyWithValue("respondentId", ANSWER_2.respondentId())
+                .hasFieldOrPropertyWithValue("answerDate", ANSWER_2.answerDate())
+                .hasFieldOrPropertyWithValue("format", ANSWER_2.format())
+                .hasFieldOrPropertyWithValue("text", ANSWER_2.text());
+    }
+
+    @Test
+    void testAnswerSummary() {
+        final AnswerView view1 = new AnswerViewRecord(ANSWER_1, USER_1, "Lorem <em>ipsum</em>.", true);
+        assertThat(answerService.getAnswerSummary(view1, Locale.ENGLISH))
+                .isEqualTo("Code Monkey's answer for January 1, 2024");
+
+        final AnswerView view2 = new AnswerViewRecord(ANSWER_2, USER_2, "Hello <strong>world</strong>.", false);
+        assertThat(answerService.getAnswerSummary(view2, Locale.ENGLISH))
+                .isEqualTo("user2@email.com's answer for January 2, 2024");
     }
 
     @Requires(property = "spec.name", value = "AnswerServiceImplTest")
@@ -62,8 +145,16 @@ class AnswerServiceImplTest {
         @Override
         @NotBlank
         public String save(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
-            answers.add(answer);
-            return "xxx";
+            final String id = UUID.randomUUID().toString();
+            answers.add(new AnswerRecord(id, answer.questionId(), answer.respondentId(), answer.answerDate(), answer.format(), answer.text()));
+            return id;
+        }
+
+        @Override
+        @NonNull
+        public Optional<? extends Answer> findById(@NotBlank String id,
+                                               @Nullable Tenant tenant) {
+            return answers.stream().filter(a -> a.id().equals(id)).findAny();
         }
 
         @Override
@@ -81,6 +172,15 @@ class AnswerServiceImplTest {
         @Override
         public List<? extends Profile> list(Tenant tenant) {
             return Collections.emptyList();
+        }
+
+        @Override
+        public Optional<? extends Profile> findById(String id, Tenant tenant) {
+            return Optional.ofNullable(switch (id) {
+                case "user1" -> USER_1;
+                case "user2" -> USER_2;
+                default -> null;
+            });
         }
     }
 }

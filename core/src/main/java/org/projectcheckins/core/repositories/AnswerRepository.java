@@ -9,10 +9,14 @@ import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Answer;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface AnswerRepository {
     @NotBlank
     String save(@NotNull @Valid Answer answer, @Nullable Tenant tenant);
+
+    @NonNull
+    Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant);
 
     @NonNull
     List<? extends Answer> findByQuestionId(@NotBlank String questionId, @Nullable Tenant tenant);

@@ -17,22 +17,24 @@ import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.api.Answer;
-import org.projectcheckins.core.forms.Format;
-import org.projectcheckins.core.repositories.SecondaryAnswerRepository;
+import org.projectcheckins.core.api.*;
+import org.projectcheckins.core.forms.*;
+import org.projectcheckins.core.repositories.*;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
 import org.projectcheckins.test.HttpClientResponseExceptionAssert;
 
 import java.net.URI;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.*;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.projectcheckins.test.AssertUtils.htmlBody;
+import static org.projectcheckins.test.AssertUtils.htmlPage;
 
 @MicronautTest
 @Property(name = "spec.name", value = "AnswerControllerTest")
@@ -90,6 +92,22 @@ class AnswerControllerTest {
         assertThat(answerRepositoryMock.getAnswers())
                 .anyMatch(a -> a.format() == Format.MARKDOWN && a.text().equals(markdown) && a.answerDate().equals(expectedAnswerDate))
                 .anyMatch(a -> a.format() == Format.WYSIWYG && a.text().equals(html) && a.answerDate().equals(expectedAnswerDate));
+
+        Assertions.assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("answer").path("any-answer").path("show").build()), String.class))
+                .matches(htmlPage())
+                .matches(htmlBody("""
+                        <div class="date">"""))
+                .matches(htmlBody("""
+                        <div class="respondent">"""))
+                .matches(htmlBody("<span>Code Monkey</span>"))
+                .matches(htmlBody("""
+                        <a href="/question/list">"""))
+                .matches(htmlBody("""
+                        <a href="/question/123/show">"""))
+                .matches(htmlBody(Pattern.compile("""
+                        <a href="/question/123/answer/.*/show">""")))
+                .matches(htmlBody(Pattern.compile("""
+                        <a href="/question/123/answer/.*/edit">""")));
     }
 
     @Requires(property = "spec.name", value = "AnswerControllerTest")
@@ -112,6 +130,48 @@ class AnswerControllerTest {
 
         public List<Answer> getAnswers() {
             return answers;
+        }
+
+        @Override
+        public Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant) {
+            return answers.stream().findAny();
+        }
+    }
+
+    @Requires(property = "spec.name", value = "AnswerControllerTest")
+    @Singleton
+    static class QuestionRepositoryMock extends SecondaryQuestionRepository {
+        @Override
+        public Optional<? extends Question> findById(String id, Tenant tenant) {
+            return Optional.of(new QuestionRecord(
+                    "123",
+                    "title",
+                    HowOften.DAILY_ON,
+                    Set.of(DayOfWeek.MONDAY),
+                    TimeOfDay.FIXED,
+                    LocalTime.of(16, 30),
+                    Collections.emptySet()
+            ));
+        }
+    }
+
+    @Requires(property = "spec.name", value = "AnswerControllerTest")
+    @Singleton
+    static class ProfileRepositoryMock extends SecondaryProfileRepository {
+        @Override
+        public Optional<? extends Profile> findById(String id, Tenant tenant) {
+            return Optional.of(new ProfileRecord(
+                    id,
+                    id + "@example.com",
+                    TimeZone.getDefault(),
+                    DayOfWeek.MONDAY,
+                    LocalTime.of(9, 0),
+                    LocalTime.of(16, 30),
+                    TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
+                    Format.MARKDOWN,
+                    "Code",
+                    "Monkey"
+            ));
         }
     }
 

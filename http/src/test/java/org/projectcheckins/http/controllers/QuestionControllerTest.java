@@ -191,6 +191,11 @@ class QuestionControllerTest {
         }
 
         @Override
+        public Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant) {
+            return Optional.empty();
+        }
+
+        @Override
         public List<? extends Answer> findByQuestionId(@NotBlank String questionId, @Nullable Tenant tenant) {
             return answers;
         }

@@ -14,6 +14,7 @@ import org.projectcheckins.annotations.Generated;
 import org.projectcheckins.core.api.Answer;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Generated // "ignore for jacoco"
@@ -25,6 +26,12 @@ public class SecondaryAnswerRepository implements AnswerRepository {
     @NonNull
     public String save(@NotNull @Valid Answer answer,
                        @Nullable Tenant tenant) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    @NonNull
+    public Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant) {
         throw new UnsupportedOperationException("Not implemented");
     }
 

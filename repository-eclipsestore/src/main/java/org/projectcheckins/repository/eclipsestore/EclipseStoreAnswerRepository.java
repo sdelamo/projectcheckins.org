@@ -11,6 +11,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+
 import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.idgeneration.IdGenerator;
 import org.projectcheckins.core.repositories.AnswerRepository;
@@ -38,6 +40,14 @@ class EclipseStoreAnswerRepository implements AnswerRepository {
         AnswerEntity entity = answerOf(id, answer);
         save(rootProvider.root().getAnswers(), entity);
         return id;
+    }
+
+    @Override
+    @NonNull
+    public Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant) {
+        return rootProvider.root().getAnswers().stream()
+                .filter(a -> a.id().equals(id))
+                .findAny();
     }
 
     @Override

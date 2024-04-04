@@ -1,5 +1,6 @@
 package org.projectcheckins.core.services;
 
+import io.micronaut.context.MessageSource;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.multitenancy.Tenant;
@@ -9,6 +10,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Answer;
+import org.projectcheckins.core.api.AnswerView;
 import org.projectcheckins.core.api.PublicProfile;
 import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.markdown.MarkdownRenderer;
@@ -16,12 +18,18 @@ import org.projectcheckins.core.repositories.AnswerRepository;
 import org.projectcheckins.core.repositories.ProfileRepository;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.function.Function;
 
+import static java.time.format.DateTimeFormatterBuilder.getLocalizedDateTimePattern;
+import static java.time.format.FormatStyle.LONG;
 import static java.util.stream.Collectors.toMap;
 
 @Singleton
@@ -42,13 +50,16 @@ public class AnswerServiceImpl implements AnswerService {
 
     private final AnswerRepository answerRepository;
     private final ProfileRepository profileRepository;
+    private final MessageSource messageSource;
     private final MarkdownRenderer markdownRenderer;
 
     public AnswerServiceImpl(AnswerRepository answerRepository,
                              ProfileRepository profileRepository,
+                             MessageSource messageSource,
                              MarkdownRenderer markdownRenderer) {
         this.answerRepository = answerRepository;
         this.profileRepository = profileRepository;
+        this.messageSource = messageSource;
         this.markdownRenderer = markdownRenderer;
     }
 
@@ -70,6 +81,15 @@ public class AnswerServiceImpl implements AnswerService {
 
     @Override
     @NonNull
+    public Optional<? extends AnswerView> findById(@NotBlank String id,
+                                                   @NotNull Authentication authentication,
+                                                   @Nullable Tenant tenant) {
+        return answerRepository.findById(id, tenant)
+                .map(answer -> buildView(answer, authentication.getName(), tenant));
+    }
+
+    @Override
+    @NonNull
     public List<AnswerViewRecord> findByQuestionId(@NotBlank String questionId,
                                                    @NotNull Authentication authentication,
                                                    @Nullable Tenant tenant) {
@@ -77,6 +97,25 @@ public class AnswerServiceImpl implements AnswerService {
         return answerRepository.findByQuestionId(questionId, tenant).stream()
                 .map(answer -> buildView(answer, authentication.getName(), respondents))
                 .toList();
+    }
+
+    @Override
+    @NonNull
+    public String getAnswerSummary(@NotNull AnswerView answerView, @Nullable Locale maybeLocale) {
+        final PublicProfile respondent = answerView.respondent();
+        final LocalDate answerDate = answerView.answer().answerDate();
+        final Locale locale = maybeLocale != null ? maybeLocale : Locale.ENGLISH;
+        final String pattern = getLocalizedDateTimePattern(LONG, null, answerDate.getChronology(), locale);
+        final String when = DateTimeFormatter.ofPattern(pattern, locale).format(answerDate);
+        final String who = respondent.fullName().isEmpty() ? respondent.email() : respondent.fullName();
+        return messageSource.getMessage("answer.summary", locale, who, when)
+                .orElse(who + "'s answer for " + when);
+    }
+
+    private AnswerViewRecord buildView(Answer answer, String authenticatedUserId, Tenant tenant) {
+        final String respondentId = answer.respondentId();
+        final PublicProfile respondent = profileRepository.findById(respondentId, tenant).orElse(null);
+        return buildView(answer, authenticatedUserId, Map.of(respondentId, respondent));
     }
 
     private AnswerViewRecord buildView(Answer answer, String authenticatedUserId, Map<String, PublicProfile> respondents) {

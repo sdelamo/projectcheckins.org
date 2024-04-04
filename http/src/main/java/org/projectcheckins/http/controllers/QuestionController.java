@@ -52,7 +52,7 @@ class QuestionController {
     // LIST
     public static final String PATH_LIST = PATH + ApiConstants.PATH_LIST;
     private static final String VIEW_LIST = PATH + ApiConstants.VIEW_LIST;
-    private static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(Message.of("Questions", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_LIST), PATH_LIST);
+    public static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(Message.of("Questions", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_LIST), PATH_LIST);
 
     // CREATE
     private static final String PATH_CREATE = PATH + ApiConstants.PATH_CREATE;
@@ -66,7 +66,7 @@ class QuestionController {
     private static final String PATH_SHOW = PATH + ApiConstants.PATH_SHOW;
     public static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_SHOW).build();
     private static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
-    private static final Function<Question, Breadcrumb> BREADCRUMB_SHOW = question -> new Breadcrumb(Message.of(question.title()), PATH_SHOW_BUILDER.andThen(URI::toString).apply(question.id()));
+    public static final Function<Question, Breadcrumb> BREADCRUMB_SHOW = question -> new Breadcrumb(Message.of(question.title()), PATH_SHOW_BUILDER.andThen(URI::toString).apply(question.id()));
 
     // EDIT
     private static final String PATH_EDIT = PATH + ApiConstants.PATH_EDIT;

@@ -1,6 +1,8 @@
 <th:block th:fragment="answer(view)" xmlns:th="http://www.thymeleaf.org">
     <article class="m-3 p-3 border border-primary">
-        <div class="date" th:text="${view.answer.answerDate}"/>
+        <div class="date">
+            <a th:href="@{|/question/${view.answer.questionId}/answer/${view.answer.id}/show|}" th:text="${view.answer.answerDate}"/>
+        </div>
         <div class="respondent">
             <span th:unless="${view.respondent.id}" th:text="#{unknown.respondent.fullName}"></span>
             <th:block th:if="${view.respondent.id}">
