@@ -10,7 +10,10 @@ import jakarta.validation.constraints.PastOrPresent;
 import java.time.LocalDate;
 
 @Serdeable
+@OnlyOncePerDay
 public record AnswerWysiwygSave(@NotBlank @InputHidden String questionId,
+                                @NotBlank @InputHidden String respondentId,
                                 @NotNull @PastOrPresent LocalDate answerDate,
-                                @NotBlank @TrixEditor String html) {
+                                @NotBlank @TrixEditor String html
+) implements AnswerForm {
 }

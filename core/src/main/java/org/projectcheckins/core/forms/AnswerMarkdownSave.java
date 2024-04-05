@@ -9,7 +9,10 @@ import jakarta.validation.constraints.PastOrPresent;
 import java.time.LocalDate;
 
 @Serdeable
+@OnlyOncePerDay
 public record AnswerMarkdownSave(@NotBlank @InputHidden String questionId,
-                         @NotNull @PastOrPresent LocalDate answerDate,
-                         @NotBlank @Textarea String markdown) {
+                                 @NotBlank @InputHidden String respondentId,
+                                 @NotNull @PastOrPresent LocalDate answerDate,
+                                 @NotBlank @Textarea String markdown
+) implements AnswerForm {
 }

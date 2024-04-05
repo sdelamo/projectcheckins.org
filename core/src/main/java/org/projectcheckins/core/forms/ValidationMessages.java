@@ -5,19 +5,16 @@ import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 
 @Singleton
-public class NotEmptyMessages extends StaticMessageSource {
+public class ValidationMessages extends StaticMessageSource {
 
     public static final String NOT_EMPTY_DAYS_MESSAGE = "You must select at least one day.";
     public static final String NOT_EMPTY_RESPONDENTS_MESSAGE = "You must select at least one respondent.";
-
-    private static final String MESSAGE_SUFFIX = ".message";
-
-    public NotEmptyMessages() {
-    }
+    public static final String ONLY_ONCE_PER_DAY_MESSAGE = "You already have an answer for that question and day.";
 
     @PostConstruct
     void init() {
-        addMessage(NotEmptyDays.class.getName() + MESSAGE_SUFFIX, NotEmptyMessages.NOT_EMPTY_DAYS_MESSAGE);
-        addMessage(NotEmptyRespondents.class.getName() + MESSAGE_SUFFIX, NotEmptyMessages.NOT_EMPTY_RESPONDENTS_MESSAGE);
+        addMessage(NotEmptyDays.MESSAGE, NOT_EMPTY_DAYS_MESSAGE);
+        addMessage(NotEmptyRespondents.MESSAGE, NOT_EMPTY_RESPONDENTS_MESSAGE);
+        addMessage(OnlyOncePerDay.MESSAGE, ONLY_ONCE_PER_DAY_MESSAGE);
     }
 }

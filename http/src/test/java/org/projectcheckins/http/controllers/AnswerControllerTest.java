@@ -56,6 +56,7 @@ class AnswerControllerTest {
 
 
         Map<String, Object> body = Map.of("questionId", questionId,
+                "respondentId", AbstractAuthenticationFetcher.SDELAMO.getName(),
                 "answerDate", "2024-03-11",
                 "markdown", markdown);
 
@@ -78,7 +79,8 @@ class AnswerControllerTest {
                         """;
         URI wysiwygUri = UriBuilder.of("/question").path(questionId).path("answer").path("wysiwyg").build();
         Map<String, Object> bodyWysiwyg = Map.of("questionId", questionId,
-                "answerDate", "2024-03-11",
+                "respondentId", AbstractAuthenticationFetcher.SDELAMO.getName(),
+                "answerDate", "2024-03-12",
                 "html", html);
 
         URI bogusWysiwygUri = UriBuilder.of("/question").path("bogus").path("answer").path("wysiwyg").build();
@@ -88,10 +90,11 @@ class AnswerControllerTest {
 
         HttpRequest<?> wysiwygRequest = BrowserRequest.POST(wysiwygUri.toString(), bodyWysiwyg);
         assertDoesNotThrow(() -> client.exchange(wysiwygRequest));
-        LocalDate expectedAnswerDate = LocalDate.of(2024, 3, 11);
+        LocalDate expectedMarkdownAnswerDate = LocalDate.of(2024, 3, 11);
+        LocalDate expectedWysiwygAnswerDate = LocalDate.of(2024, 3, 12);
         assertThat(answerRepositoryMock.getAnswers())
-                .anyMatch(a -> a.format() == Format.MARKDOWN && a.text().equals(markdown) && a.answerDate().equals(expectedAnswerDate))
-                .anyMatch(a -> a.format() == Format.WYSIWYG && a.text().equals(html) && a.answerDate().equals(expectedAnswerDate));
+                .anyMatch(a -> a.format() == Format.MARKDOWN && a.text().equals(markdown) && a.answerDate().equals(expectedMarkdownAnswerDate))
+                .anyMatch(a -> a.format() == Format.WYSIWYG && a.text().equals(html) && a.answerDate().equals(expectedWysiwygAnswerDate));
 
         Assertions.assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("answer").path("any-answer").path("show").build()), String.class))
                 .matches(htmlPage())
@@ -135,6 +138,11 @@ class AnswerControllerTest {
         @Override
         public Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant) {
             return answers.stream().findAny();
+        }
+
+        @Override
+        public List<? extends Answer> findByQuestionIdAndRespondentId(String questionId, String respondentId) {
+            return answers.stream().filter(a -> a.questionId().equals(questionId) && a.respondentId().equals(respondentId)).toList();
         }
     }
 

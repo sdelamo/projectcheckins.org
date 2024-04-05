@@ -199,5 +199,10 @@ class QuestionControllerTest {
         public List<? extends Answer> findByQuestionId(@NotBlank String questionId, @Nullable Tenant tenant) {
             return answers;
         }
+
+        @Override
+        public List<? extends Answer> findByQuestionIdAndRespondentId(String questionId, String respondentId) {
+            return answers.stream().filter(a -> a.questionId().equals(questionId) && a.respondentId().equals(respondentId)).toList();
+        }
     }
 }

@@ -31,8 +31,8 @@ class AnswerSaveFormGeneratorImpl implements AnswerSaveFormGenerator {
     public Form generate(@NotBlank String questionId, @NotNull Function<Format, String> actionFunction, @NotNull Authentication authentication) {
         Format preferedFormat = profileRepository.findByAuthentication(authentication).map(Profile::format).orElseThrow(UserNotFoundException::new);
         Object instance = switch (preferedFormat) {
-            case WYSIWYG -> new AnswerWysiwygSave(questionId, LocalDate.now(), null);
-            case MARKDOWN -> new AnswerMarkdownSave(questionId, LocalDate.now(), null);
+            case WYSIWYG -> new AnswerWysiwygSave(questionId, authentication.getName(), LocalDate.now(), null);
+            case MARKDOWN -> new AnswerMarkdownSave(questionId, authentication.getName(), LocalDate.now(), null);
         };
         return formGenerator.generate(actionFunction.apply(preferedFormat), instance);
     }

@@ -14,13 +14,15 @@ class AnswerMarkdownSaveTest {
 
     @Test
     void validation(Validator validator)  {
-        assertThat(validator.validate(new AnswerMarkdownSave(null, null, null)))
+        assertThat(validator.validate(new AnswerMarkdownSave(null, null, null, null)))
                 .hasNotNullViolation("questionId")
+                .hasNotNullViolation("respondentId")
                 .hasNotNullViolation("answerDate")
                 .hasNotNullViolation("markdown");
 
-        assertThat(validator.validate(new AnswerMarkdownSave("", null, "")))
+        assertThat(validator.validate(new AnswerMarkdownSave("", "", null, "")))
                 .hasNotBlankViolation("questionId")
+                .hasNotNullViolation("respondentId")
                 .hasNotBlankViolation("markdown");
     }
 

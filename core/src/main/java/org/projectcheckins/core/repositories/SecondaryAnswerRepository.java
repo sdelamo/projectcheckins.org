@@ -41,4 +41,9 @@ public class SecondaryAnswerRepository implements AnswerRepository {
                                                    @Nullable Tenant tenant) {
         throw new UnsupportedOperationException("Not implemented");
     }
+
+    @Override
+    public List<? extends Answer> findByQuestionIdAndRespondentId(String questionId, String respondentId) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
 }

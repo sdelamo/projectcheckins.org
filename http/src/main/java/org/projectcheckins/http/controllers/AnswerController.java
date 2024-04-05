@@ -84,6 +84,9 @@ class AnswerController {
         if (!questionId.equals(form.questionId())) {
             return HttpResponse.unprocessableEntity();
         }
+        if (!authentication.getName().equals(form.respondentId())) {
+            return HttpResponse.unprocessableEntity();
+        }
         answerService.save(authentication, new AnswerSave(form.questionId(), form.answerDate(), Format.MARKDOWN, form.markdown()), tenant);
         return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
     }
@@ -94,6 +97,9 @@ class AnswerController {
                                       @Nullable Tenant tenant,
                                       @Body @NonNull @NotNull @Valid AnswerWysiwygSave form) {
         if (!questionId.equals(form.questionId())) {
+            return HttpResponse.unprocessableEntity();
+        }
+        if (!authentication.getName().equals(form.respondentId())) {
             return HttpResponse.unprocessableEntity();
         }
         answerService.save(authentication, new AnswerSave(form.questionId(), form.answerDate(), Format.WYSIWYG, form.html()), tenant);

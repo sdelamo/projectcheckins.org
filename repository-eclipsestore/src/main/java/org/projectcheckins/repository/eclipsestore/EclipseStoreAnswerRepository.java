@@ -60,6 +60,17 @@ class EclipseStoreAnswerRepository implements AnswerRepository {
                 .toList();
     }
 
+    @Override
+    @NonNull
+    public List<? extends Answer> findByQuestionIdAndRespondentId(
+            @NotBlank String questionId,
+            @NotNull String respondentId) {
+        return rootProvider.root().getAnswers().stream()
+                .filter(a -> a.questionId().equals(questionId) && a.respondentId().equals(respondentId))
+                .sorted(CHRONOLOGICALLY.reversed())
+                .toList();
+    }
+
     @StoreParams("answers")
     public void save(List<AnswerEntity> answers, AnswerEntity answer) {
         answers.add(answer);

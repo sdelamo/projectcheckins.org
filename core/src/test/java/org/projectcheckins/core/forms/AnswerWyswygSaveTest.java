@@ -14,13 +14,15 @@ class AnswerWyswygSaveTest {
 
     @Test
     void validation(Validator validator)  {
-        assertThat(validator.validate(new AnswerWysiwygSave(null, null, null)))
+        assertThat(validator.validate(new AnswerWysiwygSave(null, null, null, null)))
                 .hasNotNullViolation("questionId")
+                .hasNotNullViolation("respondentId")
                 .hasNotNullViolation("answerDate")
                 .hasNotNullViolation("html");
 
-        assertThat(validator.validate(new AnswerWysiwygSave("", null, "")))
+        assertThat(validator.validate(new AnswerWysiwygSave("", "", null, "")))
                 .hasNotBlankViolation("questionId")
+                .hasNotNullViolation("respondentId")
                 .hasNotBlankViolation("html");
     }
 

@@ -20,4 +20,7 @@ public interface AnswerRepository {
 
     @NonNull
     List<? extends Answer> findByQuestionId(@NotBlank String questionId, @Nullable Tenant tenant);
+
+    @NonNull
+    List<? extends Answer> findByQuestionIdAndRespondentId(@NotBlank String questionId, @NotNull String respondentId);
 }
