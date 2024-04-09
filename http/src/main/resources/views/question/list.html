@@ -7,11 +7,9 @@
 <body>
 <main>
     <a href="/question/create"><button type="button" class="btn btn-primary" th:text="#{question.create}"></button></a>
-    <ul>
-        <th:block th:each="question : ${questions}">
-            <li><a th:href="@{|/question/${question.id}/show|}"><span th:text="${question.title}"></span></a></li>
-        </th:block>
-    </ul>
+    <th:block th:each="question : ${questions}">
+        <div th:replace="~{question/_question :: question(${question})}"/>
+    </th:block>
 </main>
 </body>
 </html>

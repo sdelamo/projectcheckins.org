@@ -112,7 +112,9 @@ class QuestionControllerTest {
                 .bodyHtmlTest(html -> html.contains("You must select at least one day")); // days missing when selecting DAILY_ON
 
         assertThat(client.exchange(BrowserRequest.GET("/question/list"), String.class))
-            .matches(htmlPage());
+            .matches(htmlPage())
+                .matches(htmlBody(Pattern.compile("""
+                Asking 1 person\\s*every weekday\\s*at the end of the day.""")));
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("edit").build()), String.class))
             .matches(htmlPage())
@@ -168,7 +170,7 @@ class QuestionControllerTest {
         @Override
         @NonNull
         public List<QuestionRecord> findAll(@Nullable Tenant tenant) {
-            return Collections.emptyList();
+            return findById("xxx", tenant).map(List::of).orElseGet(Collections::emptyList);
         }
 
         @Override

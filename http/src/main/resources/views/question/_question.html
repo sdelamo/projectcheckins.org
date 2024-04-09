@@ -1,0 +1,10 @@
+<th:block th:fragment="question(question)" xmlns:th="http://www.thymeleaf.org">
+    <article class="mt-5">
+        <h1 class="display-3">
+            <a th:href="@{|/question/${question.id}/show|}" class="link-underline-light">
+                <span th:text="${question.title}"></span>
+            </a>
+        </h1>
+        <div th:replace="~{question/_summary :: summary(${question})}"/>
+    </article>
+</th:block>
