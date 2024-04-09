@@ -7,12 +7,14 @@
 <body>
 <main>
     <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
-    <a th:href="@{|/question/${question.id}/edit|}" th:text="#{question.edit}"></a>
 
-    <div th:replace="~{question/_summary :: summary(${question})}"/>
+    <a th:href="@{|/question/${question.id}/edit|}">
+        <button type="button" class="btn btn-primary" th:text="#{question.edit}"/>
+    </a>
 
-    <h1 th:text="${question.title}"></h1>
+    <div th:replace="~{question/_question :: question(${question})}"/>
 
+    <hr/>
 
     <th:block th:if="${answerForm}">
         <form th:replace="~{fieldset/form :: form(${answerForm})}"></form>
