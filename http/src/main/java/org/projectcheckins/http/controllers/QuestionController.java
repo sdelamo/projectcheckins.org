@@ -45,9 +45,9 @@ class QuestionController {
     public static final String PATH = ApiConstants.SLASH + QUESTION;
 
     private static final String MODEL_QUESTIONS = "questions";
-    private static final String MODEL_QUESTION = "question";
+    public static final String MODEL_QUESTION = "question";
     private static final String MODEL_RESPONDENTS = "respondents";
-    private static final String MODEL_ANSWERS = "answers";
+    public static final String MODEL_ANSWERS = "answers";
 
     // LIST
     public static final String PATH_LIST = PATH + ApiConstants.PATH_LIST;
@@ -65,7 +65,7 @@ class QuestionController {
     // SHOW
     private static final String PATH_SHOW = PATH + ApiConstants.PATH_SHOW;
     public static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_SHOW).build();
-    private static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
+    public static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
     public static final Function<Question, Breadcrumb> BREADCRUMB_SHOW = question -> new Breadcrumb(Message.of(question.title()), PATH_SHOW_BUILDER.andThen(URI::toString).apply(question.id()));
 
     // EDIT
@@ -80,7 +80,7 @@ class QuestionController {
 
     // DELETE
     private static final String PATH_DELETE = PATH + ApiConstants.PATH_DELETE;
-    private static final String ANSWER_FORM = "answerForm";
+    public static final String ANSWER_FORM = "answerForm";
     public static final String MODEL_FIELDSET = "fieldset";
 
     private final QuestionService questionService;

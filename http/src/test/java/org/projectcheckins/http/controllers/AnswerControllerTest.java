@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.projectcheckins.test.AbstractAuthenticationFetcher.SDELAMO;
 import static org.projectcheckins.test.AssertUtils.htmlBody;
 import static org.projectcheckins.test.AssertUtils.htmlPage;
 
@@ -113,6 +114,34 @@ class AnswerControllerTest {
                         <a href="/question/123/answer/.*/edit">""")));
     }
 
+    @Test
+    void markdownMustNotBeBlank(@Client("/") HttpClient httpClient, AuthenticationFetcherMock authenticationFetcher) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final String questionId = "123";
+        final Map<String, Object> body = Map.of("questionId", questionId, "respondentId", SDELAMO.getName(), "answerDate", "1970-01-01");
+        final URI uri = UriBuilder.of("/question").path(questionId).path("answer").path("markdown").build();
+        final HttpRequest<Map<String, Object>> request = BrowserRequest.POST(uri.toString(), body);
+        authenticationFetcher.setAuthentication(SDELAMO);
+        HttpClientResponseExceptionAssert.assertThatThrowsHttpClientResponseException(() -> client.exchange(request))
+                .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                .bodyHtmlContains("""
+                        <div id="markdownValidationServerFeedback" class="invalid-feedback">must not be blank</div>""");
+    }
+
+    @Test
+    void wysiwygMustNotBeBlank(@Client("/") HttpClient httpClient, AuthenticationFetcherMock authenticationFetcher) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final String questionId = "123";
+        final Map<String, Object> body = Map.of("questionId", questionId, "respondentId", SDELAMO.getName(), "answerDate", "1970-01-01");
+        final URI uri = UriBuilder.of("/question").path(questionId).path("answer").path("wysiwyg").build();
+        final HttpRequest<Map<String, Object>> request = BrowserRequest.POST(uri.toString(), body);
+        authenticationFetcher.setAuthentication(SDELAMO);
+        HttpClientResponseExceptionAssert.assertThatThrowsHttpClientResponseException(() -> client.exchange(request))
+                .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                .bodyHtmlContains("""
+                        <div id="htmlValidationServerFeedback" class="invalid-feedback">must not be blank</div>""");
+    }
+
     @Requires(property = "spec.name", value = "AnswerControllerTest")
     @Singleton
     static class AuthenticationFetcherMock extends AbstractAuthenticationFetcher {
@@ -141,6 +170,12 @@ class AnswerControllerTest {
         }
 
         @Override
+        @NonNull
+        public List<? extends Answer> findByQuestionId(@NotBlank String questionId, @Nullable Tenant tenant) {
+            return Collections.emptyList();
+        }
+
+        @Override
         public List<? extends Answer> findByQuestionIdAndRespondentId(String questionId, String respondentId) {
             return answers.stream().filter(a -> a.questionId().equals(questionId) && a.respondentId().equals(respondentId)).toList();
         }
@@ -166,6 +201,12 @@ class AnswerControllerTest {
     @Requires(property = "spec.name", value = "AnswerControllerTest")
     @Singleton
     static class ProfileRepositoryMock extends SecondaryProfileRepository {
+
+        @Override
+        public List<? extends Profile> list(Tenant tenant) {
+            return Collections.emptyList();
+        }
+
         @Override
         public Optional<? extends Profile> findById(String id, Tenant tenant) {
             return Optional.of(new ProfileRecord(

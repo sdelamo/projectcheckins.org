@@ -1,17 +1,22 @@
 package org.projectcheckins.http.controllers;
 
-import io.micronaut.context.MessageSource;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
+import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
+import io.micronaut.views.ModelAndView;
+import io.micronaut.views.fields.Form;
+import io.micronaut.views.fields.FormGenerator;
 import io.micronaut.views.fields.messages.Message;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +25,8 @@ import org.projectcheckins.annotations.PostForm;
 import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.api.AnswerView;
+import org.projectcheckins.core.api.Question;
+import org.projectcheckins.core.forms.AnswerForm;
 import org.projectcheckins.core.forms.AnswerMarkdownSave;
 import org.projectcheckins.core.forms.AnswerSave;
 import org.projectcheckins.core.forms.AnswerWysiwygSave;
@@ -31,6 +38,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -48,10 +56,12 @@ class AnswerController {
 
     // SAVE
     private static final String PATH_ANSWER_SAVE_MARKDOWN = QuestionController.PATH + ApiConstants.SLASH + "{questionId}" + ApiConstants.SLASH + ANSWER + ApiConstants.SLASH + MARKDOWN;
+    private static final String REGEX_SAVE_MARKDOWN = "^\\/question\\/.*\\/answer/markdown$";
     private static final Function<String, URI> URI_BUILDER_ANSWER_SAVE_MARKDOWN = questionId ->
             UriBuilder.of(QuestionController.PATH).path(questionId).path(ANSWER).path(MARKDOWN).build();
 
     private static final String PATH_ANSWER_SAVE_WYSIWYG = QuestionController.PATH + ApiConstants.SLASH + "{questionId}" + ApiConstants.SLASH + ANSWER + ApiConstants.SLASH + WYSIWYG;
+    private static final String REGEX_SAVE_WYSIWYG = "^\\/question\\/.*\\/answer/wysiwyg$";
     private static final Function<String, URI> URI_BUILDER_ANSWER_SAVE_WYSIWYG = questionId ->
             UriBuilder.of(QuestionController.PATH).path(questionId).path(ANSWER).path(WYSIWYG).build();
 
@@ -68,12 +78,12 @@ class AnswerController {
 
     private final QuestionService questionService;
     private final AnswerService answerService;
-    private final MessageSource messageSource;
+    private final FormGenerator formGenerator;
 
-    AnswerController(QuestionService questionService, AnswerService answerService, MessageSource messageSource) {
+    AnswerController(QuestionService questionService, AnswerService answerService, FormGenerator formGenerator) {
         this.questionService = questionService;
         this.answerService = answerService;
-        this.messageSource = messageSource;
+        this.formGenerator = formGenerator;
     }
 
     @PostForm(uri = PATH_ANSWER_SAVE_MARKDOWN, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
@@ -124,7 +134,49 @@ class AnswerController {
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
+
+    @Error(exception = ConstraintViolationException.class)
+    public HttpResponse<?> onConstraintViolationException(HttpRequest<?> request,
+                                                          @NotNull Authentication authentication,
+                                                          @Nullable Tenant tenant,
+                                                          ConstraintViolationException ex) {
+        final Optional<? extends AnswerForm> answerForm;
+        if (request.getPath().matches(REGEX_SAVE_MARKDOWN)) {
+            answerForm = request.getBody(AnswerMarkdownSave.class);
+        } else if (request.getPath().matches(REGEX_SAVE_WYSIWYG)) {
+            answerForm = request.getBody(AnswerWysiwygSave.class);
+        } else {
+            answerForm = Optional.empty();
+        }
+        return answerForm.map(f -> questionService.findById(f.questionId(), tenant)
+                        .map(q -> HttpResponse.unprocessableEntity().body(new ModelAndView<>(QuestionController.VIEW_SHOW, showQuestionModel(q, generateForm(f, ex), authentication, tenant))))
+                        .orElseGet(NotFoundController::notFoundRedirect))
+                .orElseGet(HttpResponse::serverError);
+    }
+
     private Breadcrumb makeBreadcrumbShow(AnswerView view, Locale locale) {
         return new Breadcrumb(Message.of(answerService.getAnswerSummary(view, locale)), PATH_SHOW_BUILDER.andThen(URI::toString).apply(view.answer()));
+    }
+
+    @NonNull
+    private Map<String, Object> showQuestionModel(@NonNull Question question, @NonNull Form answerFormSave, @NonNull Authentication authentication, Tenant tenant) {
+        return Map.of(
+                QuestionController.MODEL_QUESTION, question,
+                ApiConstants.MODEL_BREADCRUMBS, List.of(QuestionController.BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
+                QuestionController.MODEL_ANSWERS, answerService.findByQuestionId(question.id(), authentication, tenant),
+                QuestionController.ANSWER_FORM, answerFormSave
+        );
+    }
+
+    private Form generateForm(AnswerForm form, ConstraintViolationException ex) {
+        return formGenerator.generate(URI_BUILDER_ANSWER_SAVE.apply(form.questionId(), getFormat(form)).toString(), form, ex);
+    }
+
+    private static Format getFormat(AnswerForm form) {
+        return switch (form) {
+            case AnswerMarkdownSave markdown -> Format.MARKDOWN;
+            case AnswerWysiwygSave wysiwyg -> Format.WYSIWYG;
+            default -> null;
+        };
     }
 }

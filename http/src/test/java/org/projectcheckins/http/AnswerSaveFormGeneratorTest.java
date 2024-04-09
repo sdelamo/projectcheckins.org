@@ -63,7 +63,7 @@ class AnswerSaveFormGeneratorTest {
                         .contains("type=\"hidden\" name=\"questionId\"")
                         .contains("input type=\"date\" name=\"answerDate\" value=\"" + LocalDate.now() + "\"")
                         .contains("type=\"hidden\" name=\"html\"")
-                        .contains("<trix-editor input=\"html\"></trix-editor>")
+                        .contains("<trix-editor class=\"form-control\" input=\"html\"></trix-editor>")
                 );
     }
 
