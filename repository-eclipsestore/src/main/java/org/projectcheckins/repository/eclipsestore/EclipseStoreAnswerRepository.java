@@ -5,6 +5,7 @@ import io.micronaut.core.annotation.Nullable;
 import io.micronaut.eclipsestore.RootProvider;
 import io.micronaut.eclipsestore.annotations.StoreParams;
 import io.micronaut.multitenancy.Tenant;
+import io.micronaut.validation.Validated;
 import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -14,8 +15,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.projectcheckins.core.api.Answer;
+import org.projectcheckins.core.exceptions.AnswerNotFoundException;
 import org.projectcheckins.core.idgeneration.IdGenerator;
 import org.projectcheckins.core.repositories.AnswerRepository;
+import org.projectcheckins.core.forms.Saved;
 
 import static java.util.Comparator.comparing;
 
@@ -42,9 +45,21 @@ class EclipseStoreAnswerRepository implements AnswerRepository {
         return id;
     }
 
+    @Validated(groups = Saved.class)
+    @Override
+    public void update(@NotNull @Valid Answer answerUpdate, @Nullable Tenant tenant) {
+        final AnswerEntity answer = findByQuestionIdAndRespondentId(answerUpdate.questionId(), answerUpdate.respondentId())
+                .stream().filter(a -> a.id().equals(answerUpdate.id())).findAny()
+                .orElseThrow(AnswerNotFoundException::new);
+        answer.answerDate(answerUpdate.answerDate());
+        answer.format(answerUpdate.format());
+        answer.text(answerUpdate.text());
+        save(answer);
+    }
+
     @Override
     @NonNull
-    public Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant) {
+    public Optional<AnswerEntity> findById(@NotBlank String id, @Nullable Tenant tenant) {
         return rootProvider.root().getAnswers().stream()
                 .filter(a -> a.id().equals(id))
                 .findAny();
@@ -52,7 +67,7 @@ class EclipseStoreAnswerRepository implements AnswerRepository {
 
     @Override
     @NonNull
-    public List<? extends Answer> findByQuestionId(@NotBlank String questionId,
+    public List<AnswerEntity> findByQuestionId(@NotBlank String questionId,
                                                    @Nullable Tenant tenant) {
         return rootProvider.root().getAnswers().stream()
                 .filter(a -> a.questionId().equals(questionId))
@@ -62,7 +77,7 @@ class EclipseStoreAnswerRepository implements AnswerRepository {
 
     @Override
     @NonNull
-    public List<? extends Answer> findByQuestionIdAndRespondentId(
+    public List<AnswerEntity> findByQuestionIdAndRespondentId(
             @NotBlank String questionId,
             @NotNull String respondentId) {
         return rootProvider.root().getAnswers().stream()
@@ -74,6 +89,10 @@ class EclipseStoreAnswerRepository implements AnswerRepository {
     @StoreParams("answers")
     public void save(List<AnswerEntity> answers, AnswerEntity answer) {
         answers.add(answer);
+    }
+
+    @StoreParams("answer")
+    public void save(AnswerEntity answer) {
     }
 
     @NonNull

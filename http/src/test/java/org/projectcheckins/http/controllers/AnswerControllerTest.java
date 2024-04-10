@@ -5,7 +5,9 @@ import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.util.StringUtils;
+import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
@@ -97,7 +99,8 @@ class AnswerControllerTest {
                 .anyMatch(a -> a.format() == Format.MARKDOWN && a.text().equals(markdown) && a.answerDate().equals(expectedMarkdownAnswerDate))
                 .anyMatch(a -> a.format() == Format.WYSIWYG && a.text().equals(html) && a.answerDate().equals(expectedWysiwygAnswerDate));
 
-        Assertions.assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("answer").path("any-answer").path("show").build()), String.class))
+        final String anyAnswerId = answerRepositoryMock.getAnswers().get(0).id();
+        Assertions.assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("answer").path(anyAnswerId).path("show").build()), String.class))
                 .matches(htmlPage())
                 .matches(htmlBody("""
                         <div class="date">"""))
@@ -142,6 +145,74 @@ class AnswerControllerTest {
                         <div id="htmlValidationServerFeedback" class="invalid-feedback">must not be blank</div>""");
     }
 
+    @Test
+    void editMarkdownAnswer(@Client("/") HttpClient httpClient, AuthenticationFetcherMock authenticationFetcher, AnswerRepository answerRepository) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final String questionId = "123";
+        final String id = UUID.randomUUID().toString();
+        final URI uri = UriBuilder.of("/question").path(questionId).path("answer").path(id).path("edit").build();
+        final HttpRequest<?> request = BrowserRequest.GET(uri.toString());
+        answerRepository.update(new AnswerRecord(id, questionId, SDELAMO.getName(), LocalDate.now(), Format.MARKDOWN, "Markdown answer"), null);
+        authenticationFetcher.setAuthentication(SDELAMO);
+        Assertions.assertThat(client.exchange(request, String.class))
+                .matches(htmlPage())
+                .matches(htmlBody("/question/123/answer/" + id + "/update"))
+                .matches(htmlBody("""
+                        <input type="hidden" name="format" value="MARKDOWN"/>"""))
+                .matches(htmlBody("""
+                        <textarea name="content" id="content" class="form-control" required="required">Markdown answer</textarea>"""));
+    }
+
+    @Test
+    void editWysiwygAnswer(@Client("/") HttpClient httpClient, AuthenticationFetcherMock authenticationFetcher, AnswerRepository answerRepository) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final String questionId = "123";
+        final String id = UUID.randomUUID().toString();
+        final URI uri = UriBuilder.of("/question").path(questionId).path("answer").path(id).path("edit").build();
+        final HttpRequest<?> request = BrowserRequest.GET(uri.toString());
+        answerRepository.update(new AnswerRecord(id, questionId, SDELAMO.getName(), LocalDate.now(), Format.WYSIWYG, "Rich text answer"), null);
+        authenticationFetcher.setAuthentication(SDELAMO);
+        Assertions.assertThat(client.exchange(request, String.class))
+                .matches(htmlPage())
+                .matches(htmlBody("/question/123/answer/" + id + "/update"))
+                .matches(htmlBody("""
+                        <input type="hidden" name="format" value="WYSIWYG"/>"""))
+                .matches(htmlBody("""
+                        <input type="hidden" name="content" value="Rich text answer" id="content"/><trix-editor class="form-control" input="content"></trix-editor>"""));
+    }
+
+    @Test
+    void updateExistingAnswer(@Client("/") HttpClient httpClient, AuthenticationFetcherMock authenticationFetcher, AnswerRepository answerRepository) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final String questionId = "123";
+        final String id = UUID.randomUUID().toString();
+        final Map<String, Object> body = Map.of("format", "MARKDOWN", "content", "Hello world", "answerDate", "1970-01-01");
+        final URI uri = UriBuilder.of("/question").path(questionId).path("answer").path(id).path("update").build();
+        final HttpRequest<Map<String, Object>> request = BrowserRequest.POST(uri.toString(), body);
+        answerRepository.update(new AnswerRecord(id, questionId, SDELAMO.getName(), LocalDate.now(), Format.MARKDOWN, "Lorem ipsum"), null);
+        authenticationFetcher.setAuthentication(SDELAMO);
+        assertThat(client.exchange(request))
+                .hasFieldOrPropertyWithValue("status", HttpStatus.SEE_OTHER)
+                .extracting(r -> r.header(HttpHeaders.LOCATION))
+                .isEqualTo("/question/123/answer/" + id + "/show");
+    }
+
+    @Test
+    void contentMustNotBeBlank(@Client("/") HttpClient httpClient, AuthenticationFetcherMock authenticationFetcher, AnswerRepository answerRepository) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final String questionId = "123";
+        final String id = UUID.randomUUID().toString();
+        final Map<String, Object> body = Map.of("format", "MARKDOWN", "answerDate", "1970-01-01");
+        final URI uri = UriBuilder.of("/question").path(questionId).path("answer").path(id).path("update").build();
+        final HttpRequest<Map<String, Object>> request = BrowserRequest.POST(uri.toString(), body);
+        answerRepository.update(new AnswerRecord(id, questionId, SDELAMO.getName(), LocalDate.now(), Format.MARKDOWN, "Lorem ipsum"), null);
+        authenticationFetcher.setAuthentication(SDELAMO);
+        Assertions.assertThat(client.exchange(request, String.class))
+                .matches(htmlPage())
+                .matches(htmlBody("""
+                        <div id="contentValidationServerFeedback" class="invalid-feedback">must not be blank</div>"""));
+    }
+
     @Requires(property = "spec.name", value = "AnswerControllerTest")
     @Singleton
     static class AuthenticationFetcherMock extends AbstractAuthenticationFetcher {
@@ -151,22 +222,29 @@ class AnswerControllerTest {
     @Singleton
     static class AnswerRepositoryMock extends SecondaryAnswerRepository {
 
-        private List<Answer> answers = new ArrayList<>();
+        private Map<String, Answer> answers = new HashMap<>();
+
         @Override
         @NonNull
         public String save(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
-            final String id = "xxx";
-            this.answers.add(answer);
+            final String id = UUID.randomUUID().toString();
+            this.answers.put(id, new AnswerRecord(id, answer.questionId(), answer.respondentId(), answer.answerDate(), answer.format(), answer.text()));
             return id;
         }
 
+        @Override
+        @NonNull
+        public void update(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
+            this.answers.put(answer.id(), answer);
+        }
+
         public List<Answer> getAnswers() {
-            return answers;
+            return answers.values().stream().toList();
         }
 
         @Override
         public Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant) {
-            return answers.stream().findAny();
+            return Optional.ofNullable(answers.get(id));
         }
 
         @Override
@@ -177,7 +255,7 @@ class AnswerControllerTest {
 
         @Override
         public List<? extends Answer> findByQuestionIdAndRespondentId(String questionId, String respondentId) {
-            return answers.stream().filter(a -> a.questionId().equals(questionId) && a.respondentId().equals(respondentId)).toList();
+            return answers.values().stream().filter(a -> a.questionId().equals(questionId) && a.respondentId().equals(respondentId)).toList();
         }
     }
 

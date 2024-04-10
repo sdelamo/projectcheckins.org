@@ -30,6 +30,11 @@ public class SecondaryAnswerRepository implements AnswerRepository {
     }
 
     @Override
+    public void update(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
     @NonNull
     public Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant) {
         throw new UnsupportedOperationException("Not implemented");

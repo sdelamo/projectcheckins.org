@@ -42,7 +42,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -184,27 +186,33 @@ class QuestionControllerTest {
     @Replaces(AnswerRepository.class)
     static class AnswerRepositoryMock implements AnswerRepository {
 
-        List<Answer> answers = new ArrayList<>();
+        Map<String, Answer> answers = new HashMap<>();
 
         @Override
         public String save(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
-            answers.add(answer);
-            return "zzz";
+            final String id = "zzz";
+            answers.put(id, answer);
+            return id;
+        }
+
+        @Override
+        public void update(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
+            answers.put(answer.id(), answer);
         }
 
         @Override
         public Optional<? extends Answer> findById(@NotBlank String id, @Nullable Tenant tenant) {
-            return Optional.empty();
+            return Optional.ofNullable(answers.get(id));
         }
 
         @Override
         public List<? extends Answer> findByQuestionId(@NotBlank String questionId, @Nullable Tenant tenant) {
-            return answers;
+            return answers.values().stream().toList();
         }
 
         @Override
         public List<? extends Answer> findByQuestionIdAndRespondentId(String questionId, String respondentId) {
-            return answers.stream().filter(a -> a.questionId().equals(questionId) && a.respondentId().equals(respondentId)).toList();
+            return answers.values().stream().filter(a -> a.questionId().equals(questionId) && a.respondentId().equals(respondentId)).toList();
         }
     }
 }

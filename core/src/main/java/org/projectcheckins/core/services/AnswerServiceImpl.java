@@ -80,6 +80,23 @@ public class AnswerServiceImpl implements AnswerService {
     }
 
     @Override
+    public void update(@NotNull Authentication authentication,
+                       @NotBlank String questionId,
+                       @NotBlank String id,
+                       @NotNull @Valid AnswerUpdate answerUpdate,
+                       @Nullable Tenant tenant) {
+        final AnswerRecord answer = new AnswerRecord(
+                id,
+                questionId,
+                authentication.getName(),
+                answerUpdate.answerDate(),
+                answerUpdate.format(),
+                answerUpdate.content()
+        );
+        answerRepository.update(answer, tenant);
+    }
+
+    @Override
     @NonNull
     public Optional<? extends AnswerView> findById(@NotBlank String id,
                                                    @NotNull Authentication authentication,

@@ -4,12 +4,15 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Answer;
+import org.projectcheckins.core.exceptions.AnswerNotFoundException;
 import org.projectcheckins.core.forms.AnswerRecord;
 import org.projectcheckins.core.forms.Format;
 
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @MicronautTest
 class EclipseStoreAnswerRepositoryTest {
@@ -40,5 +43,13 @@ class EclipseStoreAnswerRepositoryTest {
                 .isEmpty();
         assertThat(answerRepository.findByQuestionIdAndRespondentId(questionId, "user2"))
                 .isEmpty();
+        final String updatedText = "Hello world";
+        final AnswerRecord answerUpdate = new AnswerRecord(id, questionId, respondentId, answerDate, Format.MARKDOWN, updatedText);
+        assertThatCode(() -> answerRepository.update(answerUpdate, null));
+        assertThat(answerRepository.findById(id, null))
+                .hasValueSatisfying(a -> assertThat(a).hasFieldOrPropertyWithValue("text", updatedText));
+        final AnswerRecord wrongAnswer = new AnswerRecord("404", questionId, respondentId, answerDate, Format.MARKDOWN, updatedText);
+        assertThatThrownBy(() -> answerRepository.update(wrongAnswer, null))
+                .isInstanceOf(AnswerNotFoundException.class);
     }
 }

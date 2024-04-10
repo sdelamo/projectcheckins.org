@@ -30,6 +30,7 @@ import java.time.LocalTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
 
 @Property(name = "spec.name", value = "AnswerServiceImplTest")
@@ -83,6 +84,22 @@ class AnswerServiceImplTest {
                 .isNotBlank();
         assertThat(answerService.findByQuestionId(questionId, auth, null))
                 .isNotEmpty();
+    }
+
+    @Test
+    void testUpdate() {
+        final Authentication auth = new ClientAuthentication(USER_1.id(), null);
+        final String questionId = "question1";
+        final String text = "Foo";
+        final LocalDate now = LocalDate.now();
+        final AnswerSave answerSave = new AnswerSave(questionId, now, Format.MARKDOWN, text);
+        final String id = answerService.save(auth, answerSave, null);
+        final String updatedText = "Bar";
+        final AnswerUpdate answerUpdate = new AnswerUpdateRecord(now, Format.MARKDOWN, updatedText);
+        assertThatCode(() -> answerService.update(auth, questionId, id, answerUpdate, null))
+                .doesNotThrowAnyException();
+        assertThat(answerService.findById(id, auth, null))
+                .hasValueSatisfying(a -> assertThat(a.answer()).hasFieldOrPropertyWithValue("text", updatedText));
     }
 
     @Test
@@ -140,28 +157,33 @@ class AnswerServiceImplTest {
     @Replaces(AnswerRepository.class)
     static class AnswerRepositoryMock extends SecondaryAnswerRepository {
 
-        List<Answer> answers = new ArrayList<>();
+        Map<String, Answer> answers = new HashMap<>();
 
         @Override
         @NotBlank
         public String save(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
             final String id = UUID.randomUUID().toString();
-            answers.add(new AnswerRecord(id, answer.questionId(), answer.respondentId(), answer.answerDate(), answer.format(), answer.text()));
+            answers.put(id, new AnswerRecord(id, answer.questionId(), answer.respondentId(), answer.answerDate(), answer.format(), answer.text()));
             return id;
+        }
+
+        @Override
+        public void update(@NotNull @Valid Answer answer, @Nullable Tenant tenant) {
+            answers.put(answer.id(), answer);
         }
 
         @Override
         @NonNull
         public Optional<? extends Answer> findById(@NotBlank String id,
                                                @Nullable Tenant tenant) {
-            return answers.stream().filter(a -> a.id().equals(id)).findAny();
+            return Optional.ofNullable(answers.get(id));
         }
 
         @Override
         @NonNull
         public List<? extends Answer> findByQuestionId(@NotBlank String questionId,
                                                        @Nullable Tenant tenant) {
-            return answers.stream().filter(a -> a.questionId().equals(questionId)).toList();
+            return answers.values().stream().filter(a -> a.questionId().equals(questionId)).toList();
         }
     }
 
