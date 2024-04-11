@@ -6,11 +6,7 @@
 </head>
 <body>
 <main>
-
-    <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
-
-    <form th:replace="~{fieldset/form :: form(${memberForm})}"></form>
-
+    <nav th:replace="~{team/_create :: create(${breadcrumbs},${memberForm})}"></nav>
 </main>
 </body>
 </html>

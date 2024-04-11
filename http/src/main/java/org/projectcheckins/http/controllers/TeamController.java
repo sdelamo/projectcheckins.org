@@ -38,7 +38,10 @@ class TeamController {
     // LIST
     public static final String PATH_LIST = PATH + ApiConstants.PATH_LIST;
     private static final String VIEW_LIST = PATH + ApiConstants.VIEW_LIST;
-    public static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(Message.of("Team members", TEAM + ApiConstants.DOT + ApiConstants.ACTION_LIST), PATH_LIST);
+
+    private static final Message MESSAGE_LIST = Message.of("Team members", TEAM + ApiConstants.DOT + ApiConstants.ACTION_LIST);
+    public static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(MESSAGE_LIST, PATH_LIST);
+    private static final List<Breadcrumb> BREADCRUMBS_LIST = List.of(HomeController.BREADCRUMB_HOME, new Breadcrumb(MESSAGE_LIST));
 
     // CREATE
     private static final String PATH_CREATE = PATH + ApiConstants.PATH_CREATE;
@@ -47,7 +50,6 @@ class TeamController {
 
     // SAVE
     private static final String PATH_SAVE = PATH + ApiConstants.PATH_SAVE;
-
 
     private final TeamService teamService;
     private final FormGenerator formGenerator;
@@ -61,7 +63,7 @@ class TeamController {
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
     Map<String, Object> memberList(@Nullable Tenant tenant) {
         return Map.of(
-                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST),
+                ApiConstants.MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
                 MODEL_MEMBERS, teamService.findAll(tenant)
         );
     }
@@ -73,8 +75,7 @@ class TeamController {
 
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> memberSave(@NonNull @NotNull @Valid @Body TeamMemberSave form,
-                               @Nullable Tenant tenant
-    ) throws UserAlreadyExistsException {
+                               @Nullable Tenant tenant) throws UserAlreadyExistsException {
         teamService.save(form, tenant);
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
@@ -96,7 +97,7 @@ class TeamController {
 
     private Map<String, Object> createModel(Form form) {
         return Map.of(
-                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_CREATE),
+                ApiConstants.MODEL_BREADCRUMBS, List.of(HomeController.BREADCRUMB_HOME, BREADCRUMB_LIST, BREADCRUMB_CREATE),
                 MEMBER_FORM, form
         );
     }

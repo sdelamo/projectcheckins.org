@@ -1,0 +1,13 @@
+<th:block th:fragment="list(breadcrumbs,members)" xmlns:th="http://www.thymeleaf.org">
+    <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
+    <article>
+        <header><h1 th:text="#{team.list}"></h1></header>
+        <a href="/team/create"><button type="button" class="btn btn-primary" th:text="#{team.create}"></button></a>
+        <ul class="list-group mt-3">
+            <li class="list-group-item" th:each="member : ${members}">
+                <span th:unless="${member.fullName.empty}" th:text="${member.fullName}"></span>
+                <code th:if="${member.fullName.empty}" th:text="${member.email}"></code>
+            </li>
+        </ul>
+    </article>
+</th:block>

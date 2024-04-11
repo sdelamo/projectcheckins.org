@@ -11,12 +11,15 @@ import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.FormGenerator;
+import io.micronaut.views.fields.messages.Message;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import org.projectcheckins.annotations.GetHtml;
 import org.projectcheckins.annotations.PostForm;
+import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.repositories.ProfileRepository;
@@ -30,10 +33,13 @@ class ProfileController {
     private static final String MODEL_PROFILE = "profile";
 
     // SHOW
+    private static final Message MESSAGE_SHOW = Message.of("Profile", PROFILE + ApiConstants.DOT + ApiConstants.ACTION_SHOW);
     private static final String PATH_SHOW = PATH + ApiConstants.SLASH + ApiConstants.ACTION_SHOW;
     private static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
 
     // EDIT
+    private static final Message MESSAGE_BREADCRUMB_EDIT = Message.of("Edit", PROFILE + ApiConstants.DOT + ApiConstants.ACTION_EDIT);
+    private static final Breadcrumb BREADCRUMB_EDIT = new Breadcrumb(MESSAGE_BREADCRUMB_EDIT);
     private static final String PATH_EDIT = PATH + ApiConstants.SLASH + ApiConstants.ACTION_EDIT;
     private static final String VIEW_EDIT = PATH + ApiConstants.VIEW_EDIT;
 
@@ -51,7 +57,10 @@ class ProfileController {
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW)
     HttpResponse<?> profileShow(@NonNull @NotNull Authentication authentication, @Nullable Tenant tenant) {
         return profileRepository.findByAuthentication(authentication, tenant)
-            .map(p -> HttpResponse.ok(Map.of(MODEL_PROFILE, p)))
+            .map(p -> HttpResponse.ok(Map.of(
+                    MODEL_PROFILE, p,
+                    ApiConstants.MODEL_BREADCRUMBS, List.of(HomeController.BREADCRUMB_HOME, new Breadcrumb(MESSAGE_SHOW)))
+            ))
             .orElseGet(NotFoundController::notFoundRedirect);
     }
 
@@ -80,6 +89,9 @@ class ProfileController {
                 profile.format(),
                 profile.firstName(),
                 profile.lastName()));
-        return Map.of(ApiConstants.MODEL_FORM, form);
+        return Map.of(
+                ApiConstants.MODEL_FORM, form,
+                ApiConstants.MODEL_BREADCRUMBS, List.of(HomeController.BREADCRUMB_HOME, new Breadcrumb(MESSAGE_SHOW, PATH_SHOW), BREADCRUMB_EDIT)
+        );
     }
 }

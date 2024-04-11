@@ -6,43 +6,7 @@
 </head>
 <body>
 <main>
-    <a th:href="@{|/profile/edit|}" th:text="#{profile.edit}"></a>
-    <table class="table">
-        <tbody>
-        <tr>
-            <th th:text="#{profile.email}"></th>
-            <td th:text="${profile.email}"></td>
-        </tr>
-        <tr th:if="${profile.fullName}">
-            <th th:text="#{profile.fullName}"></th>
-            <td th:text="${profile.fullName}"></td>
-        </tr>
-        <tr>
-            <th th:text="#{profile.timeZone}"></th>
-            <td th:text="${timeZoneFormatter.format(profile.timeZone)}"></td>
-        </tr>
-        <tr>
-            <th th:text="#{profile.firstDayOfWeek}"></th>
-            <td th:text="${profile.firstDayOfWeek}"></td>
-        </tr>
-        <tr>
-            <th th:text="#{profile.beginningOfDay}"></th>
-            <td th:text="${profile.beginningOfDay}"></td>
-        </tr>
-        <tr>
-            <th th:text="#{profile.endOfDay}"></th>
-            <td th:text="${profile.endOfDay}"></td>
-        </tr>
-        <tr>
-            <th th:text="#{profile.timeFormat}">
-            <td><span th:replace="~{profile/_timeFormat :: timeFormat(${profile.timeFormat})}"></span></td>
-        </tr>
-        <tr>
-            <th th:text="#{profile.format}">
-            <td><span th:replace="~{profile/_format :: format(${profile.format})}"></span></td>
-        </tr>
-        </tbody>
-    </table>
+    <nav th:replace="~{profile/_show :: show(${breadcrumbs}, ${profile})}"></nav>
 </main>
 </body>
 </html>
