@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" th:replace="~{layout :: layout(~{::title},~{::script},~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title></title>
+    <script></script>
+</head>
+<body>
+<main>
+
+    <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
+
+    <ul>
+        <li th:each="member : ${members}">
+            <span th:unless="${member.fullName.empty}" th:text="${member.fullName}"></span>
+            <code th:if="${member.fullName.empty}" th:text="${member.email}"></code>
+        </li>
+    </ul>
+
+    <a href="/team/create"><button type="button" class="btn btn-primary" th:text="#{team.create}"></button></a>
+
+</main>
+</body>
+</html>

@@ -3,6 +3,7 @@ plugins {
 }
 dependencies {
     api(project(":multitenancy"))
+    api(project(":security"))
     api("io.micronaut.security:micronaut-security")
     api("io.micronaut.views:micronaut-views-core")
     api("io.micronaut.views:micronaut-views-fieldset")
