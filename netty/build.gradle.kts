@@ -5,7 +5,13 @@ plugins {
 version = "0.1"
 group = "org.projectcheckins"
 repositories {
-        mavenCentral()
+    mavenCentral()
+    maven {
+        setUrl("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
 }
 
 dependencies {
