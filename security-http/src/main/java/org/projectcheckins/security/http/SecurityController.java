@@ -68,7 +68,8 @@ class SecurityController {
     }
 
     @PostForm(uri = PATH_SIGN_UP, rolesAllowed = SecurityRule.IS_ANONYMOUS)
-    HttpResponse<?> signUp(@NonNull @NotNull @Valid @Body SignUpForm form) {
+    HttpResponse<?> signUp(HttpRequest<?> request,
+                           @NonNull @NotNull @Valid @Body SignUpForm form) {
         try {
             registerService.register(form.email(), form.password());
         } catch (UserAlreadyExistsException e) {

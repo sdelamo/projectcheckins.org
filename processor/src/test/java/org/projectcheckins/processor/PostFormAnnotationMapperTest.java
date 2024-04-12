@@ -2,6 +2,7 @@ package org.projectcheckins.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.micronaut.views.turbo.http.TurboMediaType;
 import org.projectcheckins.annotations.PostForm;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.http.MediaType;
@@ -32,7 +33,7 @@ class PostFormAnnotationMapperTest {
             .isNotNull()
             .hasSize(6)
             .containsExactlyInAnyOrder(
-                AnnotationValue.builder(Produces.class).member("value", MediaType.TEXT_HTML).build(),
+                AnnotationValue.builder(Produces.class).member("value", MediaType.TEXT_HTML, TurboMediaType.TURBO_STREAM).build(),
                 AnnotationValue.builder(ExecuteOn.class).member("value", TaskExecutors.BLOCKING).build(),
                 AnnotationValue.builder(Post.class).member("uri", "/{id}/update").build(),
                 AnnotationValue.builder(Consumes.class).member("value", MediaType.APPLICATION_FORM_URLENCODED).build(),

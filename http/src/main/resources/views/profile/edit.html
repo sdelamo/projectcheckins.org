@@ -7,7 +7,7 @@
 <body>
 <main>
     <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
-    <form th:replace="~{fieldset/form :: form(${form})}"></form>
+    <form th:replace="~{fieldset/form :: form(${form}, true)}"></form>
 </main>
 </body>
 </html>

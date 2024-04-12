@@ -4,6 +4,7 @@ import io.micronaut.http.annotation.UriMapping;
 import io.micronaut.scheduling.TaskExecutors;
 import java.lang.annotation.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import io.micronaut.views.turbo.TurboStreamAction;
 
 @Documented
 @Retention(RUNTIME)
@@ -19,4 +20,8 @@ public @interface GetHtml {
     boolean hidden() default true;
 
     String executesOn() default TaskExecutors.BLOCKING;
+
+    TurboStreamAction turboAction() default TurboStreamAction.UPDATE;
+
+    String turboView() default "";
 }
