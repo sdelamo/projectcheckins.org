@@ -120,8 +120,8 @@ class SecurityControllerTest {
         final HttpRequest<?> request = BrowserRequest.POST("/security/updatePassword", Map.of(
                 "userId", SDELAMO.getName(),
                 "currentPassword", "old password",
-                "newPassword", "new password",
-                "repeatNewPassword", "new password"));
+                "password", "new password",
+                "repeatPassword", "new password"));
         assertThat(client.retrieve(request))
                 .containsOnlyOnce("You have successfully changed your password.");
     }
@@ -132,8 +132,8 @@ class SecurityControllerTest {
         final HttpRequest<?> request = BrowserRequest.POST("/security/updatePassword", Map.of(
                 "userId", SDELAMO.getName(),
                 "currentPassword", "wrong password",
-                "newPassword", "new password",
-                "repeatNewPassword", "new password"));
+                "password", "new password",
+                "repeatPassword", "new password"));
         assertThat(client.retrieve(request))
                 .containsOnlyOnce("Current password is incorrect. Please try again.");
     }
@@ -144,10 +144,10 @@ class SecurityControllerTest {
         final HttpRequest<?> request = BrowserRequest.POST("/security/updatePassword", Map.of(
                 "userId", SDELAMO.getName(),
                 "currentPassword", "old password",
-                "newPassword", "new password one",
-                "repeatNewPassword", "new password two"));
+                "password", "new password one",
+                "repeatPassword", "new password two"));
         assertThat(client.retrieve(request))
-                .containsOnlyOnce("New passwords do not match.");
+                .containsOnlyOnce("Passwords do not match");
     }
 
     @Test
@@ -156,8 +156,8 @@ class SecurityControllerTest {
         final HttpRequest<?> request = BrowserRequest.POST("/security/updatePassword", Map.of(
                 "userId", "wrong user",
                 "currentPassword", "old password",
-                "newPassword", "new password",
-                "repeatNewPassword", "new password"));
+                "password", "new password",
+                "repeatPassword", "new password"));
         assertThat(client.retrieve(request))
                 .containsOnlyOnce("""
                         <form action="/login" method="post">""");

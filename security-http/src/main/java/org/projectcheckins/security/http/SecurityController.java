@@ -116,7 +116,7 @@ class SecurityController {
                                    @NonNull Authentication authentication) {
         final String userId = form.userId();
         if (userId.equals(authentication.getName())) {
-            this.passwordService.updatePassword(userId, form.newPassword());
+            this.passwordService.updatePassword(userId, form.password());
             return HttpResponse.ok().body(new ModelAndView<>(VIEW_CHANGED_PASSWORD, Collections.emptyMap()));
         }
         return HttpResponse.seeOther(URI_LOGIN);
