@@ -5,7 +5,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 @Introspected
-class NotEmptyDaysValidator  implements ConstraintValidator<NotEmptyDays, QuestionForm> {
+class NotEmptyDaysValidator implements ConstraintValidator<NotEmptyDays, QuestionForm> {
     @Override
     public boolean isValid(QuestionForm value, ConstraintValidatorContext context) {
         return !value.days().isEmpty();

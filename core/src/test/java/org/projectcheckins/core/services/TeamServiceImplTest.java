@@ -4,12 +4,15 @@ import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.NonNull;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.Format;
@@ -18,10 +21,7 @@ import org.projectcheckins.core.forms.TeamMemberSave;
 import org.projectcheckins.core.forms.TimeFormat;
 import org.projectcheckins.core.repositories.ProfileRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
-import org.projectcheckins.security.RegisterService;
-import org.projectcheckins.security.UserAlreadyExistsException;
-import org.projectcheckins.security.UserFetcher;
-import org.projectcheckins.security.UserState;
+import org.projectcheckins.security.*;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -29,8 +29,7 @@ import java.util.Optional;
 import java.util.TimeZone;
 
 import static java.time.DayOfWeek.MONDAY;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @Property(name = "spec.name", value = "TeamServiceImplTest")
 @MicronautTest(startApplication = false)
@@ -67,9 +66,19 @@ class TeamServiceImplTest {
 
         @Override
         public String getPassword() {
-            return "secret";
+            return "password";
         }
     };
+
+    static final TeamInvitation INVITATION_1 = new TeamInvitationRecord("pending1@email.com", null);
+
+    static final TeamInvitation INVITATION_2 = new TeamInvitationRecord("pending2@email.com", null);
+
+    @Test
+    void testFindPendingInvitations() {
+        assertThat(teamService.findInvitations(null))
+                .isEqualTo(List.of(INVITATION_1, INVITATION_2));
+    }
 
     @Inject
     TeamServiceImpl teamService;
@@ -81,15 +90,14 @@ class TeamServiceImplTest {
     }
 
     @Test
-    void testSave() throws UserAlreadyExistsException {
+    void testSave() {
         final TeamMemberSave form = new TeamMemberSave("user2@email.com");
-        final String id = teamService.save(form, null);
-        assertThat(id)
-                .isEqualTo("xxx");
+        assertThatCode(() -> teamService.save(form, null))
+                .doesNotThrowAnyException();
     }
 
     @Test
-    void testSaveInvalidEmail() throws UserAlreadyExistsException {
+    void testSaveInvalidEmail() {
         final TeamMemberSave form = new TeamMemberSave("not an email");
         assertThatThrownBy(() -> teamService.save(form, null))
                 .isInstanceOf(ConstraintViolationException.class)
@@ -101,14 +109,14 @@ class TeamServiceImplTest {
         final TeamMemberSave form = new TeamMemberSave(USER_1.email());
         assertThatThrownBy(() -> teamService.save(form, null))
                 .isInstanceOf(ConstraintViolationException.class)
-                .hasMessage("save.form: Team member already registered.");
+                .hasMessage("save.invitation: Invitation already exists");
     }
 
     @Requires(property = "spec.name", value = "TeamServiceImplTest")
     @Singleton
     static class RegisterServiceMock implements RegisterService {
         @Override
-        public String register(String email, String rawPassword, List<String> authorities) throws UserAlreadyExistsException {
+        public String register(String email, String rawPassword, Tenant tenant, List<String> authorities) throws RegistrationCheckViolationException {
             return "xxx";
         }
     }
@@ -138,4 +146,39 @@ class TeamServiceImplTest {
             return List.of(USER_1);
         }
     }
+
+    @Requires(property = "spec.name", value = "TeamServiceImplTest")
+    @Singleton
+    @Replaces(TeamInvitationRepository.class)
+    static class TeamInvitationRepositoryMock extends SecondaryTeamInvitationRepository {
+        @Override
+        public List<? extends TeamInvitation> findAll(@Nullable Tenant tenant) {
+            return List.of(INVITATION_1, INVITATION_2);
+        }
+
+        @Override
+        public void save(@NonNull @NotNull @Valid TeamInvitation invitation){
+        }
+
+        @Override
+        public boolean existsByEmail(String email, @Nullable Tenant tenant) {
+            return USER_1.email().equals(email);
+        }
+    }
+
+    @Requires(property = "spec.name", value = "TeamServiceImplTest")
+    @Singleton
+    @Replaces(UserAlreadyExistsRegistrationCheck.class)
+    static class UserAlreadyExistsRegistrationCheckMock extends UserAlreadyExistsRegistrationCheck {
+
+        public UserAlreadyExistsRegistrationCheckMock(UserRepository userRepository) {
+            super(userRepository);
+        }
+
+        @Override
+        public Optional<RegistrationCheckViolation> validate(String email, Tenant tenant) {
+            return Optional.empty();
+        }
+    }
+    record TeamInvitationRecord(String email, @Nullable Tenant tenant) implements TeamInvitation { }
 }

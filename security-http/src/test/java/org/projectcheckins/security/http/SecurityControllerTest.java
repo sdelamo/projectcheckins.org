@@ -11,19 +11,23 @@ import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
+import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.authentication.AuthenticationFailureReason;
 import io.micronaut.security.authentication.AuthenticationRequest;
 import io.micronaut.security.authentication.AuthenticationResponse;
 import io.micronaut.security.authentication.provider.HttpRequestExecutorAuthenticationProvider;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.micronaut.views.fields.messages.Message;
 import jakarta.inject.Singleton;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.security.RegisterService;
-import org.projectcheckins.security.UserAlreadyExistsException;
 import org.projectcheckins.security.PasswordEncoder;
 import org.projectcheckins.security.PasswordService;
 import org.projectcheckins.security.UserFetcher;
 import org.projectcheckins.security.UserState;
+import org.projectcheckins.security.RegistrationCheckViolation;
+import org.projectcheckins.security.RegistrationCheckViolationException;
+import org.projectcheckins.security.UserAlreadyExistsRegistrationCheck;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
 import java.util.ArrayList;
@@ -169,9 +173,9 @@ class SecurityControllerTest {
         private final List<String> emails = new ArrayList<>();
 
         @Override
-        public String register(String email, String rawPassword, List<String> authorities) throws UserAlreadyExistsException {
+        public String register(String email, String rawPassword, @Nullable Tenant tenant, List<String> authorities) throws RegistrationCheckViolationException {
             if (email.equals(EMAIL_ALREADY_EXISTS)) {
-                throw new UserAlreadyExistsException();
+                throw new RegistrationCheckViolationException(UserAlreadyExistsRegistrationCheck.VIOLATION_USER_ALREADY_EXISTS);
             }
             emails.add(email);
             return "xxx";
