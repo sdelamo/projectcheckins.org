@@ -99,11 +99,12 @@ class AnswerControllerTest {
                 .anyMatch(a -> a.format() == Format.MARKDOWN && a.text().equals(markdown) && a.answerDate().equals(expectedMarkdownAnswerDate))
                 .anyMatch(a -> a.format() == Format.WYSIWYG && a.text().equals(html) && a.answerDate().equals(expectedWysiwygAnswerDate));
 
-        final String anyAnswerId = answerRepositoryMock.getAnswers().get(0).id();
+        final String anyAnswerId = answerRepositoryMock.getAnswers().stream().filter(a -> a.answerDate().equals(expectedMarkdownAnswerDate)).map(Answer::id).findAny().orElse(null);
         Assertions.assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("answer").path(anyAnswerId).path("show").build()), String.class))
                 .matches(htmlPage())
                 .matches(htmlBody("""
                         <div class="date">"""))
+                .matches(htmlBody("Monday, March 11"))
                 .matches(htmlBody("""
                         <div class="respondent">"""))
                 .matches(htmlBody("<span>Code Monkey</span>"))
