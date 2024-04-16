@@ -26,10 +26,9 @@ public class LocalDateFormatterViewModelProcessor extends MapViewModelProcessor 
     }
 
     @Override
-    public void process(@NonNull HttpRequest<?> request, @NonNull ModelAndView<Map<String, Object>> modelAndView) {
+    protected void populateModel(@NonNull HttpRequest<?> request, @NonNull Map<String, Object> viewModel) {
         Locale locale = httpLocaleResolver.resolveOrDefault(request);
-        populateModelAndView(modelAndView, viewModel ->
-                viewModel.put(MODEL_DATE_TIME_FORMATTER,
-                        formatters.computeIfAbsent(locale, l -> new LocalizedCustomDateTimeFormatter(messageSource, l))));
+        viewModel.put(MODEL_DATE_TIME_FORMATTER,
+                formatters.computeIfAbsent(locale, l -> new LocalizedCustomDateTimeFormatter(messageSource, l)));
     }
 }
