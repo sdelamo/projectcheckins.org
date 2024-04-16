@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class AbstractRegisterService implements RegisterService {
+public abstract class AbstractRegisterService implements RegisterService, PasswordService {
 
     private final PasswordEncoder passwordEncoder;
 
@@ -31,4 +31,14 @@ public abstract class AbstractRegisterService implements RegisterService {
         final String encodedPassword = passwordEncoder.encode(rawPassword);
         return register(new UserSave(username, encodedPassword, authorities));
     }
+
+    @Override
+    public void updatePassword(@NonNull @NotBlank String userId,
+                               @NonNull @NotBlank String newRawPassword) {
+        final String newEncodedPassword = passwordEncoder.encode(newRawPassword);
+        updatePassword(new PasswordUpdate(userId, newEncodedPassword));
+    }
+
+    @NonNull
+    protected abstract void updatePassword(@NonNull @NotNull @Valid PasswordUpdate passwordUpdate);
 }

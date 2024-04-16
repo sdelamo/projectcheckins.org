@@ -88,6 +88,12 @@ class DelegatingAuthenticationProviderTest {
 
         @Override
         @NonNull
+        public Optional<UserState> findById(@NotBlank @NonNull String id) {
+            return Optional.empty();
+        }
+
+        @Override
+        @NonNull
         public Optional<UserState> findByEmail(@NotBlank @NonNull String email) {
             if (email.equals(FOUND_EMAIL) || email.equals(NOT_ENABLED)) {
                 return Optional.of(new UserState() {

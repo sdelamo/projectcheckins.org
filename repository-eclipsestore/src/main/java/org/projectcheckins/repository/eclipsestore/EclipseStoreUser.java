@@ -42,6 +42,14 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
     }
 
     @Override
+    public void updatePassword(@NonNull PasswordUpdate passwordUpdate) {
+        final String id = passwordUpdate.userId();
+        rootProvider.root().getUsers().stream()
+                .filter(u -> u.id().equals(id)).findAny()
+                .ifPresent(u -> updatePassword(u, passwordUpdate.newEncodedPassword()));
+    }
+
+    @Override
     public void enableByEmail(@NonNull @NotBlank @Email String email) {
         rootProvider.root().getUsers().stream()
                 .filter(user -> user.email().equals(email))
@@ -57,6 +65,11 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
     @StoreParams("user")
     public void enableUser(UserEntity user) {
         user.enabled(true);
+    }
+
+    @StoreParams("user")
+    public void updatePassword(UserEntity user, String encodedPassword) {
+        user.encodedPassword(encodedPassword);
     }
 
     @NonNull
@@ -75,6 +88,15 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
                 null,
                 null
         );
+    }
+
+    @Override
+    @NonNull
+    public Optional<UserState> findById(@NotBlank @NonNull String id) {
+        return rootProvider.root().getUsers().stream()
+                .filter(user -> user.id().equals(id))
+                .map(EclipseStoreUser::userStateOfEntity)
+                .findFirst();
     }
 
     @Override

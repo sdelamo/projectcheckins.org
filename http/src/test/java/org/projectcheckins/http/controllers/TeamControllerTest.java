@@ -147,6 +147,13 @@ class TeamControllerTest {
     @Requires(property = "spec.name", value = "TeamControllerTest")
     @Singleton
     static class UserFetcherMock implements UserFetcher {
+
+        @Override
+        @NonNull
+        public Optional<UserState> findById(@NotBlank @NonNull String id) {
+            return Optional.empty();
+        }
+
         @NonNull
         public Optional<UserState> findByEmail(@NotBlank @NonNull String email) {
             return switch (email) {

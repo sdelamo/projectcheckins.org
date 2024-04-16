@@ -116,6 +116,13 @@ class TeamServiceImplTest {
     @Requires(property = "spec.name", value = "TeamServiceImplTest")
     @Singleton
     static class UserFetcherMock implements UserFetcher {
+
+        @Override
+        @NonNull
+        public Optional<UserState> findById(@NotBlank @NonNull String id) {
+            return Optional.empty();
+        }
+
         @NonNull
         public Optional<UserState> findByEmail(@NotBlank @NonNull String email) {
             return USER_1_STATE.getEmail().equals(email) ? Optional.of(USER_1_STATE) : Optional.empty();

@@ -1,5 +1,6 @@
 package org.projectcheckins.security.http;
 
+import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.NonNull;
@@ -19,13 +20,19 @@ import jakarta.inject.Singleton;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.security.RegisterService;
 import org.projectcheckins.security.UserAlreadyExistsException;
+import org.projectcheckins.security.PasswordEncoder;
+import org.projectcheckins.security.PasswordService;
+import org.projectcheckins.security.UserFetcher;
+import org.projectcheckins.security.UserState;
+import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.projectcheckins.test.AbstractAuthenticationFetcher.SDELAMO;
 import static org.projectcheckins.test.AssertUtils.*;
 
 @Property(name = "spec.name", value = "SecurityControllerTest")
@@ -98,6 +105,64 @@ class SecurityControllerTest {
                 .containsOnlyOnce(TYPE_PASSWORD);
     }
 
+    @Test
+    void changePassword(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        assertThat(client.retrieve(BrowserRequest.GET("/security/changePassword")))
+                .satisfies(containsManyTimes(3, TYPE_PASSWORD))
+                .containsOnlyOnce("""
+                        action="/security/updatePassword" method="post">""");
+    }
+
+    @Test
+    void updatePassword(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final HttpRequest<?> request = BrowserRequest.POST("/security/updatePassword", Map.of(
+                "userId", SDELAMO.getName(),
+                "currentPassword", "old password",
+                "newPassword", "new password",
+                "repeatNewPassword", "new password"));
+        assertThat(client.retrieve(request))
+                .containsOnlyOnce("You have successfully changed your password.");
+    }
+
+    @Test
+    void updatePasswordWrongPassword(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final HttpRequest<?> request = BrowserRequest.POST("/security/updatePassword", Map.of(
+                "userId", SDELAMO.getName(),
+                "currentPassword", "wrong password",
+                "newPassword", "new password",
+                "repeatNewPassword", "new password"));
+        assertThat(client.retrieve(request))
+                .containsOnlyOnce("Current password is incorrect. Please try again.");
+    }
+
+    @Test
+    void updatePasswordNewPasswordsDoNotMatch(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final HttpRequest<?> request = BrowserRequest.POST("/security/updatePassword", Map.of(
+                "userId", SDELAMO.getName(),
+                "currentPassword", "old password",
+                "newPassword", "new password one",
+                "repeatNewPassword", "new password two"));
+        assertThat(client.retrieve(request))
+                .containsOnlyOnce("New passwords do not match.");
+    }
+
+    @Test
+    void updatePasswordWrongUserId(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final HttpRequest<?> request = BrowserRequest.POST("/security/updatePassword", Map.of(
+                "userId", "wrong user",
+                "currentPassword", "old password",
+                "newPassword", "new password",
+                "repeatNewPassword", "new password"));
+        assertThat(client.retrieve(request))
+                .containsOnlyOnce("""
+                        <form action="/login" method="post">""");
+    }
+
     @Requires(property = "spec.name", value = "SecurityControllerTest")
     @Singleton
     static class RegisterServiceMock implements RegisterService {
@@ -127,6 +192,74 @@ class SecurityControllerTest {
             } else {
                 return AuthenticationResponse.failure(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH);
             }
+        }
+    }
+
+    @Requires(property = "spec.name", value = "SecurityControllerTest")
+    @Singleton
+    static class PasswordServiceMock implements PasswordService {
+        @Override
+        public void updatePassword(String userId, String newRawPassword) {
+
+        }
+    }
+
+    @Requires(property = "spec.name", value = "SecurityControllerTest")
+    @Singleton
+    static class AuthenticationFetcherMock extends AbstractAuthenticationFetcher {
+        AuthenticationFetcherMock() {
+            setAuthentication(SDELAMO);
+        }
+    }
+
+    @Requires(property = "spec.name", value = "SecurityControllerTest")
+    @Singleton
+    static class UserFetcherMock implements UserFetcher {
+
+        @Override
+        public Optional<UserState> findById(String id) {
+            return Optional.of(new UserState() {
+                    @Override
+                    public String getId() {
+                        return id;
+                    }
+
+                    @Override
+                    public boolean isEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public String getEmail() {
+                        return "sdelamo@email.com";
+                    }
+
+                    @Override
+                    public String getPassword() {
+                        return "old password";
+                    }
+                });
+        }
+
+        @Override
+        public Optional<UserState> findByEmail(String email) {
+            return Optional.empty();
+        }
+    }
+
+    @Requires(property = "spec.name", value = "SecurityControllerTest")
+    @Primary
+    @Singleton
+    static class PasswordEncoderMock implements PasswordEncoder {
+
+        @Override
+        public String encode(String rawPassword) {
+            return rawPassword;
+        }
+
+        @Override
+        public boolean matches(String rawPassword, String encodedPassword) {
+            return rawPassword.equals(encodedPassword);
         }
     }
 }

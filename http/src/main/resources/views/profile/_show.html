@@ -1,6 +1,7 @@
 <th:block th:fragment="show(breadcrumbs,profile)" xmlns:th="http://www.thymeleaf.org">
 <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
 <a th:href="@{|/profile/edit|}"><button type="button" class="btn btn-primary" th:text="#{profile.edit}"></button></a>
+<a th:href="@{|/security/changePassword|}"><button type="button" class="btn btn-danger" th:text="#{profile.changePassword}"></button></a>
 <table class="table">
     <tbody>
     <tr>

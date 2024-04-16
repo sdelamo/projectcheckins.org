@@ -50,6 +50,7 @@ class ProfileControllerTest {
 
     assertThat(client.exchange(BrowserRequest.GET("/profile/show", auth), String.class))
         .matches(htmlPage())
+        .matches(htmlBody("/security/changePassword"))
         .matches(htmlBody("/profile/edit"));
 
     assertThat(client.exchange(BrowserRequest.GET("/profile/edit", auth), String.class))
