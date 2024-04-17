@@ -6,10 +6,8 @@
 </head>
 <body>
 <main>
-    <a href="/question/create"><button type="button" class="btn btn-primary" th:text="#{question.create}"></button></a>
-    <th:block th:each="question : ${questions}">
-        <div th:replace="~{question/_question :: question(${question})}"/>
-    </th:block>
+    <div th:replace="~{question/_list :: list(${questions})}"/>
+
 </main>
 </body>
 </html>

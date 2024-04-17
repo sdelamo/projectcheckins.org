@@ -12,6 +12,8 @@ public class Data {
     private List<AnswerEntity> answers = new ArrayList<>();
     @NonNull
     private List<UserEntity> users = new ArrayList<>();
+    @NonNull
+    private List<TeamInvitationEntity> invitations = new ArrayList<>();
 
     public List<QuestionEntity> getQuestions() {
         return questions;
@@ -23,5 +25,8 @@ public class Data {
 
     public List<UserEntity> getUsers() {
         return users;
+    }
+    public List<TeamInvitationEntity> getInvitations() {
+        return invitations;
     }
 }

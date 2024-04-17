@@ -21,7 +21,6 @@ import org.projectcheckins.annotations.PostForm;
 import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.forms.TeamMemberSave;
 import org.projectcheckins.core.services.TeamService;
-import org.projectcheckins.security.UserAlreadyExistsException;
 
 import java.net.URI;
 import java.util.List;
@@ -33,6 +32,7 @@ class TeamController {
     private static final String TEAM = "team";
     public static final String PATH = ApiConstants.SLASH + TEAM;
     private static final String MODEL_MEMBERS = "members";
+    private static final String MODEL_INVITATIONS = "invitations";
     private static final String MEMBER_FORM = "memberForm";
 
     // LIST
@@ -54,7 +54,6 @@ class TeamController {
     private final TeamService teamService;
     private final FormGenerator formGenerator;
 
-
     TeamController(TeamService teamService, FormGenerator formGenerator) {
         this.teamService = teamService;
         this.formGenerator = formGenerator;
@@ -64,7 +63,8 @@ class TeamController {
     Map<String, Object> memberList(@Nullable Tenant tenant) {
         return Map.of(
                 ApiConstants.MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
-                MODEL_MEMBERS, teamService.findAll(tenant)
+                MODEL_MEMBERS, teamService.findAll(tenant),
+                MODEL_INVITATIONS, teamService.findInvitations(tenant)
         );
     }
 
@@ -75,7 +75,7 @@ class TeamController {
 
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> memberSave(@NonNull @NotNull @Valid @Body TeamMemberSave form,
-                               @Nullable Tenant tenant) throws UserAlreadyExistsException {
+                               @Nullable Tenant tenant) {
         teamService.save(form, tenant);
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }

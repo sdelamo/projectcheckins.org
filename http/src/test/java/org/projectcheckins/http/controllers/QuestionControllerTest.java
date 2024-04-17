@@ -132,7 +132,8 @@ class QuestionControllerTest {
             .matches(htmlPage())
             .matches(htmlBody(Pattern.compile("""
                 Asking 1 person\\s*every weekday\\s*at the end of the day.""")))
-            .matches(htmlBody("This is <em>my</em> answer."))
+                .matches(htmlBody("Today"))
+                .matches(htmlBody("This is <em>my</em> answer."))
             .matches(htmlBody("/question/yyy/answer/zzz/edit"))
             .matches(htmlBody("""
                 <li class="breadcrumb-item"><a href="/question/list">"""));

@@ -1,9 +1,10 @@
-<th:block th:fragment="edit(fieldset)" xmlns:th="http://www.thymeleaf.org">
-<form th:action="@{|/question/${question.id}/update|}" method="post">
-    <input type="hidden" name="id" th:value="${question.id}"/>
-    <fieldset th:replace="~{question/_fieldset :: fieldset(${fieldset})}"/>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-primary mb-3" th:text="#{action.update}"></button>
-    </div>
-</form>
+<th:block th:fragment="edit(breadcrumbs, question, fieldset)" xmlns:th="http://www.thymeleaf.org">
+    <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
+    <form th:action="@{|/question/${question.id}/update|}" method="post">
+        <input type="hidden" name="id" th:value="${question.id}"/>
+        <fieldset th:replace="~{question/_fieldset :: fieldset(${fieldset})}"/>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary mb-3" th:text="#{action.update}"></button>
+        </div>
+    </form>
 </th:block>

@@ -1,5 +1,7 @@
 package org.projectcheckins.core.viewmodelprocessors;
 
+import io.micronaut.core.annotation.NonNull;
+import io.micronaut.http.HttpRequest;
 import jakarta.inject.Singleton;
 import java.util.Map;
 
@@ -13,7 +15,7 @@ class TimeZoneFormatterViewModelProcessor extends MapViewModelProcessor {
     }
 
     @Override
-    protected void populateModel(Map<String, Object> viewModel) {
+    protected void populateModel(@NonNull HttpRequest<?> request, @NonNull Map<String, Object> viewModel) {
         viewModel.putIfAbsent(MODEL_TIME_ZONE_FORMATTER, timeZoneFormatter);
     }
 }

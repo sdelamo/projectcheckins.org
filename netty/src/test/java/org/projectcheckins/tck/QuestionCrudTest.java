@@ -2,13 +2,10 @@ package org.projectcheckins.tck;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.projectcheckins.test.AbstractAuthenticationFetcher.SDELAMO;
 
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Requires;
-import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpRequest;
-import io.micronaut.http.HttpResponse;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
@@ -17,18 +14,12 @@ import io.micronaut.security.authentication.Authentication;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.api.Question;
-import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.QuestionRepository;
-import org.projectcheckins.core.repositories.SecondaryProfileRepository;
-import org.projectcheckins.security.RegisterService;
-import org.projectcheckins.security.UserAlreadyExistsException;
+import org.projectcheckins.security.*;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.*;
 
 @MicronautTest
@@ -43,9 +34,11 @@ class QuestionCrudTest {
     void questionCrud(@Client("/") HttpClient httpClient,
                       QuestionRepository questionRepository,
                       RegisterService registerService,
-                      AuthenticationFetcherMock authenticationFetcher) throws UserAlreadyExistsException {
+                      TeamInvitationRepository teamInvitationRepository,
+                      AuthenticationFetcherMock authenticationFetcher) throws RegistrationCheckViolationException {
         String email = "delamos@unityfoundation.io";
-        String userId = registerService.register(email, "secret");
+        teamInvitationRepository.save(new TeamInvitationRecord(email, null));
+        String userId = registerService.register(email, "secret", null);
         Authentication authentication = Authentication.build(userId, Collections.emptyList(), Collections.singletonMap("email", email));
         authenticationFetcher.setAuthentication(authentication);
         BlockingHttpClient client = httpClient.toBlocking();

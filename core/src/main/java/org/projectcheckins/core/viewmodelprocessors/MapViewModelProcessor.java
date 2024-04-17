@@ -8,7 +8,7 @@ import io.micronaut.views.model.ViewModelProcessor;
 import java.util.HashMap;
 import java.util.Map;
 
-abstract class MapViewModelProcessor implements ViewModelProcessor<Map<String, Object>> {
+public abstract class MapViewModelProcessor implements ViewModelProcessor<Map<String, Object>> {
     @Override
     public void process(@NonNull HttpRequest<?> request, @NonNull ModelAndView<Map<String, Object>> modelAndView) {
         Map<String, Object> viewModel = modelAndView.getModel().orElseGet(() -> {
@@ -17,13 +17,13 @@ abstract class MapViewModelProcessor implements ViewModelProcessor<Map<String, O
             return newModel;
         });
         try {
-            populateModel(viewModel);
+            populateModel(request, viewModel);
         } catch (UnsupportedOperationException ex) {
             final HashMap<String, Object> modifiableModel = new HashMap<>(viewModel);
-            populateModel(modifiableModel);
+            populateModel(request, modifiableModel);
             modelAndView.setModel(modifiableModel);
         }
     }
 
-    protected abstract void populateModel(Map<String, Object> viewModel);
+    protected abstract void populateModel(@NonNull HttpRequest<?> request, @NonNull Map<String, Object> viewModel);
 }

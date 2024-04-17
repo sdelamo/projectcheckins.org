@@ -1,0 +1,6 @@
+<th:block th:fragment="list(questions)" xmlns:th="http://www.thymeleaf.org">
+    <a href="/question/create"><button type="button" class="btn btn-primary" th:text="#{question.create}"></button></a>
+    <th:block th:each="question : ${questions}">
+        <div th:replace="~{question/_question :: question(${question})}"/>
+    </th:block>
+</th:block>

@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.AnswerView;
 import org.projectcheckins.core.forms.AnswerSave;
+import org.projectcheckins.core.models.DateAnswers;
 import org.projectcheckins.core.forms.AnswerUpdate;
 
 import java.util.List;
@@ -27,6 +28,9 @@ public interface AnswerService {
 
     @NonNull
     List<? extends AnswerView> findByQuestionId(@NotBlank String questionId, @NotNull Authentication authentication, @Nullable Tenant tenant);
+
+    @NonNull
+    List<DateAnswers> findByQuestionIdGroupedByDate(@NotBlank String questionId, @NotNull Authentication authentication, @Nullable Tenant tenant);
 
     @NonNull
     String getAnswerSummary(@NotNull AnswerView answerView, @Nullable Locale locale);

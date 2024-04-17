@@ -17,6 +17,8 @@ import org.projectcheckins.core.forms.TimeFormat;
 import org.projectcheckins.security.UserSave;
 
 import java.time.LocalTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.TimeZone;
 
 @MicronautTest
@@ -25,8 +27,9 @@ class EclipseStoreProfileRepositoryTest {
   @Test
   void testCrud(EclipseStoreUser storeUser, EclipseStoreProfileRepository profileRepository) throws Exception {
     final String email = "email@example.com";
+    List<String> authorities = emptyList();
     final String userId = storeUser.register(new UserSave(
-        email, "encodedPassword", emptyList()));
+        email, "encodedPassword", authorities), null);
     final Authentication wrongAuth = new ClientAuthentication("wrong-id", null);
     final Authentication rightAuth = new ClientAuthentication(userId, null);
     assertThat(profileRepository.findByAuthentication(rightAuth))

@@ -1,6 +1,7 @@
 package org.projectcheckins.http.controllers;
 
 import io.micronaut.core.annotation.Nullable;
+import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
@@ -11,6 +12,11 @@ import io.micronaut.security.authentication.Authentication;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.messages.Message;
+import io.micronaut.views.turbo.TurboFrameView;
+import io.micronaut.views.turbo.TurboStream;
+import io.micronaut.views.turbo.TurboStreamAction;
+import io.micronaut.views.turbo.http.TurboHttpHeaders;
+import io.micronaut.views.turbo.http.TurboMediaType;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.ConstraintViolationException;
 import org.projectcheckins.annotations.GetHtml;
@@ -23,14 +29,18 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.bootstrap.Breadcrumb;
+import org.projectcheckins.core.api.Answer;
+import org.projectcheckins.core.api.AnswerView;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.api.Respondent;
 import org.projectcheckins.core.forms.*;
+import org.projectcheckins.core.models.DateAnswers;
 import org.projectcheckins.core.services.AnswerService;
 import org.projectcheckins.core.services.QuestionService;
 
 import java.net.URI;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Function;
@@ -38,11 +48,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.projectcheckins.http.controllers.ApiConstants.SLASH;
+
 @Controller
 class QuestionController {
 
     private static final String QUESTION = "question";
-    public static final String PATH = ApiConstants.SLASH + QUESTION;
+    public static final String PATH = SLASH + QUESTION;
 
     private static final String MODEL_QUESTIONS = "questions";
     public static final String MODEL_QUESTION = "question";
@@ -50,6 +62,7 @@ class QuestionController {
     public static final String MODEL_ANSWERS = "answers";
 
     // LIST
+    private static final String VIEW_LIST_FRAGMENT = PATH + SLASH + ApiConstants.FRAGMENT_LIST;
     public static final String PATH_LIST = PATH + ApiConstants.PATH_LIST;
     private static final String VIEW_LIST = PATH + ApiConstants.VIEW_LIST;
     public static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(Message.of("Questions", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_LIST), PATH_LIST);
@@ -57,12 +70,14 @@ class QuestionController {
     // CREATE
     private static final String PATH_CREATE = PATH + ApiConstants.PATH_CREATE;
     private static final String VIEW_CREATE = PATH + ApiConstants.VIEW_CREATE;
+    private static final String VIEW_CREATE_FRAGMENT = PATH + SLASH + ApiConstants.FRAGMENT_CREATE;
     private static final Breadcrumb BREADCRUMB_CREATE = new Breadcrumb(Message.of("New Question", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_CREATE));
 
     // SAVE
     private static final String PATH_SAVE = PATH + ApiConstants.PATH_SAVE;
 
     // SHOW
+    public static final String VIEW_SHOW_FRAGMENT = "/question/_show.html";
     private static final String PATH_SHOW = PATH + ApiConstants.PATH_SHOW;
     public static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_SHOW).build();
     public static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
@@ -95,11 +110,13 @@ class QuestionController {
         this.answerSaveFormGenerator = answerSaveFormGenerator;
     }
 
+    @TurboFrameView(VIEW_LIST_FRAGMENT)
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
     Map<String, Object> questionList(@Nullable Tenant tenant) {
         return Map.of(MODEL_QUESTIONS, questionService.findAll(tenant));
     }
 
+    @TurboFrameView(value = VIEW_CREATE_FRAGMENT)
     @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE)
     Map<String, Object> questionCreate(@Nullable Tenant tenant) {
         final QuestionForm form = QuestionFormRecord.of(new QuestionRecord(
@@ -113,10 +130,23 @@ class QuestionController {
         ));
         return saveModel(form, tenant);
     }
+
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionSave(@NonNull @NotNull @Valid @Body QuestionFormRecord form,
+    HttpResponse<?> questionSave(HttpRequest<?> request,
+                                 @NonNull @NotNull @Valid @Body QuestionFormRecord form,
+                                 @NonNull Authentication authentication,
+                                 @Nullable @Header(TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                  @Nullable Tenant tenant) {
         String id = questionService.save(form, tenant);
+        if (TurboMediaType.acceptsTurboStream(request)) {
+            return showModel(id, authentication, tenant)
+                    .map(model -> TurboStream.builder()
+                    .action(TurboStreamAction.REPLACE)
+                    .targetDomId(turboFrame)
+                    .template(VIEW_SHOW_FRAGMENT, model))
+                    .map(HttpResponse::ok)
+                    .orElseGet(HttpResponse::notFound);
+        }
         return HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
@@ -124,15 +154,31 @@ class QuestionController {
     HttpResponse<?> questionShow(@PathVariable @NotBlank String id,
                                  @NonNull Authentication authentication,
                                  @Nullable Tenant tenant) {
+        return showModel(id, authentication, tenant)
+                .map(HttpResponse::ok)
+                .orElseGet(NotFoundController::notFoundRedirect);
+    }
+
+    @NonNull
+    private Optional<Map<String, Object>> showModel(@NonNull String id,
+                                                    @NonNull Authentication authentication,
+                                                    @NonNull Tenant tenant) {
         Form answerFormSave = answerSaveFormGenerator.generate(id, format -> AnswerController.URI_BUILDER_ANSWER_SAVE.apply(id, format).toString(), authentication);
         return questionService.findById(id, tenant)
-                .map(question -> HttpResponse.ok(Map.of(
-                        MODEL_QUESTION, question,
-                        ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
-                        MODEL_ANSWERS, answerService.findByQuestionId(id, authentication, tenant),
-                        ANSWER_FORM, answerFormSave
-                )))
-                .orElseGet(NotFoundController::notFoundRedirect);
+                .map(question -> showModel(answerService, question, answerFormSave, authentication, tenant));
+    }
+
+    public static Map<String, Object> showModel(AnswerService answerService,
+                                         Question question,
+                                         Form answerFormSave,
+                                         Authentication authentication,
+                                         Tenant tenant) {
+        return Map.of(
+                MODEL_QUESTION, question,
+                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
+                MODEL_ANSWERS, answerService.findByQuestionIdGroupedByDate(question.id(), authentication, tenant),
+                ANSWER_FORM, answerFormSave
+        );
     }
 
     @Hidden

@@ -1,8 +1,11 @@
 package org.projectcheckins.repository.eclipsestore;
 
 import io.micronaut.core.annotation.NonNull;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.eclipsestore.RootProvider;
 import io.micronaut.eclipsestore.annotations.StoreParams;
+import io.micronaut.multitenancy.Tenant;
+import io.micronaut.views.fields.messages.Message;
 import jakarta.inject.Singleton;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +13,6 @@ import org.projectcheckins.core.configuration.ProfileConfiguration;
 import org.projectcheckins.core.idgeneration.IdGenerator;
 import org.projectcheckins.email.EmailConfirmationRepository;
 import org.projectcheckins.security.*;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -19,26 +21,37 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
     private final ProfileConfiguration profileConfiguration;
     private final RootProvider<Data> rootProvider;
     private final IdGenerator idGenerator;
-    protected EclipseStoreUser(PasswordEncoder passwordEncoder,
-                               ProfileConfiguration profileConfiguration,
-                               RootProvider<Data> rootProvider,
-                               IdGenerator idGenerator) {
-        super(passwordEncoder);
+    protected EclipseStoreUser(
+            PasswordEncoder passwordEncoder,
+            List<RegistrationCheck> registrationChecks,
+            TeamInvitationRepository teamInvitationRepository,
+            ProfileConfiguration profileConfiguration,
+            RootProvider<Data> rootProvider,
+            IdGenerator idGenerator) {
+        super(passwordEncoder, registrationChecks, teamInvitationRepository);
         this.profileConfiguration = profileConfiguration;
         this.rootProvider = rootProvider;
         this.idGenerator = idGenerator;
     }
 
     @Override
-    public String register(@NonNull UserSave userSave) throws UserAlreadyExistsException {
+    public String register(@NonNull UserSave userSave, @Nullable Tenant tenant) throws RegistrationCheckViolationException {
         if (rootProvider.root().getUsers().stream().anyMatch(user -> user.email().equals(userSave.email()))) {
-            throw new UserAlreadyExistsException();
+            throw new RegistrationCheckViolationException(UserAlreadyExistsRegistrationCheck.VIOLATION_USER_ALREADY_EXISTS);
         }
         String id = idGenerator.generate();
         UserEntity userEntity = entityOf(userSave);
         userEntity.id(id);
         saveUser(rootProvider.root().getUsers(), userEntity);
         return id;
+    }
+
+    @Override
+    public void updatePassword(@NonNull PasswordUpdate passwordUpdate) {
+        final String id = passwordUpdate.userId();
+        rootProvider.root().getUsers().stream()
+                .filter(u -> u.id().equals(id)).findAny()
+                .ifPresent(u -> updatePassword(u, passwordUpdate.newEncodedPassword()));
     }
 
     @Override
@@ -59,6 +72,11 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
         user.enabled(true);
     }
 
+    @StoreParams("user")
+    public void updatePassword(UserEntity user, String encodedPassword) {
+        user.encodedPassword(encodedPassword);
+    }
+
     @NonNull
     private UserEntity entityOf(@NonNull UserSave userSave) {
         return new UserEntity(
@@ -75,6 +93,15 @@ class EclipseStoreUser extends AbstractRegisterService implements UserFetcher, E
                 null,
                 null
         );
+    }
+
+    @Override
+    @NonNull
+    public Optional<UserState> findById(@NotBlank @NonNull String id) {
+        return rootProvider.root().getUsers().stream()
+                .filter(user -> user.id().equals(id))
+                .map(EclipseStoreUser::userStateOfEntity)
+                .findFirst();
     }
 
     @Override

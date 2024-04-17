@@ -29,12 +29,18 @@ class AnswerSaveFormGeneratorImpl implements AnswerSaveFormGenerator {
     @Override
     @NonNull
     public Form generate(@NotBlank String questionId, @NotNull Function<Format, String> actionFunction, @NotNull Authentication authentication) {
-        Format preferedFormat = profileRepository.findByAuthentication(authentication).map(Profile::format).orElseThrow(UserNotFoundException::new);
+        Format preferedFormat = formatByAuthentication(authentication);
         Object instance = switch (preferedFormat) {
             case WYSIWYG -> new AnswerWysiwygSave(questionId, authentication.getName(), LocalDate.now(), null);
             case MARKDOWN -> new AnswerMarkdownSave(questionId, authentication.getName(), LocalDate.now(), null);
         };
         return formGenerator.generate(actionFunction.apply(preferedFormat), instance);
+    }
+
+    private Format formatByAuthentication(Authentication authentication) {
+        return profileRepository.findByAuthentication(authentication)
+                .map(Profile::format)
+                .orElseThrow(UserNotFoundException::new);
     }
 
 }
