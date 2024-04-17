@@ -20,7 +20,7 @@ class NotFoundControllerTest {
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
         assertThat(client.exchange(BrowserRequest.GET("/notFound"), String.class))
-            .matches(htmlPage())
-            .matches(htmlBody("Not Found"));
+            .satisfies(htmlPage())
+            .satisfies(htmlBody("Not Found"));
     }
 }

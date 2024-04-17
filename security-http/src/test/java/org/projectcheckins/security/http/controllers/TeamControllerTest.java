@@ -110,14 +110,14 @@ class TeamControllerTest {
     void testListTeamMembers(@Client("/") HttpClient httpClient, AuthenticationFetcherMock authenticationFetcher) {
         final BlockingHttpClient client = httpClient.toBlocking();
         Assertions.assertThat(client.exchange(BrowserRequest.GET(URI_LIST), String.class))
-                .matches(htmlPage())
-                .matches(htmlBody("""
+                .satisfies(htmlPage())
+                .satisfies(htmlBody("""
                         <span>User One</span>"""))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("""
                         <code>user2@email.com</code>"""))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("""
                         <code>pending@email.com</code>"""))
-                .matches(htmlBody(Pattern.compile("""
+                .satisfies(htmlBody(Pattern.compile("""
                         <a href="/team/create">""")));
     }
 
@@ -125,14 +125,14 @@ class TeamControllerTest {
     void testCreateTeamMember(@Client("/") HttpClient httpClient, AuthenticationFetcherMock authenticationFetcher) {
         final BlockingHttpClient client = httpClient.toBlocking();
         Assertions.assertThat(client.exchange(BrowserRequest.GET(URI_CREATE), String.class))
-                .matches(htmlPage())
-                .matches(htmlBody("""
+                .satisfies(htmlPage())
+                .satisfies(htmlBody("""
                         <a href="/">"""))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("""
                         <a href="/team/list">"""))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("""
                         <form action="/team/save" method="post">"""))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("""
                         <input type="email" name="email" value="" id="email" class="form-control" required="required"/>"""));
     }
 
@@ -142,8 +142,8 @@ class TeamControllerTest {
         final Map<String, Object> body = Map.of("email", "user3@email.com");
         final HttpRequest<?> request = BrowserRequest.POST(URI_SAVE, body);
         Assertions.assertThat(client.exchange(request))
-                .matches(status(HttpStatus.SEE_OTHER))
-                .matches(location("/team/list"));
+                .satisfies(status(HttpStatus.SEE_OTHER))
+                .satisfies(location("/team/list"));
     }
 
     @Test

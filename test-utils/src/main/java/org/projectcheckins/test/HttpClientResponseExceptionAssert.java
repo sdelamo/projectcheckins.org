@@ -6,7 +6,8 @@ import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractObjectAssert;
 import org.assertj.core.api.ThrowableAssert;
-import java.util.function.Predicate;
+import java.util.function.Consumer;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class HttpClientResponseExceptionAssert extends AbstractAssert<HttpClientResponseExceptionAssert, AbstractObjectAssert<?, HttpClientResponseException>> {
@@ -27,12 +28,12 @@ public class HttpClientResponseExceptionAssert extends AbstractAssert<HttpClient
     }
 
     public HttpClientResponseExceptionAssert bodyHtmlContains(String expected) {
-        return bodyHtmlTest(html -> html.contains(expected));
+        return bodyHtmlTest(html -> assertThat(html).contains(expected));
     }
 
-    public HttpClientResponseExceptionAssert bodyHtmlTest(Predicate<String> expected) {
+    public HttpClientResponseExceptionAssert bodyHtmlTest(Consumer<String> expected) {
                     actual.extracting(HttpClientResponseException::getResponse)
-                                    .matches(htmlBody(expected));
+                                    .satisfies(htmlBody(expected));
         return this;
     }
 
@@ -42,9 +43,8 @@ public class HttpClientResponseExceptionAssert extends AbstractAssert<HttpClient
         return this;
     }
 
-    private static Predicate<HttpResponse<?>> htmlBody(Predicate<String> expected) {
-        return response -> response.getBody(String.class)
-                .filter(expected)
-                .isPresent();
+    private static Consumer<HttpResponse<?>> htmlBody(Consumer<String> expected) {
+        return response -> assertThat(response.getBody(String.class))
+                              .hasValueSatisfying(expected);
     }
 }

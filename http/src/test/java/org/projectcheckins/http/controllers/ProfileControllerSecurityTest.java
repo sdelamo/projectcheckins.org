@@ -24,16 +24,16 @@ class ProfileControllerSecurityTest {
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
         assertThat(client.exchange(BrowserRequest.GET("/profile/show")))
-            .matches(unauthorized());
+            .satisfies(unauthorized());
 
         assertThat(client.exchange(BrowserRequest.GET("/profile/edit")))
-            .matches(unauthorized());
+            .satisfies(unauthorized());
 
         assertThat(client.exchange(BrowserRequest.POST("/profile/update", Map.of(
             "timeZone", TimeZone.getDefault().getID(),
             "firstDayOfWeek", DayOfWeek.MONDAY.name(),
             "using24HourClock", true))))
-            .matches(unauthorized());
+            .satisfies(unauthorized());
     }
 
 }

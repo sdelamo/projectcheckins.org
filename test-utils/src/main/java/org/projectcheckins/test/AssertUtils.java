@@ -9,9 +9,10 @@ import org.assertj.core.api.Condition;
 import org.assertj.core.api.ThrowableAssert;
 
 import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public final class AssertUtils {
@@ -36,53 +37,51 @@ public final class AssertUtils {
                 "Contains [%s] exactly %s times", needle, expectedTimes);
     }
 
-    public static Predicate<HttpResponse<?>> status(HttpStatus httpStatus) {
-        return response -> httpStatus.equals(response.getStatus());
+    public static Consumer<HttpResponse<?>> status(HttpStatus httpStatus) {
+        return response -> assertThat((CharSequence) response.getStatus()).isEqualTo(httpStatus);
     }
 
-    public static Predicate<HttpResponse<?>> htmlBody(Predicate<String> expected) {
-        return response -> response.getBody(String.class)
-            .filter(expected)
-            .isPresent();
+    public static Consumer<HttpResponse<?>> htmlBody(Consumer<String> consumer) {
+        return response -> response.getBody(String.class).ifPresent(consumer::accept);
     }
 
-    public static Predicate<HttpResponse<?>> htmlBody(String expected) {
-        return htmlBody(html -> html.contains(expected));
+    public static Consumer<HttpResponse<?>> htmlBody(String expected) {
+        return htmlBody(html -> assertThat(html).contains(expected));
     }
 
-    public static Predicate<HttpResponse<?>> htmlBody(Pattern regex) {
-        return htmlBody(html -> regex.matcher(html).find());
+    public static Consumer<HttpResponse<?>> htmlBody(Pattern regex) {
+        return htmlBody(html -> assertThat(html).containsPattern(regex));
     }
 
-    public static Predicate<HttpResponse<?>> htmlBody() {
-        return htmlBody("<!DOCTYPE html>");
+    public static Consumer<HttpResponse<?>> htmlBody() {
+        return htmlBody(html -> assertThat(html).contains("<!DOCTYPE html>"));
     }
 
-    public static Predicate<HttpResponse<?>> htmlPage(HttpStatus httpStatus) {
-        return status(httpStatus).and(htmlBody());
+    public static Consumer<HttpResponse<?>> htmlPage(HttpStatus httpStatus) {
+        return status(httpStatus).andThen(htmlBody());
     }
 
-    public static Predicate<HttpResponse<?>> htmlPage() {
+    public static Consumer<HttpResponse<?>> htmlPage() {
         return htmlPage(HttpStatus.OK);
     }
 
-    public static Predicate<HttpResponse<?>> location(Predicate<String> expected) {
-        return response -> response.getHeaders().getFirst(HttpHeaders.LOCATION).filter(expected).isPresent();
+    public static Consumer<HttpResponse<?>> location(Consumer<String> expected) {
+        return response -> assertThat(response.getHeaders().getFirst(HttpHeaders.LOCATION)).hasValueSatisfying(expected);
     }
 
-    public static Predicate<HttpResponse<?>> location(String location) {
+    public static Consumer<HttpResponse<?>> location(String location) {
         return location(location::equals);
     }
 
-    public static Predicate<HttpResponse<?>> redirection(Predicate<String> expected) {
-        return status(HttpStatus.SEE_OTHER).and(location(expected));
+    public static Consumer<HttpResponse<?>> redirection(Consumer<String> expected) {
+        return status(HttpStatus.SEE_OTHER).andThen(location(expected));
     }
 
-    public static Predicate<HttpResponse<?>> redirection(String expected) {
-        return status(HttpStatus.SEE_OTHER).and(location(expected));
+    public static Consumer<HttpResponse<?>> redirection(String expected) {
+        return status(HttpStatus.SEE_OTHER).andThen(location(expected));
     }
 
-    public static Predicate<HttpResponse<?>> unauthorized() {
+    public static Consumer<HttpResponse<?>> unauthorized() {
         return redirection("/unauthorized");
     }
 }

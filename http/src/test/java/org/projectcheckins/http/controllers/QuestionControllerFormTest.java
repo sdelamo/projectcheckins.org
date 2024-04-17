@@ -87,7 +87,7 @@ class QuestionControllerFormTest {
         String title = "What are you working on?";
         HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", "title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1"));
         assertThat(saveResponse)
-            .matches(redirection(s -> s.startsWith("/question") && s.endsWith("/show")));
+            .satisfies(redirection(s -> assertThat(s).startsWith("/question").endsWith("/show")));
 
         String location = saveResponse.getHeaders().get(HttpHeaders.LOCATION);
         String id = location.substring(location.indexOf("/question/") + "/question/".length(), location.lastIndexOf("/show"));
@@ -109,7 +109,7 @@ class QuestionControllerFormTest {
         String updateBody = "title="+updatedTitle+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1";
 
         assertThat(client.exchange(BrowserRequest.POST(updateUri.toString(), updateBody)))
-            .matches(redirection(s -> s.equals("/question/" + id + "/show")));
+            .satisfies(redirection(s -> s.equals("/question/" + id + "/show")));
 
         assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class))
             .doesNotContain(title)
@@ -117,7 +117,7 @@ class QuestionControllerFormTest {
 
         URI deleteUri = UriBuilder.of("/question").path(id).path("delete").build();
         assertThat(client.exchange(BrowserRequest.POST(deleteUri.toString(), Collections.emptyMap())))
-            .matches(redirection("/question/list"));
+            .satisfies(redirection("/question/list"));
 
         assertThat(questionRepository.findAll()).isEmpty();
     }

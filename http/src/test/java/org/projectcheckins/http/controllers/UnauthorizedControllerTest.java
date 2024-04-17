@@ -20,7 +20,7 @@ class UnauthorizedControllerTest {
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
         assertThat(client.exchange(BrowserRequest.GET("/unauthorized"), String.class))
-            .matches(htmlPage())
-            .matches(htmlBody("Unauthorized"));
+            .satisfies(htmlPage())
+            .satisfies(htmlBody("Unauthorized"));
     }
 }

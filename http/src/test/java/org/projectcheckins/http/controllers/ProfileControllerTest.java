@@ -49,13 +49,13 @@ class ProfileControllerTest {
     Map<CharSequence, CharSequence> auth = Map.of(AUTHORIZATION, "Basic YWRtaW46YWRtaW4=");
 
     assertThat(client.exchange(BrowserRequest.GET("/profile/show", auth), String.class))
-        .matches(htmlPage())
-        .matches(htmlBody("/security/changePassword"))
-        .matches(htmlBody("/profile/edit"));
+        .satisfies(htmlPage())
+        .satisfies(htmlBody("/security/changePassword"))
+        .satisfies(htmlBody("/profile/edit"));
 
     assertThat(client.exchange(BrowserRequest.GET("/profile/edit", auth), String.class))
-        .matches(htmlPage())
-        .matches(htmlBody("/profile/update"));
+        .satisfies(htmlPage())
+        .satisfies(htmlBody("/profile/update"));
 
     assertThat(client.exchange(BrowserRequest.POST("/profile/update", auth, Map.of(
         "timeZone", TimeZone.getDefault().getID(),
@@ -66,12 +66,12 @@ class ProfileControllerTest {
             "format", Format.WYSIWYG,
         "firstName", "Guillermo",
         "lastName", "Calvo"))))
-        .matches(redirection("/profile/show"));
+        .satisfies(redirection("/profile/show"));
 
       assertThat(client.exchange(BrowserRequest.GET("/profile/show", auth), String.class))
-              .matches(htmlPage())
-              .matches(htmlBody("Guillermo Calvo"))
-              .matches(htmlBody("Rich Text"));
+              .satisfies(htmlPage())
+              .satisfies(htmlBody("Guillermo Calvo"))
+              .satisfies(htmlBody("Rich Text"));
   }
 
   @Requires(property = "spec.name", value = "ProfileControllerTest")

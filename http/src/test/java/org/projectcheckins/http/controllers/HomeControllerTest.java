@@ -20,6 +20,6 @@ class HomeControllerTest {
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
         assertThat(client.exchange("/"))
-            .matches(redirection("/question/list"));
+            .satisfies(redirection("/question/list"));
     }
 }
