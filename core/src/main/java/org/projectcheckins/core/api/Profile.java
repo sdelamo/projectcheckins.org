@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.forms.Format;
 import org.projectcheckins.core.forms.FullNameUtils;
 import org.projectcheckins.core.forms.TimeFormat;
+import org.projectcheckins.security.api.PublicProfile;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;

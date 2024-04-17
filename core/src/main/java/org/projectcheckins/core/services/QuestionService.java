@@ -6,9 +6,9 @@ import io.micronaut.multitenancy.Tenant;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.projectcheckins.core.api.PublicProfile;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.QuestionForm;
+import org.projectcheckins.security.api.PublicProfile;
 
 import java.util.List;
 import java.util.Optional;

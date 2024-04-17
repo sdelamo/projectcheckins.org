@@ -1,4 +1,4 @@
-package org.projectcheckins.core.forms;
+package org.projectcheckins.security.forms;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.serde.annotation.Serdeable;

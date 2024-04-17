@@ -1,13 +1,13 @@
-package org.projectcheckins.core.services;
+package org.projectcheckins.security.services;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.multitenancy.Tenant;
 import jakarta.inject.Singleton;
 import jakarta.validation.constraints.NotNull;
-import org.projectcheckins.core.api.PublicProfile;
-import org.projectcheckins.core.forms.TeamMemberSave;
-import org.projectcheckins.core.repositories.ProfileRepository;
+import org.projectcheckins.security.api.PublicProfile;
+import org.projectcheckins.security.forms.TeamMemberSave;
+import org.projectcheckins.security.repositories.PublicProfileRepository;
 import org.projectcheckins.security.TeamInvitation;
 import org.projectcheckins.security.TeamInvitationRecord;
 import org.projectcheckins.security.TeamInvitationRepository;
@@ -17,10 +17,10 @@ import java.util.List;
 @Singleton
 public class TeamServiceImpl implements TeamService {
 
-    private final ProfileRepository profileRepository;
+    private final PublicProfileRepository profileRepository;
     private final TeamInvitationRepository teamInvitationRepository;
 
-    public TeamServiceImpl(ProfileRepository profileRepository, TeamInvitationRepository teamInvitationRepository) {
+    public TeamServiceImpl(PublicProfileRepository profileRepository, TeamInvitationRepository teamInvitationRepository) {
         this.profileRepository = profileRepository;
         this.teamInvitationRepository = teamInvitationRepository;
     }
