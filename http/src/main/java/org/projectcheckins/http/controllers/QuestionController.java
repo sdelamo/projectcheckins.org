@@ -1,6 +1,7 @@
 package org.projectcheckins.http.controllers;
 
 import io.micronaut.core.annotation.Nullable;
+import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
@@ -23,14 +24,18 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.bootstrap.Breadcrumb;
+import org.projectcheckins.core.api.Answer;
+import org.projectcheckins.core.api.AnswerView;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.api.Respondent;
 import org.projectcheckins.core.forms.*;
+import org.projectcheckins.core.models.DateAnswers;
 import org.projectcheckins.core.services.AnswerService;
 import org.projectcheckins.core.services.QuestionService;
 
 import java.net.URI;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Function;
@@ -126,13 +131,21 @@ class QuestionController {
                                  @Nullable Tenant tenant) {
         Form answerFormSave = answerSaveFormGenerator.generate(id, format -> AnswerController.URI_BUILDER_ANSWER_SAVE.apply(id, format).toString(), authentication);
         return questionService.findById(id, tenant)
-                .map(question -> HttpResponse.ok(Map.of(
-                        MODEL_QUESTION, question,
-                        ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
-                        MODEL_ANSWERS, answerService.findByQuestionId(id, authentication, tenant),
-                        ANSWER_FORM, answerFormSave
-                )))
+                .map(question -> HttpResponse.ok(showModel(answerService, question, answerFormSave, authentication, tenant)))
                 .orElseGet(NotFoundController::notFoundRedirect);
+    }
+
+    public static Map<String, Object> showModel(AnswerService answerService,
+                                         Question question,
+                                         Form answerFormSave,
+                                         Authentication authentication,
+                                         Tenant tenant) {
+        return Map.of(
+                MODEL_QUESTION, question,
+                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
+                MODEL_ANSWERS, answerService.findByQuestionIdGroupedByDate(question.id(), authentication, tenant),
+                ANSWER_FORM, answerFormSave
+        );
     }
 
     @Hidden

@@ -11,10 +11,6 @@ import java.util.Map;
 public abstract class MapViewModelProcessor implements ViewModelProcessor<Map<String, Object>> {
     @Override
     public void process(@NonNull HttpRequest<?> request, @NonNull ModelAndView<Map<String, Object>> modelAndView) {
-        populateModelAndView(request, modelAndView);
-    }
-
-    private void populateModelAndView(@NonNull HttpRequest<?> request, ModelAndView<Map<String, Object>> modelAndView) {
         Map<String, Object> viewModel = modelAndView.getModel().orElseGet(() -> {
             final HashMap<String, Object> newModel = new HashMap<>(1);
             modelAndView.setModel(newModel);
@@ -29,5 +25,5 @@ public abstract class MapViewModelProcessor implements ViewModelProcessor<Map<St
         }
     }
 
-    protected void populateModel(@NonNull HttpRequest<?> request, @NonNull Map<String, Object> viewModel) {}
+    protected abstract void populateModel(@NonNull HttpRequest<?> request, @NonNull Map<String, Object> viewModel);
 }

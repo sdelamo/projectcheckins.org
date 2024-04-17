@@ -1,7 +1,10 @@
 <th:block th:fragment="answers(answers)" xmlns:th="http://www.thymeleaf.org">
     <div id="question-answers" class="mt-3">
-        <th:block th:each="view : ${answers}">
-            <article th:replace="~{question/_answer :: answer(${view})}"/>
+        <th:block th:each="dateAnswer : ${answers}">
+            <h2 th:text="${dateTimeFormatter.format(dateAnswer.answerDate)}"></h2>
+            <th:block th:each="view : ${dateAnswer.answers}">
+                <article th:replace="~{question/_answer :: answer(${view})}"/>
+            </th:block>
         </th:block>
     </div>
 </th:block>

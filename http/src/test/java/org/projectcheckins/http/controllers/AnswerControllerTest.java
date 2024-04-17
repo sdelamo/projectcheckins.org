@@ -107,7 +107,7 @@ class AnswerControllerTest {
                 .matches(htmlBody("Monday, March 11"))
                 .matches(htmlBody("""
                         <div class="respondent">"""))
-                .matches(htmlBody("<span>Code Monkey</span>"))
+                .matches(htmlBody("<b>Code Monkey</b>"))
                 .matches(htmlBody("""
                         <a href="/question/list">"""))
                 .matches(htmlBody("""
