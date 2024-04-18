@@ -101,20 +101,20 @@ class AnswerControllerTest {
 
         final String anyAnswerId = answerRepositoryMock.getAnswers().stream().filter(a -> a.answerDate().equals(expectedMarkdownAnswerDate)).map(Answer::id).findAny().orElse(null);
         Assertions.assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("answer").path(anyAnswerId).path("show").build()), String.class))
-                .matches(htmlPage())
-                .matches(htmlBody("""
+                .satisfies(htmlPage())
+                .satisfies(htmlBody("""
                         <div class="date">"""))
-                .matches(htmlBody("Monday, March 11"))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("Monday, March 11"))
+                .satisfies(htmlBody("""
                         <div class="respondent">"""))
-                .matches(htmlBody("<b>Code Monkey</b>"))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("<b>Code Monkey</b>"))
+                .satisfies(htmlBody("""
                         <a href="/question/list">"""))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("""
                         <a href="/question/123/show">"""))
-                .matches(htmlBody(Pattern.compile("""
+                .satisfies(htmlBody(Pattern.compile("""
                         <a href="/question/123/answer/.*/show">""")))
-                .matches(htmlBody(Pattern.compile("""
+                .satisfies(htmlBody(Pattern.compile("""
                         <a href="/question/123/answer/.*/edit">""")));
     }
 
@@ -156,11 +156,11 @@ class AnswerControllerTest {
         answerRepository.update(new AnswerRecord(id, questionId, SDELAMO.getName(), LocalDate.now(), Format.MARKDOWN, "Markdown answer"), null);
         authenticationFetcher.setAuthentication(SDELAMO);
         Assertions.assertThat(client.exchange(request, String.class))
-                .matches(htmlPage())
-                .matches(htmlBody("/question/123/answer/" + id + "/update"))
-                .matches(htmlBody("""
+                .satisfies(htmlPage())
+                .satisfies(htmlBody("/question/123/answer/" + id + "/update"))
+                .satisfies(htmlBody("""
                         <input type="hidden" name="format" value="MARKDOWN"/>"""))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("""
                         <textarea name="content" id="content" class="form-control" required="required">Markdown answer</textarea>"""));
     }
 
@@ -174,11 +174,11 @@ class AnswerControllerTest {
         answerRepository.update(new AnswerRecord(id, questionId, SDELAMO.getName(), LocalDate.now(), Format.WYSIWYG, "Rich text answer"), null);
         authenticationFetcher.setAuthentication(SDELAMO);
         Assertions.assertThat(client.exchange(request, String.class))
-                .matches(htmlPage())
-                .matches(htmlBody("/question/123/answer/" + id + "/update"))
-                .matches(htmlBody("""
+                .satisfies(htmlPage())
+                .satisfies(htmlBody("/question/123/answer/" + id + "/update"))
+                .satisfies(htmlBody("""
                         <input type="hidden" name="format" value="WYSIWYG"/>"""))
-                .matches(htmlBody("""
+                .satisfies(htmlBody("""
                         <input type="hidden" name="content" value="Rich text answer" id="content"/><trix-editor class="form-control" input="content"></trix-editor>"""));
     }
 
@@ -209,8 +209,8 @@ class AnswerControllerTest {
         answerRepository.update(new AnswerRecord(id, questionId, SDELAMO.getName(), LocalDate.now(), Format.MARKDOWN, "Lorem ipsum"), null);
         authenticationFetcher.setAuthentication(SDELAMO);
         Assertions.assertThat(client.exchange(request, String.class))
-                .matches(htmlPage())
-                .matches(htmlBody("""
+                .satisfies(htmlPage())
+                .satisfies(htmlBody("""
                         <div id="contentValidationServerFeedback" class="invalid-feedback">must not be blank</div>"""));
     }
 

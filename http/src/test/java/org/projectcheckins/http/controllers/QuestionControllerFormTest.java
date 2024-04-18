@@ -4,27 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.projectcheckins.test.AbstractAuthenticationFetcher.SDELAMO;
 import static org.projectcheckins.test.AssertUtils.redirection;
-import static org.projectcheckins.test.HttpClientResponseExceptionAssert.*;
 
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
-import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpHeaders;
-import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
-import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
-import io.micronaut.security.authentication.Authentication;
-import io.micronaut.security.filters.AuthenticationFetcher;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
@@ -33,17 +26,13 @@ import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.api.Profile;
-import org.projectcheckins.core.api.PublicProfile;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.*;
-import org.projectcheckins.core.repositories.ProfileRepository;
 import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.core.repositories.SecondaryAnswerRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
-import org.projectcheckins.test.HttpClientResponseExceptionAssert;
-import org.reactivestreams.Publisher;
 
 import java.net.URI;
 import java.time.DayOfWeek;
@@ -98,7 +87,7 @@ class QuestionControllerFormTest {
         String title = "What are you working on?";
         HttpResponse<?> saveResponse = client.exchange(BrowserRequest.POST("/question/save", "title="+title+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1"));
         assertThat(saveResponse)
-            .matches(redirection(s -> s.startsWith("/question") && s.endsWith("/show")));
+            .satisfies(redirection(s -> assertThat(s).startsWith("/question").endsWith("/show")));
 
         String location = saveResponse.getHeaders().get(HttpHeaders.LOCATION);
         String id = location.substring(location.indexOf("/question/") + "/question/".length(), location.lastIndexOf("/show"));
@@ -120,7 +109,7 @@ class QuestionControllerFormTest {
         String updateBody = "title="+updatedTitle+"&howOften=DAILY_ON&dailyOnDay=MONDAY&dailyOnDay=TUESDAY&dailyOnDay=WEDNESDAY&dailyOnDay=THURSDAY&dailyOnDay=FRIDAY&timeOfDay=END&fixedTime=16:30&respondentIds=user1";
 
         assertThat(client.exchange(BrowserRequest.POST(updateUri.toString(), updateBody)))
-            .matches(redirection(s -> s.equals("/question/" + id + "/show")));
+            .satisfies(redirection(s -> s.equals("/question/" + id + "/show")));
 
         assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("edit").build()), String.class))
             .doesNotContain(title)
@@ -128,7 +117,7 @@ class QuestionControllerFormTest {
 
         URI deleteUri = UriBuilder.of("/question").path(id).path("delete").build();
         assertThat(client.exchange(BrowserRequest.POST(deleteUri.toString(), Collections.emptyMap())))
-            .matches(redirection("/question/list"));
+            .satisfies(redirection("/question/list"));
 
         assertThat(questionRepository.findAll()).isEmpty();
     }

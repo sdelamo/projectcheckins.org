@@ -23,6 +23,7 @@ import org.projectcheckins.email.EmailConfirmationComposer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -42,7 +43,8 @@ class LoginFailedEventListenerTest {
         String recipient = "delamos@unityfoundation.io";
         AuthenticationResponse authenticationResponse = AuthenticationResponse.failure(AuthenticationFailureReason.USER_DISABLED);
         UsernamePasswordCredentials usernamePasswordCredentials = new UsernamePasswordCredentials(recipient, "password");
-        loginFailedEventPublisher.publishEvent(new LoginFailedEvent(authenticationResponse, usernamePasswordCredentials));
+        String host = "https://projectcheckins.example.com";
+        loginFailedEventPublisher.publishEvent(new LoginFailedEvent(authenticationResponse, usernamePasswordCredentials, host, Locale.ENGLISH));
         await().atMost(3, SECONDS).until(() -> !emailSenderReplacement.getEmails().isEmpty());
         List<Email> emails = emailSenderReplacement.getEmails();
         assertThat(emails).hasSize(1);
@@ -58,15 +60,8 @@ class LoginFailedEventListenerTest {
 
         EmailConfirmationSenderImplReplacement(EmailConfirmationComposer emailConfirmationComposer,
                                                EmailSender<?, ?> emailSender,
-                                               LocaleResolutionConfiguration localeResolutionConfiguration,
-                                               HttpHostResolver httpHostResolver,
                                                EmailConfirmationControllerConfiguration emailConfirmationControllerConfiguration) {
-            super(emailConfirmationComposer, emailSender, localeResolutionConfiguration, httpHostResolver, emailConfirmationControllerConfiguration);
-        }
-
-        @Override
-        protected Optional<String> resolveHost() {
-            return Optional.of("https://projectcheckins.example.com");
+            super(emailConfirmationComposer, emailSender, emailConfirmationControllerConfiguration);
         }
     }
     @Requires(property = "spec.name", value = "LoginFailedEventListenerTest")

@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Profile;
-import org.projectcheckins.core.api.PublicProfile;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.exceptions.UserNotFoundException;
 import org.projectcheckins.core.forms.QuestionForm;
@@ -17,6 +16,7 @@ import org.projectcheckins.core.forms.QuestionRecord;
 import org.projectcheckins.core.forms.RespondentRecord;
 import org.projectcheckins.core.repositories.ProfileRepository;
 import org.projectcheckins.core.repositories.QuestionRepository;
+import org.projectcheckins.security.api.PublicProfile;
 
 import java.util.Collections;
 import java.util.List;

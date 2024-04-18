@@ -1,4 +1,4 @@
-package org.projectcheckins.http.controllers;
+package org.projectcheckins.security.http;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
@@ -19,8 +19,8 @@ import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.annotations.GetHtml;
 import org.projectcheckins.annotations.PostForm;
 import org.projectcheckins.bootstrap.Breadcrumb;
-import org.projectcheckins.core.forms.TeamMemberSave;
-import org.projectcheckins.core.services.TeamService;
+import org.projectcheckins.security.forms.TeamMemberSave;
+import org.projectcheckins.security.services.TeamService;
 
 import java.net.URI;
 import java.util.List;
@@ -29,27 +29,38 @@ import java.util.Map;
 @Controller
 class TeamController {
 
+    public static final String SLASH = "/";
+    public static final String DOT = ".";
+    public static final String DOT_HTML = DOT + "html";
+    public static final String ACTION_LIST = "list";
+    public static final String ACTION_CREATE = "create";
+    public static final String ACTION_SAVE = "save";
     private static final String TEAM = "team";
-    public static final String PATH = ApiConstants.SLASH + TEAM;
+    public static final String PATH = SLASH + TEAM;
+
+    private static final Message MESSAGE_HOME = Message.of("Home", "home");
+    public static final Breadcrumb BREADCRUMB_HOME = new Breadcrumb(MESSAGE_HOME, "/");
+
     private static final String MODEL_MEMBERS = "members";
     private static final String MODEL_INVITATIONS = "invitations";
     private static final String MEMBER_FORM = "memberForm";
+    private static final String MODEL_BREADCRUMBS = "breadcrumbs";
 
     // LIST
-    public static final String PATH_LIST = PATH + ApiConstants.PATH_LIST;
-    private static final String VIEW_LIST = PATH + ApiConstants.VIEW_LIST;
+    public static final String PATH_LIST = PATH + SLASH + ACTION_LIST;
+    private static final String VIEW_LIST = PATH + SLASH + ACTION_LIST + DOT_HTML;
 
-    private static final Message MESSAGE_LIST = Message.of("Team members", TEAM + ApiConstants.DOT + ApiConstants.ACTION_LIST);
+    private static final Message MESSAGE_LIST = Message.of("Team members", TEAM + DOT + ACTION_LIST);
     public static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(MESSAGE_LIST, PATH_LIST);
-    private static final List<Breadcrumb> BREADCRUMBS_LIST = List.of(HomeController.BREADCRUMB_HOME, new Breadcrumb(MESSAGE_LIST));
+    private static final List<Breadcrumb> BREADCRUMBS_LIST = List.of(BREADCRUMB_HOME, new Breadcrumb(MESSAGE_LIST));
 
     // CREATE
-    private static final String PATH_CREATE = PATH + ApiConstants.PATH_CREATE;
-    private static final String VIEW_CREATE = PATH + ApiConstants.VIEW_CREATE;
-    private static final Breadcrumb BREADCRUMB_CREATE = new Breadcrumb(Message.of("Add team member", TEAM + ApiConstants.DOT + ApiConstants.ACTION_CREATE));
+    private static final String PATH_CREATE = PATH + SLASH + ACTION_CREATE;
+    private static final String VIEW_CREATE = PATH + SLASH + ACTION_CREATE + DOT_HTML;
+    private static final Breadcrumb BREADCRUMB_CREATE = new Breadcrumb(Message.of("Add team member", TEAM + DOT + ACTION_CREATE));
 
     // SAVE
-    private static final String PATH_SAVE = PATH + ApiConstants.PATH_SAVE;
+    private static final String PATH_SAVE = PATH + SLASH + ACTION_SAVE;
 
     private final TeamService teamService;
     private final FormGenerator formGenerator;
@@ -62,7 +73,7 @@ class TeamController {
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
     Map<String, Object> memberList(@Nullable Tenant tenant) {
         return Map.of(
-                ApiConstants.MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
+                MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
                 MODEL_MEMBERS, teamService.findAll(tenant),
                 MODEL_INVITATIONS, teamService.findInvitations(tenant)
         );
@@ -97,7 +108,7 @@ class TeamController {
 
     private Map<String, Object> createModel(Form form) {
         return Map.of(
-                ApiConstants.MODEL_BREADCRUMBS, List.of(HomeController.BREADCRUMB_HOME, BREADCRUMB_LIST, BREADCRUMB_CREATE),
+                MODEL_BREADCRUMBS, List.of(BREADCRUMB_HOME, BREADCRUMB_LIST, BREADCRUMB_CREATE),
                 MEMBER_FORM, form
         );
     }

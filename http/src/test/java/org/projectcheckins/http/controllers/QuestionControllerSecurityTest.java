@@ -22,13 +22,13 @@ class QuestionControllerSecurityTest {
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
         assertThat(client.exchange(BrowserRequest.GET("/question/list")))
-            .matches(unauthorized());
+            .satisfies(unauthorized());
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("xx").path("edit").build())))
-            .matches(unauthorized());
+            .satisfies(unauthorized());
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("create").build())))
-            .matches(unauthorized());
+            .satisfies(unauthorized());
     }
 
 }

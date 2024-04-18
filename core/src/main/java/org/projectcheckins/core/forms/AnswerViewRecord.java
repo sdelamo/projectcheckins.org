@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.api.AnswerView;
-import org.projectcheckins.core.api.PublicProfile;
+import org.projectcheckins.security.api.PublicProfile;
 
 @Serdeable
 public record AnswerViewRecord (

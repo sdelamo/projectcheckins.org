@@ -7,16 +7,12 @@ import io.micronaut.security.authentication.Authentication;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
 import java.util.Optional;
 import org.projectcheckins.core.api.Profile;
-import org.projectcheckins.core.api.PublicProfile;
 import org.projectcheckins.core.forms.ProfileUpdate;
+import org.projectcheckins.security.repositories.PublicProfileRepository;
 
-public interface ProfileRepository {
-
-  @NonNull
-  List<? extends PublicProfile> list(@Nullable Tenant tenant);
+public interface ProfileRepository extends PublicProfileRepository {
 
   @NonNull
   Optional<? extends Profile> findById(@NotBlank String id, @Nullable Tenant tenant);
@@ -27,11 +23,6 @@ public interface ProfileRepository {
   }
 
   void update(@NotNull Authentication authentication, @NotNull @Valid ProfileUpdate profileUpdate, @Nullable Tenant tenant);
-
-  @NonNull
-  default List<? extends PublicProfile> list() {
-      return list(null);
-  }
 
   @NonNull
   default Optional<? extends Profile> findByAuthentication(@NotNull Authentication authentication) {

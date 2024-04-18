@@ -11,12 +11,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.api.AnswerView;
-import org.projectcheckins.core.api.PublicProfile;
 import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.markdown.MarkdownRenderer;
 import org.projectcheckins.core.models.DateAnswers;
 import org.projectcheckins.core.repositories.AnswerRepository;
 import org.projectcheckins.core.repositories.ProfileRepository;
+import org.projectcheckins.security.api.PublicProfile;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

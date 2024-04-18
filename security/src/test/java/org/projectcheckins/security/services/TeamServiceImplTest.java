@@ -1,4 +1,4 @@
-package org.projectcheckins.core.services;
+package org.projectcheckins.security.services;
 
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
@@ -14,38 +14,24 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
-import org.projectcheckins.core.api.Profile;
-import org.projectcheckins.core.forms.Format;
-import org.projectcheckins.core.forms.ProfileRecord;
-import org.projectcheckins.core.forms.TeamMemberSave;
-import org.projectcheckins.core.forms.TimeFormat;
-import org.projectcheckins.core.repositories.ProfileRepository;
-import org.projectcheckins.core.repositories.SecondaryProfileRepository;
 import org.projectcheckins.security.*;
+import org.projectcheckins.security.api.PublicProfile;
+import org.projectcheckins.security.forms.TeamMemberSave;
+import org.projectcheckins.security.repositories.PublicProfileRepository;
 
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.TimeZone;
 
-import static java.time.DayOfWeek.MONDAY;
 import static org.assertj.core.api.Assertions.*;
 
 @Property(name = "spec.name", value = "TeamServiceImplTest")
 @MicronautTest(startApplication = false)
 class TeamServiceImplTest {
 
-    static final Profile USER_1 = new ProfileRecord(
+    static final PublicProfile USER_1 = new PublicProfileRecord(
             "user1",
             "user1@email.com",
-            TimeZone.getDefault(),
-            MONDAY,
-            LocalTime.of(9, 0),
-            LocalTime.of(16, 30),
-            TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
-            Format.MARKDOWN,
-            null,
-            null
+            ""
     );
 
     static final UserState USER_1_STATE = new UserState() {
@@ -139,10 +125,9 @@ class TeamServiceImplTest {
 
     @Requires(property = "spec.name", value = "TeamServiceImplTest")
     @Singleton
-    @Replaces(ProfileRepository.class)
-    static class ProfileRepositoryMock extends SecondaryProfileRepository {
+    static class ProfileRepositoryMock implements PublicProfileRepository {
         @Override
-        public List<? extends Profile> list(Tenant tenant) {
+        public List<? extends PublicProfile> list(Tenant tenant) {
             return List.of(USER_1);
         }
     }
@@ -180,5 +165,6 @@ class TeamServiceImplTest {
             return Optional.empty();
         }
     }
-    record TeamInvitationRecord(String email, @Nullable Tenant tenant) implements TeamInvitation { }
+    record PublicProfileRecord(String id, String email, String fullName) implements PublicProfile {
+    }
 }

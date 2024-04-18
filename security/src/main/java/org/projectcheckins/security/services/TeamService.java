@@ -1,12 +1,12 @@
-package org.projectcheckins.core.services;
+package org.projectcheckins.security.services;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.multitenancy.Tenant;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import org.projectcheckins.core.api.PublicProfile;
-import org.projectcheckins.core.forms.TeamMemberSave;
+import org.projectcheckins.security.api.PublicProfile;
+import org.projectcheckins.security.forms.TeamMemberSave;
 import org.projectcheckins.security.TeamInvitation;
 
 import java.util.List;
