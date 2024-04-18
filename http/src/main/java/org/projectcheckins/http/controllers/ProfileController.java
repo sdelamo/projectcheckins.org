@@ -12,6 +12,7 @@ import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.FormGenerator;
 import io.micronaut.views.fields.messages.Message;
+import io.micronaut.views.turbo.TurboFrameView;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -24,27 +25,34 @@ import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.repositories.ProfileRepository;
 
+import static org.projectcheckins.http.controllers.ApiConstants.FRAGMENT_EDIT;
+import static org.projectcheckins.http.controllers.ApiConstants.SLASH;
+
 @Controller
 class ProfileController {
 
     private static final String PROFILE = "profile";
-    private static final String PATH = ApiConstants.SLASH + PROFILE;
+    private static final String PATH = SLASH + PROFILE;
 
     private static final String MODEL_PROFILE = "profile";
 
     // SHOW
+    public static final String VIEW_SHOW_FRAGMENT = MODEL_PROFILE + SLASH + ApiConstants.FRAGMENT_SHOW;
+
     private static final Message MESSAGE_SHOW = Message.of("Profile", PROFILE + ApiConstants.DOT + ApiConstants.ACTION_SHOW);
-    private static final String PATH_SHOW = PATH + ApiConstants.SLASH + ApiConstants.ACTION_SHOW;
+    private static final String PATH_SHOW = PATH + SLASH + ApiConstants.ACTION_SHOW;
     private static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
 
     // EDIT
+    private static final String VIEW_EDIT_FRAGMENT = PATH + SLASH + FRAGMENT_EDIT;
+
     private static final Message MESSAGE_BREADCRUMB_EDIT = Message.of("Edit", PROFILE + ApiConstants.DOT + ApiConstants.ACTION_EDIT);
     private static final Breadcrumb BREADCRUMB_EDIT = new Breadcrumb(MESSAGE_BREADCRUMB_EDIT);
-    private static final String PATH_EDIT = PATH + ApiConstants.SLASH + ApiConstants.ACTION_EDIT;
+    private static final String PATH_EDIT = PATH + SLASH + ApiConstants.ACTION_EDIT;
     private static final String VIEW_EDIT = PATH + ApiConstants.VIEW_EDIT;
 
     // UPDATE
-    private static final String PATH_UPDATE = PATH + ApiConstants.SLASH + ApiConstants.ACTION_UPDATE;
+    private static final String PATH_UPDATE = PATH + SLASH + ApiConstants.ACTION_UPDATE;
 
     private final FormGenerator formGenerator;
     private final ProfileRepository profileRepository;
@@ -54,6 +62,7 @@ class ProfileController {
         this.profileRepository = profileRepository;
     }
 
+    @TurboFrameView(VIEW_SHOW_FRAGMENT)
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW)
     HttpResponse<?> profileShow(@NonNull @NotNull Authentication authentication, @Nullable Tenant tenant) {
         return profileRepository.findByAuthentication(authentication, tenant)
@@ -64,6 +73,7 @@ class ProfileController {
             .orElseGet(NotFoundController::notFoundRedirect);
     }
 
+    @TurboFrameView(VIEW_EDIT_FRAGMENT)
     @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_EDIT)
     HttpResponse<?> profileEdit(@NonNull @NotNull Authentication authentication, @Nullable Tenant tenant) {
         return profileRepository.findByAuthentication(authentication, tenant)
