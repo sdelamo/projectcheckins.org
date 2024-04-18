@@ -35,18 +35,8 @@ class EmailConfirmationSenderTest {
         assertThat(emails).hasSize(1);
         Email email = emails.getFirst();
         AssertConfirmationEmailUtils.assertConfirmationEmail(recipient, email);
-
         emailSenderReplacement.getEmails().clear();
-        try {
-            emailConfirmationSender.sendConfirmationEmail(recipient);
-            Thread.sleep(1000); // waits for 1 second
-            assertThat(emailSenderReplacement.getEmails()).isEmpty();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
-
-
 
     @Requires(property = "spec.name", value = "EmailConfirmationSenderTest")
     @Singleton

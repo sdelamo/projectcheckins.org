@@ -22,11 +22,12 @@ class LoginFailedEventListener implements ApplicationEventListener<LoginFailedEv
 
     @Override
     public void onApplicationEvent(LoginFailedEvent event) {
+
         if (event.getSource() instanceof AuthenticationFailed authenticationFailed) {
             LOG.trace("Logging failed with email  {} reason {}", event.getAuthenticationRequest().getIdentity(), authenticationFailed.getReason());
             if (authenticationFailed.getReason() == AuthenticationFailureReason.USER_DISABLED) {
                 String email = event.getAuthenticationRequest().getIdentity().toString();
-                emailConfirmationSender.sendConfirmationEmail(email);
+                emailConfirmationSender.sendConfirmationEmail(email, event.getHost().orElse(""), event.getLocale());
             }
         }
     }
