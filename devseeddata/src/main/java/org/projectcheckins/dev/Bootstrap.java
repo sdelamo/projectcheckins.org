@@ -7,6 +7,7 @@ import io.micronaut.context.event.ApplicationEventListener;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.runtime.server.event.ServerStartupEvent;
 import jakarta.inject.Singleton;
+import jakarta.validation.ConstraintViolationException;
 import org.projectcheckins.email.EmailConfirmationRepository;
 import org.projectcheckins.security.RegisterService;
 import org.projectcheckins.security.RegistrationCheckViolationException;
@@ -37,7 +38,7 @@ public class Bootstrap implements ApplicationEventListener<ServerStartupEvent> {
     @Override
     public void onApplicationEvent(ServerStartupEvent event) {
         Tenant tenant = null;
-        teamInvitationRepository.save(new TeamInvitationRecord("pending@example.com", tenant));
+        sendInvitation("pending@example.com", tenant);
         addUser("delamos@unityfoundation.io", tenant);
         addUser("calvog@unityfoundation.io", tenant);
         addUser("grellej@unityfoundation.io", tenant);
@@ -47,11 +48,19 @@ public class Bootstrap implements ApplicationEventListener<ServerStartupEvent> {
 
     private void addUser(String email, Tenant tenant) {
         try {
-            teamInvitationRepository.save(new TeamInvitationRecord(email, tenant));
+            sendInvitation(email, tenant);
             registerService.register(email, "secret", tenant);
         } catch (RegistrationCheckViolationException e) {
             LOG.warn("{}", e.getViolation().message().defaultMessage());
         }
         emailConfirmationRepository.enableByEmail(email);
+    }
+
+    private void sendInvitation(String email, Tenant tenant) {
+        try {
+            teamInvitationRepository.save(new TeamInvitationRecord(email, tenant));
+        } catch (ConstraintViolationException e) {
+            LOG.warn("Could not invite {}: {}", email, e.getMessage());
+        }
     }
 }
