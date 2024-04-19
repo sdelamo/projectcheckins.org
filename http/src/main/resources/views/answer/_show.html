@@ -1,0 +1,4 @@
+<th:block th:fragment="show(breadcrumbs, answer)" xmlns:th="http://www.thymeleaf.org">
+    <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
+    <article th:replace="~{question/_answer :: answer(${answer})}"/>
+</th:block>
