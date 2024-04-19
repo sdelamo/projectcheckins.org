@@ -4,10 +4,8 @@ import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.Body;
-import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.*;
 import io.micronaut.http.annotation.Error;
-import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.authentication.Authentication;
@@ -16,6 +14,9 @@ import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.FormGenerator;
 import io.micronaut.views.fields.messages.Message;
+import io.micronaut.views.turbo.TurboStream;
+import io.micronaut.views.turbo.http.TurboHttpHeaders;
+import io.micronaut.views.turbo.http.TurboMediaType;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -26,15 +27,7 @@ import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.api.AnswerView;
 import org.projectcheckins.core.api.Question;
-import org.projectcheckins.core.forms.AnswerForm;
-import org.projectcheckins.core.forms.AnswerMarkdownSave;
-import org.projectcheckins.core.forms.AnswerSave;
-import org.projectcheckins.core.forms.AnswerUpdate;
-import org.projectcheckins.core.forms.AnswerUpdateMarkdown;
-import org.projectcheckins.core.forms.AnswerUpdateRecord;
-import org.projectcheckins.core.forms.AnswerUpdateWysiwyg;
-import org.projectcheckins.core.forms.AnswerWysiwygSave;
-import org.projectcheckins.core.forms.Format;
+import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.services.AnswerService;
 import org.projectcheckins.core.services.QuestionService;
 
@@ -48,6 +41,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.projectcheckins.http.controllers.ApiConstants.FRAME_ID_MAIN;
 import static org.projectcheckins.http.controllers.ApiConstants.SLASH;
 
 @Controller
@@ -99,41 +93,36 @@ class AnswerController {
     private final QuestionService questionService;
     private final AnswerService answerService;
     private final FormGenerator formGenerator;
+    private final AnswerSaveFormGenerator answerSaveFormGenerator;
 
-    AnswerController(QuestionService questionService, AnswerService answerService, FormGenerator formGenerator) {
+    AnswerController(QuestionService questionService,
+                     AnswerService answerService,
+                     FormGenerator formGenerator,
+                     AnswerSaveFormGenerator answerSaveFormGenerator) {
         this.questionService = questionService;
         this.answerService = answerService;
         this.formGenerator = formGenerator;
+        this.answerSaveFormGenerator = answerSaveFormGenerator;
     }
 
     @PostForm(uri = PATH_ANSWER_SAVE_MARKDOWN, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> answerSaveMarkdown(@PathVariable String questionId,
+    HttpResponse<?> answerSaveMarkdown(@NonNull HttpRequest<?> request,
+                                       @NonNull @PathVariable String questionId,
                                        @NonNull Authentication authentication,
+                                       @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                        @Nullable Tenant tenant,
                                        @Body @NonNull @NotNull @Valid AnswerMarkdownSave form) {
-        if (!questionId.equals(form.questionId())) {
-            return HttpResponse.unprocessableEntity();
-        }
-        if (!authentication.getName().equals(form.respondentId())) {
-            return HttpResponse.unprocessableEntity();
-        }
-        answerService.save(authentication, new AnswerSave(form.questionId(), form.answerDate(), Format.MARKDOWN, form.markdown()), tenant);
-        return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
+        return answerSave(request, form, questionId, authentication, Format.MARKDOWN, form.markdown(), turboFrame, tenant);
     }
 
     @PostForm(uri = PATH_ANSWER_SAVE_WYSIWYG, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> answerSaveWysiwyg(@PathVariable String questionId,
+    HttpResponse<?> answerSaveWysiwyg(@NonNull HttpRequest<?> request,
+                                      @PathVariable String questionId,
                                       @NonNull Authentication authentication,
+                                      @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                       @Nullable Tenant tenant,
                                       @Body @NonNull @NotNull @Valid AnswerWysiwygSave form) {
-        if (!questionId.equals(form.questionId())) {
-            return HttpResponse.unprocessableEntity();
-        }
-        if (!authentication.getName().equals(form.respondentId())) {
-            return HttpResponse.unprocessableEntity();
-        }
-        answerService.save(authentication, new AnswerSave(form.questionId(), form.answerDate(), Format.WYSIWYG, form.html()), tenant);
-        return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
+        return answerSave(request, form, questionId, authentication, Format.WYSIWYG, form.html(), turboFrame, tenant);
     }
 
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT, turboAction = ApiConstants.DATA_TURBO_ACTION)
@@ -271,5 +260,31 @@ class AnswerController {
             case AnswerWysiwygSave wysiwyg -> Format.WYSIWYG;
             default -> null;
         };
+    }
+
+    @NonNull
+    private HttpResponse<?>  answerSave(@NonNull HttpRequest<?> request,
+                                        @NonNull AnswerForm form,
+                                        @NonNull String questionId,
+                                        @NonNull Authentication authentication,
+                                        @NonNull Format format,
+                                        @NonNull String text,
+                                        @Nullable String turboFrame,
+                                        @Nullable Tenant tenant) {
+        if (!questionId.equals(form.questionId())) {
+            return HttpResponse.unprocessableEntity();
+        }
+        if (!authentication.getName().equals(form.respondentId())) {
+            return HttpResponse.unprocessableEntity();
+        }
+        answerService.save(authentication, new AnswerSave(form.questionId(), form.answerDate(), format, text), tenant);
+        if (TurboMediaType.acceptsTurboStream(request)) {
+            Optional<Map<String, Object>> model = QuestionController.showModel(answerService, questionService, answerSaveFormGenerator, questionId, authentication, tenant);
+            return HttpResponse.ok(TurboStream.builder()
+                    .targetDomId(turboFrame)
+                    .replace()
+                    .template("question/_answers.html", model));
+        }
+        return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
     }
 }

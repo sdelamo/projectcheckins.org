@@ -148,7 +148,7 @@ class QuestionController {
     HttpResponse<?> questionShow(@PathVariable @NotBlank String id,
                                  @NonNull Authentication authentication,
                                  @Nullable Tenant tenant) {
-        return showModel(id, authentication, tenant)
+        return showModel(answerService, questionService, answerSaveFormGenerator, id, authentication, tenant)
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
@@ -257,9 +257,12 @@ class QuestionController {
     }
 
     @NonNull
-    private Optional<Map<String, Object>> showModel(@NonNull String id,
-                                                    @NonNull Authentication authentication,
-                                                    @NonNull Tenant tenant) {
+    public static Optional<Map<String, Object>> showModel(@NonNull AnswerService answerService,
+                                                          @NonNull QuestionService questionService,
+                                                          @NonNull AnswerSaveFormGenerator answerSaveFormGenerator,
+                                                          @NonNull String id,
+                                                          @NonNull Authentication authentication,
+                                                          @NonNull Tenant tenant) {
         Form answerFormSave = answerSaveFormGenerator.generate(id, format -> AnswerController.URI_BUILDER_ANSWER_SAVE.apply(id, format).toString(), authentication);
         return questionService.findById(id, tenant)
                 .map(question -> showModel(answerService, question, answerFormSave, authentication, tenant));
@@ -269,7 +272,7 @@ class QuestionController {
                                                           @NonNull Authentication authentication,
                                                           @Nullable Tenant tenant,
                                                           @Nullable String turboFrame) {
-        return showModel(questionid, authentication, tenant)
+        return showModel(answerService, questionService, answerSaveFormGenerator, questionid, authentication, tenant)
                 .map(model ->
                         TurboStream.builder()
                                 .action(TurboStreamAction.REPLACE)
