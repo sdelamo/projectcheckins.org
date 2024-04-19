@@ -6,9 +6,7 @@
 </head>
 <body>
 <main>
-    <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
-    <form th:replace="~{question/_edit :: edit(${fieldset})}"/>
-
+    <form th:replace="~{question/_edit :: edit(${breadcrumbs}, ${question}, ${fieldset})}"/>
 </main>
 </body>
 </html>

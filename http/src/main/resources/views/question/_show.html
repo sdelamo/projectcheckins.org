@@ -1,0 +1,17 @@
+<th:block th:fragment="show(breadcrumbs, question, answerForm, answers)" xmlns:th="http://www.thymeleaf.org">
+    <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
+
+    <a th:href="@{|/question/${question.id}/edit|}">
+        <button type="button" class="btn btn-primary" th:text="#{question.edit}"/>
+    </a>
+
+    <div th:replace="~{question/_question :: question(${question})}"/>
+
+    <hr/>
+
+    <th:block th:if="${answerForm}">
+        <form th:replace="~{fieldset/form :: form(${answerForm})}"></form>
+    </th:block>
+
+    <div th:replace="~{question/_answers :: answers(${answers})}"/>
+</th:block>

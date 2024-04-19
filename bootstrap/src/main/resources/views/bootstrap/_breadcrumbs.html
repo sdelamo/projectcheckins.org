@@ -1,5 +1,5 @@
 <th:block th:fragment="breadcrumbs(breadcrumbs)" xmlns:th="http://www.thymeleaf.org">
-    <nav aria-label="breadcrumb" th:if="${breadcrumbs}">
+    <nav aria-label="breadcrumb" th:if="${breadcrumbs && breadcrumbs.size() > 1}">
         <ol class="breadcrumb">
             <th:block  th:each="breadcrumb : ${breadcrumbs}">
                 <th:block th:if="${breadcrumb.href() != null && breadcrumb.label.code != null}">

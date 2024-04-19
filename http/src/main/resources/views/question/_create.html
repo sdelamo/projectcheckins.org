@@ -1,8 +1,9 @@
-<th:block th:fragment="create(fieldset)" xmlns:th="http://www.thymeleaf.org">
-<form action="/question/save" method="post" class="container">
-    <fieldset th:replace="~{question/_fieldset :: fieldset(${fieldset})}"/>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-primary mb-3" th:text="#{action.save}"></button>
-    </div>
-</form>
+<th:block th:fragment="create(breadcrumbs, fieldset)" xmlns:th="http://www.thymeleaf.org">
+    <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
+    <form action="/question/save" method="post" class="container">
+        <fieldset th:replace="~{question/_fieldset :: fieldset(${fieldset})}"/>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary mb-3" th:text="#{action.save}"></button>
+        </div>
+    </form>
 </th:block>
