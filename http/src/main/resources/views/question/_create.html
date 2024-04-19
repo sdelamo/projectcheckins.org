@@ -1,4 +1,4 @@
-<th:block th:fragment="create(fieldset)" xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="create(breadcrumbs, fieldset)" xmlns:th="http://www.thymeleaf.org">
     <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
     <form action="/question/save" method="post" class="container">
         <fieldset th:replace="~{question/_fieldset :: fieldset(${fieldset})}"/>

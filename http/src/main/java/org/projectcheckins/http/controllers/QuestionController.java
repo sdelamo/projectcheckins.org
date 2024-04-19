@@ -65,7 +65,8 @@ class QuestionController {
     private static final String VIEW_LIST_FRAGMENT = PATH + SLASH + ApiConstants.FRAGMENT_LIST;
     public static final String PATH_LIST = PATH + ApiConstants.PATH_LIST;
     private static final String VIEW_LIST = PATH + ApiConstants.VIEW_LIST;
-    public static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(Message.of("Questions", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_LIST), PATH_LIST);
+    public static final Message MESSAGE_QUESTIONS = Message.of("Questions", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_LIST);
+    public static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(MESSAGE_QUESTIONS, PATH_LIST);
 
     // CREATE
     private static final String PATH_CREATE = PATH + ApiConstants.PATH_CREATE;
@@ -113,7 +114,8 @@ class QuestionController {
     @TurboFrameView(VIEW_LIST_FRAGMENT)
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
     Map<String, Object> questionList(@Nullable Tenant tenant) {
-        return Map.of(MODEL_QUESTIONS, questionService.findAll(tenant));
+        return Map.of(MODEL_QUESTIONS, questionService.findAll(tenant),
+                ApiConstants.MODEL_BREADCRUMBS, List.of(new Breadcrumb(MESSAGE_QUESTIONS)));
     }
 
     @TurboFrameView(value = VIEW_CREATE_FRAGMENT)

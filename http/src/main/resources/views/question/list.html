@@ -6,8 +6,7 @@
 </head>
 <body>
 <main>
-    <div th:replace="~{question/_list :: list(${questions})}"/>
-
+    <div th:replace="~{question/_list :: list(${breadcrumbs}, ${questions})}"/>
 </main>
 </body>
 </html>

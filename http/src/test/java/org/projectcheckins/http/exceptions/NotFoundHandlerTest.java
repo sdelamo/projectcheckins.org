@@ -3,6 +3,7 @@ package org.projectcheckins.http.exceptions;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.projectcheckins.test.AssertUtils.htmlBody;
 
+import io.micronaut.http.MediaType;
 import org.projectcheckins.annotations.GetHtml;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Requires;
@@ -42,7 +43,7 @@ class NotFoundHandlerTest {
     @Test
     void notFoundHtml(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
-        HttpRequest<?> request = BrowserRequest.GET("/notFound/throwing/html");
+        HttpRequest<?> request = BrowserRequest.GET("/notFound/throwing/html").accept(MediaType.TEXT_HTML);
         Argument<String> ok = Argument.of(String.class);
         Argument<String> ko = Argument.of(String.class);
         HttpClientResponseExceptionAssert.assertThatThrowsHttpClientResponseException(() -> client.exchange(request, ok, ko))
