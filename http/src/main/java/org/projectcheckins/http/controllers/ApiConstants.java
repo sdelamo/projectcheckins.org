@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.info.Info;
         )
 )
 public interface ApiConstants {
+    String FRAME_ID_MAIN = "main";
+    String DATA_TURBO_ACTION = "advance";
     String PATH_VARIABLE_ID = "{id}";
 
     String SLASH = "/";

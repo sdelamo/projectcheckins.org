@@ -33,8 +33,7 @@ import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.repositories.ProfileRepository;
 
-import static org.projectcheckins.http.controllers.ApiConstants.FRAGMENT_EDIT;
-import static org.projectcheckins.http.controllers.ApiConstants.SLASH;
+import static org.projectcheckins.http.controllers.ApiConstants.*;
 
 @Controller
 class ProfileController {
@@ -70,7 +69,7 @@ class ProfileController {
         this.profileRepository = profileRepository;
     }
 
-    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT)
+    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT, turboAction = ApiConstants.DATA_TURBO_ACTION)
     HttpResponse<?> profileShow(@NonNull @NotNull Authentication authentication, @Nullable Tenant tenant) {
         return showModel(authentication, tenant)
                 .map(HttpResponse::ok)
@@ -82,7 +81,7 @@ class ProfileController {
             view = VIEW_EDIT,
             turboView = VIEW_EDIT_FRAGMENT)
     HttpResponse<?> profileEdit(@NonNull @NotNull Authentication authentication,
-                                @Nullable @Header(TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+                                @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                 @Nullable Tenant tenant) {
         return profileRepository.findByAuthentication(authentication, tenant)
             .map(p -> HttpResponse.ok(updateModel(p)))
@@ -94,7 +93,7 @@ class ProfileController {
             HttpRequest<?> request,
             @NonNull @NotNull Authentication authentication,
             @NonNull @NotNull @Valid @Body ProfileUpdate profileUpdate,
-            @Nullable @Header(TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+            @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
             @Nullable Tenant tenant) {
         profileRepository.update(authentication, profileUpdate, tenant);
         if (TurboMediaType.acceptsTurboStream(request)) {

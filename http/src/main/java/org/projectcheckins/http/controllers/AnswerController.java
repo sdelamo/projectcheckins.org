@@ -48,6 +48,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.projectcheckins.http.controllers.ApiConstants.SLASH;
+
 @Controller
 class AnswerController {
     private static final String ANSWER = "answer";
@@ -86,10 +88,12 @@ class AnswerController {
     public static final BiFunction<String, String, URI> PATH_SHOW_URI_BUILDER  = (questionId, id) -> UriBuilder.of(QuestionController.PATH).path(questionId).path(ANSWER).path(id).path(ApiConstants.ACTION_SHOW).build();
     public static final Function<Answer, URI> PATH_SHOW_BUILDER  = answer -> PATH_SHOW_URI_BUILDER.apply(answer.questionId(), answer.id());
     private static final String VIEW_SHOW = ANSWER + ApiConstants.VIEW_SHOW;
+    public static final String VIEW_SHOW_FRAGMENT =  ANSWER + SLASH + ApiConstants.FRAGMENT_SHOW;
 
     // EDIT
     private static final String PATH_EDIT = PATH + ApiConstants.PATH_EDIT;
     private static final String VIEW_EDIT = ANSWER + ApiConstants.VIEW_EDIT;
+    public static final String VIEW_EDIT_FRAGMENT =  ANSWER + SLASH + ApiConstants.FRAGMENT_EDIT;
     private static final Breadcrumb BREADCRUMB_EDIT = new Breadcrumb(Message.of("Edit Answer", ANSWER + ApiConstants.DOT + ApiConstants.ACTION_EDIT));
 
     private final QuestionService questionService;
@@ -132,7 +136,7 @@ class AnswerController {
         return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
     }
 
-    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW)
+    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT, turboAction = ApiConstants.DATA_TURBO_ACTION)
     HttpResponse<?> answerShow(@PathVariable @NotBlank String questionId,
                                @PathVariable @NotBlank String id,
                                @NonNull Authentication authentication,
@@ -150,7 +154,7 @@ class AnswerController {
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
-    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_EDIT)
+    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_EDIT, turboView = VIEW_EDIT_FRAGMENT)
     HttpResponse<?> answerEdit(@PathVariable @NotBlank String questionId,
                                @PathVariable @NotBlank String id,
                                @NonNull Authentication authentication,

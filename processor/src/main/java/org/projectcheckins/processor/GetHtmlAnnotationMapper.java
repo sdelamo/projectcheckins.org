@@ -1,6 +1,8 @@
 package org.projectcheckins.processor;
 
+import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.views.turbo.TurboFrameView;
+import io.micronaut.views.turbo.TurboStreamAction;
 import io.micronaut.views.turbo.http.TurboMediaType;
 import org.projectcheckins.annotations.GetHtml;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -25,9 +27,11 @@ public class GetHtmlAnnotationMapper implements TypedAnnotationMapper<GetHtml> {
     public static final String MEMBER_VIEW = "view";
     public static final String MEMBER_URI = "uri";
     private static final String MEMBER_TURBO_VIEW = "turboView";
+    private static final String MEMBER_TURBO_ACTION = "turboAction";
     public static final String MEMBER_ROLESALLOWED  = "rolesAllowed";
     public static final String MEMBER_EXECUTES_ON = "executesOn";
     public static final String MEMBER_HIDDEN = "hidden";
+    public static final String MEMBER_ACTION = "action";
 
     @Override
     public Class<GetHtml> annotationType() {
@@ -47,8 +51,13 @@ public class GetHtmlAnnotationMapper implements TypedAnnotationMapper<GetHtml> {
 
         annotation.stringValue(MEMBER_TURBO_VIEW)
                 .filter(StringUtils::isNotEmpty)
-                .ifPresent(view ->
-                        result.add(AnnotationValue.builder(TurboFrameView.class).member(MEMBER_VALUE, view).build()));
+                .ifPresent(view -> {
+                        AnnotationValueBuilder<TurboFrameView> b = AnnotationValue.builder(TurboFrameView.class)
+                                        .member(MEMBER_VALUE, view);
+                    annotation.stringValue(MEMBER_TURBO_ACTION)
+                            .ifPresent(action -> b.member(MEMBER_ACTION, action));
+                    result.add(b.build());
+                });
 
         annotation.stringValue(MEMBER_URI)
                 .filter(StringUtils::isNotEmpty)

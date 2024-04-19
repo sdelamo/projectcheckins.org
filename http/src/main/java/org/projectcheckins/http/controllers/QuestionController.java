@@ -48,6 +48,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.projectcheckins.http.controllers.ApiConstants.FRAME_ID_MAIN;
 import static org.projectcheckins.http.controllers.ApiConstants.SLASH;
 
 @Controller
@@ -112,10 +113,9 @@ class QuestionController {
         this.answerSaveFormGenerator = answerSaveFormGenerator;
     }
 
-    @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST, turboView = VIEW_LIST_FRAGMENT)
+    @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST, turboView = VIEW_LIST_FRAGMENT, turboAction = ApiConstants.DATA_TURBO_ACTION)
     Map<String, Object> questionList(@Nullable Tenant tenant) {
-        return Map.of(MODEL_QUESTIONS, questionService.findAll(tenant),
-                ApiConstants.MODEL_BREADCRUMBS, List.of(new Breadcrumb(MESSAGE_QUESTIONS)));
+        return listModel(tenant);
     }
 
     @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE, turboView = VIEW_CREATE_FRAGMENT)
@@ -136,7 +136,7 @@ class QuestionController {
     HttpResponse<?> questionSave(HttpRequest<?> request,
                                  @NonNull @NotNull @Valid @Body QuestionFormRecord form,
                                  @NonNull Authentication authentication,
-                                 @Nullable @Header(TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+                                 @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                  @Nullable Tenant tenant) {
         String id = questionService.save(form, tenant);
         return TurboMediaType.acceptsTurboStream(request)
@@ -144,7 +144,7 @@ class QuestionController {
             : HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
-    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT)
+    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT, turboAction = ApiConstants.DATA_TURBO_ACTION)
     HttpResponse<?> questionShow(@PathVariable @NotBlank String id,
                                  @NonNull Authentication authentication,
                                  @Nullable Tenant tenant) {
@@ -153,14 +153,11 @@ class QuestionController {
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
-    @Hidden
-    @Produces(MediaType.TEXT_HTML)
-    @Get(PATH_EDIT)
-    @Secured(SecurityRule.IS_AUTHENTICATED)
+    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_EDIT, turboView = VIEW_EDIT_FRAGMENT)
     HttpResponse<?> questionEdit(@PathVariable @NotBlank String id,
                                  @Nullable Tenant tenant) {
         return questionService.findById(id, tenant)
-                .map(question -> HttpResponse.ok(new ModelAndView<>(VIEW_EDIT, updateModel(question, QuestionFormRecord.of(question), tenant))))
+                .map(question -> HttpResponse.ok(updateModel(question, QuestionFormRecord.of(question), tenant)))
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
@@ -169,7 +166,7 @@ class QuestionController {
                                    @NonNull Authentication authentication,
                                    @PathVariable @NotBlank String id,
                                    @NonNull @NotNull @Valid @Body QuestionFormRecord form,
-                                   @Nullable @Header(TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+                                   @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                    @Nullable Tenant tenant) {
         questionService.update(id, form, tenant);
         return TurboMediaType.acceptsTurboStream(request)
@@ -178,17 +175,20 @@ class QuestionController {
     }
 
     @PostForm(uri = PATH_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionDelete(@PathVariable @NotBlank String id,
+    HttpResponse<?> questionDelete(HttpRequest<?> request,
+                                   @PathVariable @NotBlank String id,
                                    @Nullable Tenant tenant) {
         questionService.deleteById(id, tenant);
-        return HttpResponse.seeOther(URI.create(PATH_LIST));
+        return TurboMediaType.acceptsTurboStream(request)
+                ? HttpResponse.ok(listModel(tenant))
+                : HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
     @Error(exception = ConstraintViolationException.class)
     public HttpResponse<?> onConstraintViolationException(HttpRequest<?> request,
                                                           @Nullable Tenant tenant,
                                                           ConstraintViolationException ex) {
-        String turboFrame = request.getHeaders().get(TurboHttpHeaders.TURBO_FRAME);
+        String turboFrame = request.getHeaders().get(TurboHttpHeaders.TURBO_FRAME, String.class, FRAME_ID_MAIN);
         boolean turboRequest = TurboMediaType.acceptsTurboStream(request);
         String contentType = turboRequest ? TurboMediaType.TURBO_STREAM : MediaType.TEXT_HTML;
         final Matcher matcher = REGEX_UPDATE.matcher(request.getPath());
@@ -275,5 +275,11 @@ class QuestionController {
                                 .action(TurboStreamAction.REPLACE)
                                 .targetDomId(turboFrame)
                                 .template(VIEW_SHOW_FRAGMENT, model));
+    }
+
+    @NonNull
+    private Map<String, Object> listModel(@Nullable Tenant tenant) {
+        return Map.of(MODEL_QUESTIONS, questionService.findAll(tenant),
+                ApiConstants.MODEL_BREADCRUMBS, List.of(new Breadcrumb(MESSAGE_QUESTIONS)));
     }
 }
