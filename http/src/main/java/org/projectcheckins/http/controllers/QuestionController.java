@@ -78,15 +78,16 @@ class QuestionController {
     private static final String PATH_SAVE = PATH + ApiConstants.PATH_SAVE;
 
     // SHOW
-    public static final String VIEW_SHOW_FRAGMENT = "/question/_show.html";
     private static final String PATH_SHOW = PATH + ApiConstants.PATH_SHOW;
     public static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_SHOW).build();
     public static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
+    public static final String VIEW_SHOW_FRAGMENT =  PATH + SLASH + ApiConstants.FRAGMENT_SHOW;
     public static final Function<Question, Breadcrumb> BREADCRUMB_SHOW = question -> new Breadcrumb(Message.of(question.title()), PATH_SHOW_BUILDER.andThen(URI::toString).apply(question.id()));
 
     // EDIT
     private static final String PATH_EDIT = PATH + ApiConstants.PATH_EDIT;
     private static final String VIEW_EDIT = PATH + ApiConstants.VIEW_EDIT;
+    private static final String VIEW_EDIT_FRAGMENT = PATH + SLASH + ApiConstants.FRAGMENT_EDIT;
     private static final Breadcrumb BREADCRUMB_EDIT = new Breadcrumb(Message.of("Edit Question", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_EDIT));
 
     // UPDATE
@@ -111,15 +112,13 @@ class QuestionController {
         this.answerSaveFormGenerator = answerSaveFormGenerator;
     }
 
-    @TurboFrameView(VIEW_LIST_FRAGMENT)
-    @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
+    @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST, turboView = VIEW_LIST_FRAGMENT)
     Map<String, Object> questionList(@Nullable Tenant tenant) {
         return Map.of(MODEL_QUESTIONS, questionService.findAll(tenant),
                 ApiConstants.MODEL_BREADCRUMBS, List.of(new Breadcrumb(MESSAGE_QUESTIONS)));
     }
 
-    @TurboFrameView(value = VIEW_CREATE_FRAGMENT)
-    @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE)
+    @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE, turboView = VIEW_CREATE_FRAGMENT)
     Map<String, Object> questionCreate(@Nullable Tenant tenant) {
         final QuestionForm form = QuestionFormRecord.of(new QuestionRecord(
                 null,
@@ -140,47 +139,18 @@ class QuestionController {
                                  @Nullable @Header(TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                  @Nullable Tenant tenant) {
         String id = questionService.save(form, tenant);
-        if (TurboMediaType.acceptsTurboStream(request)) {
-            return showModel(id, authentication, tenant)
-                    .map(model -> TurboStream.builder()
-                    .action(TurboStreamAction.REPLACE)
-                    .targetDomId(turboFrame)
-                    .template(VIEW_SHOW_FRAGMENT, model))
-                    .map(HttpResponse::ok)
-                    .orElseGet(HttpResponse::notFound);
-        }
-        return HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
+        return TurboMediaType.acceptsTurboStream(request)
+            ? showTurboStream(id, authentication, tenant, turboFrame).map(HttpResponse::ok).orElseGet(HttpResponse::notFound)
+            : HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
-    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW)
+    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT)
     HttpResponse<?> questionShow(@PathVariable @NotBlank String id,
                                  @NonNull Authentication authentication,
                                  @Nullable Tenant tenant) {
         return showModel(id, authentication, tenant)
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
-    }
-
-    @NonNull
-    private Optional<Map<String, Object>> showModel(@NonNull String id,
-                                                    @NonNull Authentication authentication,
-                                                    @NonNull Tenant tenant) {
-        Form answerFormSave = answerSaveFormGenerator.generate(id, format -> AnswerController.URI_BUILDER_ANSWER_SAVE.apply(id, format).toString(), authentication);
-        return questionService.findById(id, tenant)
-                .map(question -> showModel(answerService, question, answerFormSave, authentication, tenant));
-    }
-
-    public static Map<String, Object> showModel(AnswerService answerService,
-                                         Question question,
-                                         Form answerFormSave,
-                                         Authentication authentication,
-                                         Tenant tenant) {
-        return Map.of(
-                MODEL_QUESTION, question,
-                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
-                MODEL_ANSWERS, answerService.findByQuestionIdGroupedByDate(question.id(), authentication, tenant),
-                ANSWER_FORM, answerFormSave
-        );
     }
 
     @Hidden
@@ -195,11 +165,16 @@ class QuestionController {
     }
 
     @PostForm(uri = PATH_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionUpdate(@PathVariable @NotBlank String id,
+    HttpResponse<?> questionUpdate(HttpRequest<?> request,
+                                   @NonNull Authentication authentication,
+                                   @PathVariable @NotBlank String id,
                                    @NonNull @NotNull @Valid @Body QuestionFormRecord form,
+                                   @Nullable @Header(TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                    @Nullable Tenant tenant) {
         questionService.update(id, form, tenant);
-        return HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
+        return TurboMediaType.acceptsTurboStream(request)
+                ? showTurboStream(id, authentication, tenant, turboFrame).map(HttpResponse::ok).orElseGet(HttpResponse::notFound)
+                : HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
     @PostForm(uri = PATH_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
@@ -213,11 +188,14 @@ class QuestionController {
     public HttpResponse<?> onConstraintViolationException(HttpRequest<?> request,
                                                           @Nullable Tenant tenant,
                                                           ConstraintViolationException ex) {
+        String turboFrame = request.getHeaders().get(TurboHttpHeaders.TURBO_FRAME);
+        boolean turboRequest = TurboMediaType.acceptsTurboStream(request);
+        String contentType = turboRequest ? TurboMediaType.TURBO_STREAM : MediaType.TEXT_HTML;
         final Matcher matcher = REGEX_UPDATE.matcher(request.getPath());
         if (request.getPath().equals(PATH_SAVE)) {
             return request.getBody(QuestionForm.class)
-                    .map(form -> HttpResponse.unprocessableEntity()
-                            .body(new ModelAndView<>(VIEW_CREATE, saveModel(QuestionFormRecord.of(form, ex), tenant))))
+                    .map(form -> saveModel(QuestionFormRecord.of(form, ex), tenant))
+                    .map(model -> unprocessableEntity(model, contentType, turboRequest, VIEW_CREATE, VIEW_CREATE_FRAGMENT, turboFrame))
                     .orElseGet(HttpResponse::serverError);
         } else if (matcher.find()) {
             final String id = matcher.group(1);
@@ -227,11 +205,23 @@ class QuestionController {
             }
             QuestionForm form = updateFormOptional.get();
             return questionService.findById(id, tenant)
-                    .map(question -> HttpResponse.unprocessableEntity()
-                            .body(new ModelAndView<>(VIEW_EDIT, updateModel(question, QuestionFormRecord.of(form, ex), tenant))))
+                    .map(question -> updateModel(question, QuestionFormRecord.of(form, ex), tenant))
+                    .map(model -> unprocessableEntity(model, contentType, turboRequest, VIEW_EDIT, VIEW_EDIT_FRAGMENT, turboFrame))
                     .orElseGet(NotFoundController::notFoundRedirect);
         }
         return HttpResponse.serverError();
+    }
+
+    private HttpResponse<?> unprocessableEntity(Object model,
+                                                String contentType,
+                                                boolean turboRequest,
+                                                String view,
+                                                String turboView,
+                                                @Nullable String turboFrame) {
+        return HttpResponse.unprocessableEntity().body(turboRequest
+                        ? TurboStream.builder().action(TurboStreamAction.REPLACE).targetDomId(turboFrame).template(turboView, model)
+                        : new ModelAndView<>(view, model))
+                .contentType(contentType);
     }
 
     @NonNull
@@ -253,4 +243,37 @@ class QuestionController {
         );
     }
 
+    public static Map<String, Object> showModel(AnswerService answerService,
+                                                Question question,
+                                                Form answerFormSave,
+                                                Authentication authentication,
+                                                Tenant tenant) {
+        return Map.of(
+                MODEL_QUESTION, question,
+                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
+                MODEL_ANSWERS, answerService.findByQuestionIdGroupedByDate(question.id(), authentication, tenant),
+                ANSWER_FORM, answerFormSave
+        );
+    }
+
+    @NonNull
+    private Optional<Map<String, Object>> showModel(@NonNull String id,
+                                                    @NonNull Authentication authentication,
+                                                    @NonNull Tenant tenant) {
+        Form answerFormSave = answerSaveFormGenerator.generate(id, format -> AnswerController.URI_BUILDER_ANSWER_SAVE.apply(id, format).toString(), authentication);
+        return questionService.findById(id, tenant)
+                .map(question -> showModel(answerService, question, answerFormSave, authentication, tenant));
+    }
+
+    private Optional<TurboStream.Builder> showTurboStream(@NonNull String questionid,
+                                                          @NonNull Authentication authentication,
+                                                          @Nullable Tenant tenant,
+                                                          @Nullable String turboFrame) {
+        return showModel(questionid, authentication, tenant)
+                .map(model ->
+                        TurboStream.builder()
+                                .action(TurboStreamAction.REPLACE)
+                                .targetDomId(turboFrame)
+                                .template(VIEW_SHOW_FRAGMENT, model));
+    }
 }

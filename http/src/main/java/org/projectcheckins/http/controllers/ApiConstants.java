@@ -19,10 +19,10 @@ public interface ApiConstants {
     String ACTION_SHOW = "show";
 
     String ACTION_CREATE = "create";
-    String FRAGMENT_SHOW = "_show";
-    String FRAGMENT_CREATE = "_create";
-    String FRAGMENT_EDIT = "_edit";
-    String FRAGMENT_LIST = "_list";
+    String FRAGMENT_SHOW = "_show.html";
+    String FRAGMENT_CREATE = "_create.html";
+    String FRAGMENT_EDIT = "_edit.html";
+    String FRAGMENT_LIST = "_list.html";
     String ACTION_EDIT = "edit";
     String ACTION_SAVE = "save";
     String ACTION_UPDATE = "update";

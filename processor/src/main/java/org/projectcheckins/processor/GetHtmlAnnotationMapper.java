@@ -1,5 +1,7 @@
 package org.projectcheckins.processor;
 
+import io.micronaut.views.turbo.TurboFrameView;
+import io.micronaut.views.turbo.http.TurboMediaType;
 import org.projectcheckins.annotations.GetHtml;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.util.StringUtils;
@@ -22,7 +24,7 @@ public class GetHtmlAnnotationMapper implements TypedAnnotationMapper<GetHtml> {
     public static final String MEMBER_VALUE = "value";
     public static final String MEMBER_VIEW = "view";
     public static final String MEMBER_URI = "uri";
-
+    private static final String MEMBER_TURBO_VIEW = "turboView";
     public static final String MEMBER_ROLESALLOWED  = "rolesAllowed";
     public static final String MEMBER_EXECUTES_ON = "executesOn";
     public static final String MEMBER_HIDDEN = "hidden";
@@ -42,6 +44,11 @@ public class GetHtmlAnnotationMapper implements TypedAnnotationMapper<GetHtml> {
                 .filter(StringUtils::isNotEmpty)
                 .ifPresent(view ->
                 result.add(AnnotationValue.builder(View.class).member(MEMBER_VALUE, view).build()));
+
+        annotation.stringValue(MEMBER_TURBO_VIEW)
+                .filter(StringUtils::isNotEmpty)
+                .ifPresent(view ->
+                        result.add(AnnotationValue.builder(TurboFrameView.class).member(MEMBER_VALUE, view).build()));
 
         annotation.stringValue(MEMBER_URI)
                 .filter(StringUtils::isNotEmpty)
