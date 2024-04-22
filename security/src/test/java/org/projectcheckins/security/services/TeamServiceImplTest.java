@@ -3,6 +3,7 @@ package org.projectcheckins.security.services;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
+import io.micronaut.context.event.ApplicationEventListener;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.multitenancy.Tenant;
@@ -19,14 +20,20 @@ import org.projectcheckins.security.api.PublicProfile;
 import org.projectcheckins.security.forms.TeamMemberSave;
 import org.projectcheckins.security.repositories.PublicProfileRepository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.await;
 
 @Property(name = "spec.name", value = "TeamServiceImplTest")
 @MicronautTest(startApplication = false)
 class TeamServiceImplTest {
+
+    static final String SIGNUP_URL = "http://example.com/signUp";
 
     static final PublicProfile USER_1 = new PublicProfileRecord(
             "user1",
@@ -76,16 +83,26 @@ class TeamServiceImplTest {
     }
 
     @Test
-    void testSave() {
+    void testSave(InvitationSavedEvents events) {
         final TeamMemberSave form = new TeamMemberSave("user2@email.com");
-        assertThatCode(() -> teamService.save(form, null))
+        assertThatCode(() -> teamService.save(form, null, Locale.ENGLISH, SIGNUP_URL))
                 .doesNotThrowAnyException();
+
+        await().atMost(1, SECONDS).until(() -> !events.received.isEmpty());
+
+        assertThat(events.received)
+                .hasSize(1)
+                .first()
+                .hasFieldOrPropertyWithValue("email", "user2@email.com")
+                .hasFieldOrPropertyWithValue("url", SIGNUP_URL);
+
+        events.received.clear();
     }
 
     @Test
     void testSaveInvalidEmail() {
         final TeamMemberSave form = new TeamMemberSave("not an email");
-        assertThatThrownBy(() -> teamService.save(form, null))
+        assertThatThrownBy(() -> teamService.save(form, null, Locale.ENGLISH, SIGNUP_URL))
                 .isInstanceOf(ConstraintViolationException.class)
                 .hasMessage("save.form.email: must be a well-formed email address");
     }
@@ -93,7 +110,7 @@ class TeamServiceImplTest {
     @Test
     void testSaveAlreadyExists() {
         final TeamMemberSave form = new TeamMemberSave(USER_1.email());
-        assertThatThrownBy(() -> teamService.save(form, null))
+        assertThatThrownBy(() -> teamService.save(form, null, Locale.ENGLISH, SIGNUP_URL))
                 .isInstanceOf(ConstraintViolationException.class)
                 .hasMessage("save.invitation: Invitation already exists");
     }
@@ -165,6 +182,19 @@ class TeamServiceImplTest {
             return Optional.empty();
         }
     }
+
+    @Requires(property = "spec.name", value = "TeamServiceImplTest")
+    @Singleton
+    static class InvitationSavedEvents implements ApplicationEventListener<InvitationSavedEvent> {
+
+        final List<InvitationSavedEvent> received = new ArrayList<>();
+
+        @Override
+        public void onApplicationEvent(InvitationSavedEvent event) {
+            received.add(event);
+        }
+    }
+
     record PublicProfileRecord(String id, String email, String fullName) implements PublicProfile {
     }
 }

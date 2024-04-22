@@ -7,6 +7,9 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
+import io.micronaut.http.server.util.HttpHostResolver;
+import io.micronaut.http.server.util.locale.HttpLocaleResolver;
+import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
@@ -24,6 +27,7 @@ import org.projectcheckins.security.services.TeamService;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Controller
@@ -64,10 +68,14 @@ class TeamController {
 
     private final TeamService teamService;
     private final FormGenerator formGenerator;
+    private final HttpHostResolver httpHostResolver;
+    private final HttpLocaleResolver httpLocaleResolver;
 
-    TeamController(TeamService teamService, FormGenerator formGenerator) {
+    TeamController(TeamService teamService, FormGenerator formGenerator, HttpHostResolver httpHostResolver, HttpLocaleResolver httpLocaleResolver) {
         this.teamService = teamService;
         this.formGenerator = formGenerator;
+        this.httpHostResolver = httpHostResolver;
+        this.httpLocaleResolver = httpLocaleResolver;
     }
 
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
@@ -86,8 +94,9 @@ class TeamController {
 
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> memberSave(@NonNull @NotNull @Valid @Body TeamMemberSave form,
+                               @NonNull @NotNull HttpRequest<?> request,
                                @Nullable Tenant tenant) {
-        teamService.save(form, tenant);
+        teamService.save(form, tenant, getLocale(request), getSignUpUri(request).toString());
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
@@ -111,5 +120,13 @@ class TeamController {
                 MODEL_BREADCRUMBS, List.of(BREADCRUMB_HOME, BREADCRUMB_LIST, BREADCRUMB_CREATE),
                 MEMBER_FORM, form
         );
+    }
+
+    private Locale getLocale(HttpRequest<?> request) {
+        return httpLocaleResolver.resolveOrDefault(request);
+    }
+
+    private URI getSignUpUri(HttpRequest<?> request) {
+        return UriBuilder.of(httpHostResolver.resolve(request)).path(SecurityController.PATH_SIGN_UP).build();
     }
 }
