@@ -24,7 +24,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // HTTP Client
-    testImplementation("io.micronaut:micronaut-http-client-jdk")
+    testImplementation("io.micronaut:micronaut-http-client")
 
     // AssertJ
     testImplementation("org.assertj:assertj-core")

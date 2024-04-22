@@ -48,6 +48,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.projectcheckins.http.controllers.ApiConstants.*;
 import static org.projectcheckins.http.controllers.ApiConstants.FRAME_ID_MAIN;
 import static org.projectcheckins.http.controllers.ApiConstants.SLASH;
 
@@ -63,38 +64,38 @@ class QuestionController {
     public static final String MODEL_ANSWERS = "answers";
 
     // LIST
-    private static final String VIEW_LIST_FRAGMENT = PATH + SLASH + ApiConstants.FRAGMENT_LIST;
+    private static final String VIEW_LIST_FRAGMENT = PATH + SLASH + FRAGMENT_LIST;
     public static final String PATH_LIST = PATH + ApiConstants.PATH_LIST;
     private static final String VIEW_LIST = PATH + ApiConstants.VIEW_LIST;
-    public static final Message MESSAGE_QUESTIONS = Message.of("Questions", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_LIST);
+    public static final Message MESSAGE_QUESTIONS = Message.of("Questions", QUESTION + DOT + ACTION_LIST);
     public static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(MESSAGE_QUESTIONS, PATH_LIST);
 
     // CREATE
     private static final String PATH_CREATE = PATH + ApiConstants.PATH_CREATE;
     private static final String VIEW_CREATE = PATH + ApiConstants.VIEW_CREATE;
-    private static final String VIEW_CREATE_FRAGMENT = PATH + SLASH + ApiConstants.FRAGMENT_CREATE;
-    private static final Breadcrumb BREADCRUMB_CREATE = new Breadcrumb(Message.of("New Question", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_CREATE));
+    private static final String VIEW_CREATE_FRAGMENT = PATH + SLASH + FRAGMENT_CREATE;
+    private static final Breadcrumb BREADCRUMB_CREATE = new Breadcrumb(Message.of("New Question", QUESTION + DOT + ACTION_CREATE));
 
     // SAVE
     private static final String PATH_SAVE = PATH + ApiConstants.PATH_SAVE;
 
     // SHOW
     private static final String PATH_SHOW = PATH + ApiConstants.PATH_SHOW;
-    public static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_SHOW).build();
+    public static final Function<String, URI> PATH_SHOW_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ACTION_SHOW).build();
     public static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
-    public static final String VIEW_SHOW_FRAGMENT =  PATH + SLASH + ApiConstants.FRAGMENT_SHOW;
+    public static final String VIEW_SHOW_FRAGMENT =  PATH + SLASH + FRAGMENT_SHOW;
     public static final Function<Question, Breadcrumb> BREADCRUMB_SHOW = question -> new Breadcrumb(Message.of(question.title()), PATH_SHOW_BUILDER.andThen(URI::toString).apply(question.id()));
 
     // EDIT
     private static final String PATH_EDIT = PATH + ApiConstants.PATH_EDIT;
     private static final String VIEW_EDIT = PATH + ApiConstants.VIEW_EDIT;
-    private static final String VIEW_EDIT_FRAGMENT = PATH + SLASH + ApiConstants.FRAGMENT_EDIT;
-    private static final Breadcrumb BREADCRUMB_EDIT = new Breadcrumb(Message.of("Edit Question", QUESTION + ApiConstants.DOT + ApiConstants.ACTION_EDIT));
+    private static final String VIEW_EDIT_FRAGMENT = PATH + SLASH + FRAGMENT_EDIT;
+    private static final Breadcrumb BREADCRUMB_EDIT = new Breadcrumb(Message.of("Edit Question", QUESTION + DOT + ACTION_EDIT));
 
     // UPDATE
     private static final String PATH_UPDATE = PATH + ApiConstants.PATH_UPDATE;
     private static final Pattern REGEX_UPDATE = Pattern.compile("^\\/question\\/(.*)\\/update$");
-    private static final Function<String, URI> PATH_UPDATE_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ApiConstants.ACTION_UPDATE).build();
+    private static final Function<String, URI> PATH_UPDATE_BUILDER  = id -> UriBuilder.of(PATH).path(id).path(ACTION_UPDATE).build();
 
     // DELETE
     private static final String PATH_DELETE = PATH + ApiConstants.PATH_DELETE;
@@ -113,7 +114,7 @@ class QuestionController {
         this.answerSaveFormGenerator = answerSaveFormGenerator;
     }
 
-    @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST, turboView = VIEW_LIST_FRAGMENT, turboAction = ApiConstants.DATA_TURBO_ACTION)
+    @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST, turboView = VIEW_LIST_FRAGMENT, turboAction = DATA_TURBO_ACTION)
     Map<String, Object> questionList(@Nullable Tenant tenant) {
         return listModel(tenant);
     }
@@ -144,20 +145,33 @@ class QuestionController {
             : HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
-    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT, turboAction = ApiConstants.DATA_TURBO_ACTION)
+    @Get(PATH_SHOW)
+    @Produces(value = { MediaType.TEXT_HTML })
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionShow(@PathVariable @NotBlank String id,
                                  @NonNull Authentication authentication,
+                                 @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                  @Nullable Tenant tenant) {
         return showModel(answerService, questionService, answerSaveFormGenerator, id, authentication, tenant)
+                .map(model -> turboFrame != null ?  new ModelAndView<>(VIEW_SHOW_FRAGMENT, model) : new ModelAndView<>(VIEW_SHOW, model))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
-    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_EDIT, turboView = VIEW_EDIT_FRAGMENT)
-    HttpResponse<?> questionEdit(@PathVariable @NotBlank String id,
+    @Get(PATH_EDIT)
+    @Produces(value = { MediaType.TEXT_HTML })
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    HttpResponse<?> questionEdit(@Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+                                 @PathVariable @NotBlank String id,
                                  @Nullable Tenant tenant) {
         return questionService.findById(id, tenant)
-                .map(question -> HttpResponse.ok(updateModel(question, QuestionFormRecord.of(question), tenant)))
+                .map(question -> {
+                    Map<String, Object> model = updateModel(question, QuestionFormRecord.of(question), tenant);
+                    return turboFrame != null
+                            ? new ModelAndView<>(VIEW_EDIT_FRAGMENT, model)
+                            : new ModelAndView<>(VIEW_EDIT, model);
+                })
+                .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
@@ -229,7 +243,7 @@ class QuestionController {
         return Map.of(
                 MODEL_QUESTION, question,
                 MODEL_FIELDSET, fieldset,
-                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_SHOW.apply(question), BREADCRUMB_EDIT),
+                MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_SHOW.apply(question), BREADCRUMB_EDIT),
                 MODEL_RESPONDENTS, questionService.listAvailableRespondents(tenant)
         );
     }
@@ -238,7 +252,7 @@ class QuestionController {
     private Map<String, Object> saveModel(@NonNull QuestionForm fieldset, Tenant tenant) {
         return Map.of(
                 MODEL_FIELDSET, fieldset,
-                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_CREATE),
+                MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, BREADCRUMB_CREATE),
                 MODEL_RESPONDENTS, questionService.listAvailableRespondents(tenant)
         );
     }
@@ -250,7 +264,7 @@ class QuestionController {
                                                 Tenant tenant) {
         return Map.of(
                 MODEL_QUESTION, question,
-                ApiConstants.MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
+                MODEL_BREADCRUMBS, List.of(BREADCRUMB_LIST, new Breadcrumb(Message.of(question.title()))),
                 MODEL_ANSWERS, answerService.findByQuestionIdGroupedByDate(question.id(), authentication, tenant),
                 ANSWER_FORM, answerFormSave
         );
@@ -283,6 +297,6 @@ class QuestionController {
     @NonNull
     private Map<String, Object> listModel(@Nullable Tenant tenant) {
         return Map.of(MODEL_QUESTIONS, questionService.findAll(tenant),
-                ApiConstants.MODEL_BREADCRUMBS, List.of(new Breadcrumb(MESSAGE_QUESTIONS)));
+                MODEL_BREADCRUMBS, List.of(new Breadcrumb(MESSAGE_QUESTIONS)));
     }
 }
