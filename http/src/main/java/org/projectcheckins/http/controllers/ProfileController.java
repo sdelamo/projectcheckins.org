@@ -4,10 +4,10 @@ import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.Body;
-import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.Header;
+import io.micronaut.http.MediaType;
+import io.micronaut.http.annotation.*;
 import io.micronaut.multitenancy.Tenant;
+import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
@@ -69,23 +69,25 @@ class ProfileController {
         this.profileRepository = profileRepository;
     }
 
-    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT, turboAction = ApiConstants.DATA_TURBO_ACTION)
-    HttpResponse<?> profileShow(@NonNull @NotNull Authentication authentication, @Nullable Tenant tenant) {
+    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    HttpResponse<?> profileShow(@NonNull @NotNull Authentication authentication,
+                                @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+                                @Nullable Tenant tenant) {
         return showModel(authentication, tenant)
+                .map(model -> turboFrame != null ? new ModelAndView<>(VIEW_SHOW_FRAGMENT, model) : new ModelAndView<>(VIEW_SHOW, model))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
-    @GetHtml(uri = PATH_EDIT,
-            rolesAllowed = SecurityRule.IS_AUTHENTICATED,
-            view = VIEW_EDIT,
-            turboView = VIEW_EDIT_FRAGMENT)
+    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> profileEdit(@NonNull @NotNull Authentication authentication,
-                                @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
+                                @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                 @Nullable Tenant tenant) {
         return profileRepository.findByAuthentication(authentication, tenant)
-            .map(p -> HttpResponse.ok(updateModel(p)))
-            .orElseGet(NotFoundController::notFoundRedirect);
+                .map(this::updateModel)
+                .map(model -> turboFrame != null ? new ModelAndView<>(VIEW_EDIT_FRAGMENT, model) : new ModelAndView<>(VIEW_EDIT, model))
+                .map(HttpResponse::ok)
+                .orElseGet(NotFoundController::notFoundRedirect);
     }
 
     @PostForm(uri = PATH_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)

@@ -145,9 +145,7 @@ class QuestionController {
             : HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
-    @Get(PATH_SHOW)
-    @Produces(value = { MediaType.TEXT_HTML })
-    @Secured(SecurityRule.IS_AUTHENTICATED)
+    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionShow(@PathVariable @NotBlank String id,
                                  @NonNull Authentication authentication,
                                  @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
@@ -157,10 +155,8 @@ class QuestionController {
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
-
-    @Get(PATH_EDIT)
-    @Produces(value = { MediaType.TEXT_HTML })
-    @Secured(SecurityRule.IS_AUTHENTICATED)
+    
+    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionEdit(@Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                  @PathVariable @NotBlank String id,
                                  @Nullable Tenant tenant) {
