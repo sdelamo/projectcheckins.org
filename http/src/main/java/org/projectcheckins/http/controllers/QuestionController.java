@@ -114,12 +114,19 @@ class QuestionController {
         this.answerSaveFormGenerator = answerSaveFormGenerator;
     }
 
-    @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST, turboView = VIEW_LIST_FRAGMENT, turboAction = DATA_TURBO_ACTION)
+    @GetHtml(uri = PATH_LIST,
+            rolesAllowed = SecurityRule.IS_AUTHENTICATED,
+            view = VIEW_LIST,
+            turboView = VIEW_LIST_FRAGMENT,
+            turboAction = DATA_TURBO_ACTION)
     Map<String, Object> questionList(@Nullable Tenant tenant) {
         return listModel(tenant);
     }
 
-    @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE, turboView = VIEW_CREATE_FRAGMENT)
+    @GetHtml(uri = PATH_CREATE,
+            rolesAllowed = SecurityRule.IS_AUTHENTICATED,
+            view = VIEW_CREATE,
+            turboView = VIEW_CREATE_FRAGMENT)
     Map<String, Object> questionCreate(@Nullable Tenant tenant) {
         final QuestionForm form = QuestionFormRecord.of(new QuestionRecord(
                 null,
@@ -150,8 +157,9 @@ class QuestionController {
                                  @NonNull Authentication authentication,
                                  @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                  @Nullable Tenant tenant) {
+        String viewName = turboFrame != null ? VIEW_SHOW_FRAGMENT : VIEW_SHOW;
         return showModel(answerService, questionService, answerSaveFormGenerator, id, authentication, tenant)
-                .map(model -> turboFrame != null ?  new ModelAndView<>(VIEW_SHOW_FRAGMENT, model) : new ModelAndView<>(VIEW_SHOW, model))
+                .map(model -> new ModelAndView<>(viewName, model))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
@@ -160,13 +168,10 @@ class QuestionController {
     HttpResponse<?> questionEdit(@Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                  @PathVariable @NotBlank String id,
                                  @Nullable Tenant tenant) {
+        String viewName = turboFrame != null ? VIEW_EDIT_FRAGMENT : VIEW_EDIT;
         return questionService.findById(id, tenant)
-                .map(question -> {
-                    Map<String, Object> model = updateModel(question, QuestionFormRecord.of(question), tenant);
-                    return turboFrame != null
-                            ? new ModelAndView<>(VIEW_EDIT_FRAGMENT, model)
-                            : new ModelAndView<>(VIEW_EDIT, model);
-                })
+                .map(question -> updateModel(question, QuestionFormRecord.of(question), tenant))
+                .map(model -> new ModelAndView<>(viewName, model))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
@@ -179,9 +184,12 @@ class QuestionController {
                                    @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                    @Nullable Tenant tenant) {
         questionService.update(id, form, tenant);
-        return TurboMediaType.acceptsTurboStream(request)
-                ? showTurboStream(id, authentication, tenant, turboFrame).map(HttpResponse::ok).orElseGet(HttpResponse::notFound)
-                : HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
+        if (TurboMediaType.acceptsTurboStream(request)) {
+            return showTurboStream(id, authentication, tenant, turboFrame)
+                    .map(HttpResponse::ok)
+                    .orElseGet(HttpResponse::notFound);
+        }
+        return HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
     @PostForm(uri = PATH_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)

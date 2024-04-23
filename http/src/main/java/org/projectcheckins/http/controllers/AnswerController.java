@@ -6,6 +6,7 @@ import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.annotation.Error;
+import io.micronaut.http.server.util.locale.HttpLocaleResolver;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.authentication.Authentication;
@@ -94,15 +95,18 @@ class AnswerController {
     private final AnswerService answerService;
     private final FormGenerator formGenerator;
     private final AnswerSaveFormGenerator answerSaveFormGenerator;
+    private final HttpLocaleResolver httpLocaleResolver;
 
     AnswerController(QuestionService questionService,
                      AnswerService answerService,
                      FormGenerator formGenerator,
-                     AnswerSaveFormGenerator answerSaveFormGenerator) {
+                     AnswerSaveFormGenerator answerSaveFormGenerator,
+                     HttpLocaleResolver httpLocaleResolver) {
         this.questionService = questionService;
         this.answerService = answerService;
         this.formGenerator = formGenerator;
         this.answerSaveFormGenerator = answerSaveFormGenerator;
+        this.httpLocaleResolver = httpLocaleResolver;
     }
 
     @PostForm(uri = PATH_ANSWER_SAVE_MARKDOWN, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
@@ -125,44 +129,53 @@ class AnswerController {
         return answerSave(request, form, questionId, authentication, Format.WYSIWYG, form.html(), turboFrame, tenant);
     }
 
-    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW, turboView = VIEW_SHOW_FRAGMENT, turboAction = ApiConstants.DATA_TURBO_ACTION)
-    HttpResponse<?> answerShow(@PathVariable @NotBlank String questionId,
+    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    HttpResponse<?> answerShow(HttpRequest<?> request,
+                               @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+                               @PathVariable @NotBlank String questionId,
                                @PathVariable @NotBlank String id,
                                @NonNull Authentication authentication,
-                               @Nullable Locale locale,
                                @Nullable Tenant tenant) {
-        return questionService.findById(questionId, tenant)
-                .flatMap(question -> answerService.findById(id, authentication, tenant)
-                            .map(answer -> HttpResponse.ok(Map.of(
-                                    MODEL_ANSWER, answer,
-                                    ApiConstants.MODEL_BREADCRUMBS, List.of(
-                                            QuestionController.BREADCRUMB_LIST,
-                                            QuestionController.BREADCRUMB_SHOW.apply(question),
-                                            makeBreadcrumbShow(answer, locale))
-                                    ))))
+        String viewName = turboFrame != null ? VIEW_SHOW_FRAGMENT : VIEW_SHOW;
+        Locale locale = httpLocaleResolver.resolveOrDefault(request);
+        return answerShowModel(questionId, id, authentication, locale, tenant)
+                .map(model -> new ModelAndView<>(viewName, model))
+                .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
-    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_EDIT, turboView = VIEW_EDIT_FRAGMENT)
+    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> answerEdit(@PathVariable @NotBlank String questionId,
                                @PathVariable @NotBlank String id,
                                @NonNull Authentication authentication,
+                               @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                @Nullable Locale locale,
                                @Nullable Tenant tenant) {
+        String viewName = turboFrame != null ? VIEW_EDIT_FRAGMENT : VIEW_EDIT;
         return questionService.findById(questionId, tenant)
                 .flatMap(question -> answerService.findById(id, authentication, tenant)
                         .map(answer -> updateAnswerModel(question, answer, locale)))
-                .map(model -> HttpResponse.ok(new ModelAndView<>(VIEW_EDIT, model)))
+                .map(model -> HttpResponse.ok(new ModelAndView<>(viewName, model)))
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
     @PostForm(uri = PATH_ANSWER_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> answerUpdate(@PathVariable String questionId,
+    HttpResponse<?> answerUpdate(HttpRequest<?> request,
+                                 @PathVariable String questionId,
                                  @PathVariable String id,
                                  @NonNull Authentication authentication,
+                                 @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                  @Nullable Tenant tenant,
                                  @Body @NonNull @NotNull @Valid AnswerUpdateRecord answerUpdate) {
         answerService.update(authentication, questionId, id, answerUpdate, tenant);
+        if (TurboMediaType.acceptsTurboStream(request)) {
+            return answerShowModel(questionId, id, authentication, httpLocaleResolver.resolveOrDefault(request), tenant)
+                    .map(model -> HttpResponse.ok(TurboStream.builder()
+                            .targetDomId(turboFrame)
+                            .replace()
+                            .template(VIEW_SHOW_FRAGMENT, model)))
+                    .orElseGet(NotFoundController::notFoundRedirect);
+        }
         return HttpResponse.seeOther(PATH_SHOW_URI_BUILDER.apply(questionId, id));
     }
 
@@ -283,8 +296,24 @@ class AnswerController {
             return HttpResponse.ok(TurboStream.builder()
                     .targetDomId(turboFrame)
                     .replace()
-                    .template("question/_answers.html", model));
+                    .template(QuestionController.VIEW_SHOW_FRAGMENT, model));
         }
         return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
+    }
+
+    private Optional<Map<String, Object>> answerShowModel(@NonNull String questionId,
+                                                          @NonNull String answerId,
+                                                          @NonNull Authentication authentication,
+                                                          @NonNull Locale locale,
+                                                          @Nullable Tenant tenant) {
+        return questionService.findById(questionId, tenant)
+                .flatMap(question -> answerService.findById(answerId, authentication, tenant)
+                        .map(answer -> Map.of(
+                                MODEL_ANSWER, answer,
+                                ApiConstants.MODEL_BREADCRUMBS, List.of(
+                                        QuestionController.BREADCRUMB_LIST,
+                                        QuestionController.BREADCRUMB_SHOW.apply(question),
+                                        makeBreadcrumbShow(answer, locale))
+                        )));
     }
 }

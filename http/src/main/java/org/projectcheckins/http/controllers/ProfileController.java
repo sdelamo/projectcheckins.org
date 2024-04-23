@@ -73,8 +73,9 @@ class ProfileController {
     HttpResponse<?> profileShow(@NonNull @NotNull Authentication authentication,
                                 @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                 @Nullable Tenant tenant) {
+        String vieName = turboFrame != null ? VIEW_SHOW_FRAGMENT : VIEW_SHOW;
         return showModel(authentication, tenant)
-                .map(model -> turboFrame != null ? new ModelAndView<>(VIEW_SHOW_FRAGMENT, model) : new ModelAndView<>(VIEW_SHOW, model))
+                .map(model -> new ModelAndView<>(vieName, model))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
@@ -83,9 +84,10 @@ class ProfileController {
     HttpResponse<?> profileEdit(@NonNull @NotNull Authentication authentication,
                                 @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                 @Nullable Tenant tenant) {
+        String vieName = turboFrame != null ? VIEW_EDIT_FRAGMENT : VIEW_EDIT;
         return profileRepository.findByAuthentication(authentication, tenant)
                 .map(this::updateModel)
-                .map(model -> turboFrame != null ? new ModelAndView<>(VIEW_EDIT_FRAGMENT, model) : new ModelAndView<>(VIEW_EDIT, model))
+                .map(model -> new ModelAndView<>(vieName, model))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
