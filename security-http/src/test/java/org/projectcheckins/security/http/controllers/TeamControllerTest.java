@@ -33,6 +33,7 @@ import org.projectcheckins.test.BrowserRequest;
 import org.projectcheckins.test.HttpClientResponseExceptionAssert;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -200,7 +201,7 @@ class TeamControllerTest {
         }
 
         @Override
-        public void save(@NotNull @Valid TeamMemberSave form, @Nullable Tenant tenant) {
+        public void save(@NotNull @Valid TeamMemberSave form, @Nullable Tenant tenant, @NotNull Locale locale, @NotBlank String signupUrl) {
         }
     }
 

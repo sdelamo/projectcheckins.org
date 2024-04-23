@@ -8,6 +8,9 @@ import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Header;
+import io.micronaut.http.server.util.HttpHostResolver;
+import io.micronaut.http.server.util.locale.HttpLocaleResolver;
+import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
@@ -28,6 +31,7 @@ import org.projectcheckins.security.services.TeamService;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Controller
@@ -71,10 +75,14 @@ class TeamController {
 
     private final TeamService teamService;
     private final FormGenerator formGenerator;
+    private final HttpHostResolver httpHostResolver;
+    private final HttpLocaleResolver httpLocaleResolver;
 
-    TeamController(TeamService teamService, FormGenerator formGenerator) {
+    TeamController(TeamService teamService, FormGenerator formGenerator, HttpHostResolver httpHostResolver, HttpLocaleResolver httpLocaleResolver) {
         this.teamService = teamService;
         this.formGenerator = formGenerator;
+        this.httpHostResolver = httpHostResolver;
+        this.httpLocaleResolver = httpLocaleResolver;
     }
 
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST, turboView = VIEW_LIST_FRAGMENT)
@@ -92,7 +100,7 @@ class TeamController {
                                @NonNull @NotNull @Valid @Body TeamMemberSave form,
                                @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                @Nullable Tenant tenant) {
-        teamService.save(form, tenant);
+        teamService.save(form, tenant, getLocale(request), getSignUpUri(request).toString());
         if (TurboMediaType.acceptsTurboStream(request)) {
             return HttpResponse.ok().body(TurboStream.builder().targetDomId(turboFrame).template(VIEW_LIST_FRAGMENT, listModel(tenant)).build());
         }
@@ -120,12 +128,20 @@ class TeamController {
                 MEMBER_FORM, form
         );
     }
-
+    
     private Map<String, Object> listModel(@Nullable Tenant tenant) {
         return Map.of(
                 MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
                 MODEL_MEMBERS, teamService.findAll(tenant),
                 MODEL_INVITATIONS, teamService.findInvitations(tenant)
         );
+    }
+
+    private Locale getLocale(HttpRequest<?> request) {
+        return httpLocaleResolver.resolveOrDefault(request);
+    }
+
+    private URI getSignUpUri(HttpRequest<?> request) {
+        return UriBuilder.of(httpHostResolver.resolve(request)).path(SecurityController.PATH_SIGN_UP).build();
     }
 }

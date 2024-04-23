@@ -52,7 +52,7 @@ class SecurityController {
     // SIGN UP
     private final Form signUpForm;
     private static final String VIEW_SECURITY_SIGN_UP = PATH + "/signUp.html";
-    private static final String PATH_SIGN_UP = PATH + "/signUp";
+    public static final String PATH_SIGN_UP = PATH + "/signUp";
 
     // PASSWORD
     private static final String ACTION_PASSWORD_CHANGE = "changePassword";
