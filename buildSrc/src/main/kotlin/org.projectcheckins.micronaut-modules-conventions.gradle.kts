@@ -16,7 +16,7 @@ dependencies {
     testAnnotationProcessor("io.micronaut.validation:micronaut-validation-processor")
 
     // HTTP Client
-    testImplementation("io.micronaut:micronaut-http-client-jdk")
+    testImplementation("io.micronaut:micronaut-http-client")
 
     // JUnit Testing
     testImplementation("org.junit.jupiter:junit-jupiter")
