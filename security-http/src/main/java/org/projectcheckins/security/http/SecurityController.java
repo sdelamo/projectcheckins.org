@@ -8,6 +8,8 @@ import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.http.server.util.HttpHostResolver;
+import io.micronaut.http.server.util.locale.HttpLocaleResolver;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.authentication.Authentication;
@@ -27,6 +29,7 @@ import org.projectcheckins.bootstrap.Alert;
 import org.projectcheckins.security.PasswordService;
 import org.projectcheckins.security.RegisterService;
 import org.projectcheckins.security.RegistrationCheckViolationException;
+import org.projectcheckins.security.constraints.ValidToken;
 
 import java.net.URI;
 import java.util.Collections;
@@ -39,6 +42,8 @@ class SecurityController {
     private static final String PATH = "/" + SECURITY;
     private static final String MODEL_FORM = "form";
     private static final String MODEL_PASSWORD_FORM = "passwordForm";
+    private static final String MODEL_PASSWORD_FORGOT_FORM = "forgotPasswordForm";
+    private static final String MODEL_PASSWORD_RESET_FORM = "resetPasswordForm";
     private static final String MODEL_ALERT = "alert";
 
     // LOGIN
@@ -55,26 +60,44 @@ class SecurityController {
     public static final String PATH_SIGN_UP = PATH + "/signUp";
 
     // PASSWORD
+    private final Form forgotPasswordForm;
+    private static final Message MESSAGE_FORGOT_SUBMIT = Message.of("Email me reset instructions", "resetpasswordform.submit");
+    private static final Message MESSAGE_INSTRUCTIONS_SENT = Message.of("Check your email for reset instructions.", "password.forgot.sent");
+    private static final Message MESSAGE_PASSWORD_RESET = Message.of("You have successfully reset your password.", "password.reset");
+    private static final Message MESSAGE_TOKEN_INVALID = Message.of("Token is invalid or already expired.", ValidToken.class.getName() + ".message");
     private static final String ACTION_PASSWORD_CHANGE = "changePassword";
     private static final String ACTION_PASSWORD_UPDATE = "updatePassword";
+    private static final String ACTION_PASSWORD_FORGOT = "forgotPassword";
+    private static final String ACTION_PASSWORD_RESET = "resetPassword";
     private static final String PATH_PASSWORD_CHANGE = PATH + "/" + ACTION_PASSWORD_CHANGE;
     private static final String PATH_PASSWORD_UPDATE = PATH + "/" + ACTION_PASSWORD_UPDATE;
+    private static final String PATH_PASSWORD_FORGOT = PATH + "/" + ACTION_PASSWORD_FORGOT;
+    private static final String PATH_PASSWORD_RESET = PATH + "/" + ACTION_PASSWORD_RESET;
     private static final String VIEW_PASSWORD_CHANGE = PATH + "/" + ACTION_PASSWORD_CHANGE + ".html";
     private static final String VIEW_CHANGED_PASSWORD = PATH + "/passwordChanged.html";
+    private static final String VIEW_PASSWORD_FORGOT = PATH + "/" + ACTION_PASSWORD_FORGOT + ".html";
+    private static final String VIEW_PASSWORD_RESET = PATH + "/" + ACTION_PASSWORD_RESET + ".html";
 
     private final FormGenerator formGenerator;
     private final RegisterService registerService;
     private final PasswordService passwordService;
+    private final HttpHostResolver httpHostResolver;
+    private final HttpLocaleResolver httpLocaleResolver;
 
     SecurityController(FormGenerator formGenerator,
                        LoginControllerConfiguration loginControllerConfiguration,
                        RegisterService registerService,
-                       PasswordService passwordService) {
+                       PasswordService passwordService,
+                       HttpHostResolver httpHostResolver,
+                       HttpLocaleResolver httpLocaleResolver) {
         this.formGenerator = formGenerator;
         this.registerService = registerService;
         this.passwordService = passwordService;
+        this.httpHostResolver = httpHostResolver;
+        this.httpLocaleResolver = httpLocaleResolver;
         loginForm = formGenerator.generate(loginControllerConfiguration.getPath(), LoginForm.class);
         signUpForm = formGenerator.generate(PATH_SIGN_UP, SignUpForm.class);
+        forgotPasswordForm = formGenerator.generate(PATH_PASSWORD_FORGOT, ForgotPasswordForm.class, MESSAGE_FORGOT_SUBMIT);
     }
 
     @GetHtml(uri = PATH_SIGN_UP, rolesAllowed = SecurityRule.IS_ANONYMOUS, view = VIEW_SECURITY_SIGN_UP)
@@ -124,6 +147,34 @@ class SecurityController {
         return HttpResponse.seeOther(URI_LOGIN);
     }
 
+    @GetHtml(uri = PATH_PASSWORD_FORGOT, rolesAllowed = SecurityRule.IS_ANONYMOUS, view = VIEW_PASSWORD_FORGOT)
+    Map<String, Object> forgotPasswordForm() {
+        return Map.of(MODEL_PASSWORD_FORGOT_FORM, forgotPasswordForm);
+    }
+
+    @PostForm(uri = PATH_PASSWORD_FORGOT, rolesAllowed = SecurityRule.IS_ANONYMOUS)
+    HttpResponse<?> forgotPassword(@NonNull @NotNull HttpRequest<?> request,
+                                   @NonNull @NotNull @Valid @Body ForgotPasswordForm forgotPasswordForm) {
+        passwordService.sendResetInstructions(forgotPasswordForm.email(),
+                httpLocaleResolver.resolveOrDefault(request),
+                UriBuilder.of(httpHostResolver.resolve(request)).path(SecurityController.PATH_PASSWORD_RESET));
+        return HttpResponse.ok().body(forgotPasswordModelAndView(forgotPasswordForm.email()));
+    }
+
+    @GetHtml(uri = PATH_PASSWORD_RESET, rolesAllowed = SecurityRule.IS_ANONYMOUS)
+    ModelAndView<Map<String, Object>> resetPasswordForm(@ValidToken @QueryValue(PasswordService.TOKEN_QUERY_PARAM) String token) {
+        return resetPasswordModelAndView(token);
+    }
+
+    @PostForm(uri = PATH_PASSWORD_RESET, rolesAllowed = SecurityRule.IS_ANONYMOUS)
+    HttpResponse<?> resetPassword(@NonNull @NotNull @Valid @Body ResetPasswordForm resetPasswordForm) {
+        final Map<String, ?> model = passwordService.resetPassword(resetPasswordForm.token(), resetPasswordForm.password())
+                .map(email -> Map.of(MODEL_ALERT, Alert.info(MESSAGE_PASSWORD_RESET), MODEL_FORM,
+                        formGenerator.generate(loginForm.action(), new LoginForm(email, null))))
+                .orElseGet(() -> Map.of(MODEL_ALERT, Alert.danger(MESSAGE_TOKEN_INVALID), MODEL_FORM, loginForm));
+        return HttpResponse.ok().body(new ModelAndView<>(VIEW_SECURITY_LOGIN, model));
+    }
+
     @NonNull
     private static Message messageOf(@NonNull AuthenticationFailureReason reason) {
         return switch (reason) {
@@ -152,7 +203,32 @@ class SecurityController {
             final Form form = formGenerator.generate(PATH_PASSWORD_UPDATE, passwordForm, ex);
             final Map<String, Object> model = Collections.singletonMap(MODEL_PASSWORD_FORM, form);
             return HttpResponse.ok().body(new ModelAndView<>(VIEW_PASSWORD_CHANGE, model));
+        } else if (request.getPath().equals(PATH_PASSWORD_FORGOT)) {
+            return request.getBody(ForgotPasswordForm.class)
+                    .map(form -> HttpResponse.ok().body(new ModelAndView<>(VIEW_PASSWORD_FORGOT,
+                            Map.of(MODEL_PASSWORD_FORGOT_FORM, (Object) formGenerator.generate(PATH_PASSWORD_FORGOT, form, ex, MESSAGE_FORGOT_SUBMIT)))))
+                    .orElseGet(HttpResponse::serverError);
+        } else if (request.getPath().equals(PATH_PASSWORD_RESET)) {
+            return request.getBody(ResetPasswordForm.class)
+                    .map(form -> HttpResponse.ok().body(new ModelAndView<>(VIEW_PASSWORD_RESET,
+                            Map.of(MODEL_PASSWORD_RESET_FORM, (Object) formGenerator.generate(PATH_PASSWORD_RESET, form, ex)))))
+                    .orElseGet(() -> HttpResponse.ok().body(new ModelAndView<>(VIEW_SECURITY_LOGIN,
+                            Map.of(MODEL_FORM, loginForm, MODEL_ALERT, Alert.danger(MESSAGE_TOKEN_INVALID)))));
         }
         return HttpResponse.serverError();
+    }
+
+    @NonNull
+    private ModelAndView<Map<String, Object>> resetPasswordModelAndView(@NonNull String token) {
+        final ResetPasswordForm resetPasswordForm = new ResetPasswordForm(token);
+        final Form form = formGenerator.generate(PATH_PASSWORD_RESET, resetPasswordForm);
+        return new ModelAndView<>(VIEW_PASSWORD_RESET, Map.of(MODEL_PASSWORD_RESET_FORM, form));
+    }
+
+    @NonNull
+    private ModelAndView<Map<String, Object>> forgotPasswordModelAndView(@NonNull String email) {
+        final Form form = formGenerator.generate(loginForm.action(), new LoginForm(email, null));
+        final Map<String, Object> model = Map.of(MODEL_FORM, form, MODEL_ALERT, Alert.info(MESSAGE_INSTRUCTIONS_SENT));
+        return new ModelAndView<>(VIEW_SECURITY_LOGIN, model);
     }
 }

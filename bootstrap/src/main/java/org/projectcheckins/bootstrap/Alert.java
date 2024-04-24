@@ -24,4 +24,14 @@ public record Alert(@NonNull @NotNull @Valid Message message, @NonNull @NotNull 
     public static Alert danger(@NonNull Message message, boolean dismissible) {
         return new Alert(message, AlertVariant.DANGER, dismissible);
     }
+
+    @NonNull
+    public static Alert info(@NonNull Message message) {
+        return info(message, true);
+    }
+
+    @NonNull
+    public static Alert info(@NonNull Message message, boolean dismissible) {
+        return new Alert(message, AlertVariant.INFO, dismissible);
+    }
 }
