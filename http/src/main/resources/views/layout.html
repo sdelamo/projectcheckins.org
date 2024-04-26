@@ -97,7 +97,7 @@
                 <a class="nav-link" aria-current="page" href="/profile/show" th:text="#{nav.profile}"></a>
             </li>
             <li th:if="${logoutForm}" class="nav-item">
-                <form th:replace="~{fieldset/form :: form(${logoutForm}, false)}"></form>
+                <form th:replace="~{fieldset/form :: form(${logoutForm})}"></form>
             </li>
         </ul>
     </div>

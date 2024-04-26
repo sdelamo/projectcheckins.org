@@ -17,8 +17,7 @@ import io.micronaut.security.authentication.AuthenticationFailureReason;
 import io.micronaut.security.endpoints.LoginControllerConfiguration;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
-import io.micronaut.views.fields.Form;
-import io.micronaut.views.fields.FormGenerator;
+import io.micronaut.views.fields.*;
 import io.micronaut.views.fields.elements.InputSubmitFormElement;
 import io.micronaut.views.fields.messages.Message;
 import jakarta.validation.ConstraintViolationException;
@@ -33,9 +32,7 @@ import org.projectcheckins.security.RegistrationCheckViolationException;
 import org.projectcheckins.security.constraints.ValidToken;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 class SecurityController {
@@ -88,6 +85,7 @@ class SecurityController {
     private final HttpLocaleResolver httpLocaleResolver;
 
     SecurityController(FormGenerator formGenerator,
+                       FieldsetGenerator fieldsetGenerator,
                        LoginControllerConfiguration loginControllerConfiguration,
                        RegisterService registerService,
                        PasswordService passwordService,
@@ -98,7 +96,10 @@ class SecurityController {
         this.passwordService = passwordService;
         this.httpHostResolver = httpHostResolver;
         this.httpLocaleResolver = httpLocaleResolver;
-        loginForm = formGenerator.generate(loginControllerConfiguration.getPath(), LoginForm.class, INPUT_SUBMIT_LOGIN);
+        Fieldset fieldset = fieldsetGenerator.generate(LoginForm.class);
+        List<FormElement> fields = new ArrayList<>(fieldset.fields());
+        fields.add(INPUT_SUBMIT_LOGIN);
+        loginForm = new Form(loginControllerConfiguration.getPath(), "post", new Fieldset(fields, fieldset.errors()), Boolean.FALSE);
         signUpForm = formGenerator.generate(PATH_SIGN_UP, SignUpForm.class);
         forgotPasswordForm = formGenerator.generate(PATH_PASSWORD_FORGOT, ForgotPasswordForm.class, MESSAGE_FORGOT_SUBMIT);
     }

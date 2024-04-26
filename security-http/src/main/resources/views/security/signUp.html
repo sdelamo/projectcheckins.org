@@ -6,7 +6,7 @@
 </head>
 <body>
 <main>
-    <form th:replace="~{fieldset/form :: form(${form}, true)}"></form>
+    <form th:replace="~{fieldset/form :: form(${form})}"></form>
     <th:block th:if="${alert}"><div th:replace="~{bootstrap/_alert :: alert(${alert})}"></div></th:block>
 </main>
 </body>

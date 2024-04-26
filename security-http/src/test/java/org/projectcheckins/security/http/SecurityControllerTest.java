@@ -95,6 +95,7 @@ class SecurityControllerTest {
                 .containsOnlyOnce(ACTION_SECURITY_LOGIN)
                 .containsOnlyOnce(TYPE_EMAIL)
                 .containsOnlyOnce("Log in")
+                .containsOnlyOnce("data-turbo=\"false\"")
                 .containsOnlyOnce(TYPE_PASSWORD);
 
         assertThat(client.retrieve(HttpRequest.POST("/login", Map.of("username", "sherlock@example.com", "password", "password"))))
