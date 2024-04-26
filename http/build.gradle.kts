@@ -2,6 +2,7 @@ plugins {
     id("org.projectcheckins.micronaut-http-modules-conventions")
 }
 dependencies {
+    api(project(":security-http"))
     api(project(":core"))
     api(project(":bootstrap"))
     implementation("io.micronaut:micronaut-management")

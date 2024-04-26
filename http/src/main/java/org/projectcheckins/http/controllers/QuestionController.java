@@ -1,23 +1,18 @@
 package org.projectcheckins.http.controllers;
 
 import io.micronaut.core.annotation.Nullable;
-import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.multitenancy.Tenant;
-import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.messages.Message;
-import io.micronaut.views.turbo.TurboFrameView;
 import io.micronaut.views.turbo.TurboStream;
-import io.micronaut.views.turbo.TurboStreamAction;
 import io.micronaut.views.turbo.http.TurboHttpHeaders;
 import io.micronaut.views.turbo.http.TurboMediaType;
-import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.ConstraintViolationException;
 import org.projectcheckins.annotations.GetHtml;
 import org.projectcheckins.annotations.PostForm;
@@ -29,24 +24,20 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.bootstrap.Breadcrumb;
-import org.projectcheckins.core.api.Answer;
-import org.projectcheckins.core.api.AnswerView;
 import org.projectcheckins.core.api.Question;
-import org.projectcheckins.core.api.Respondent;
 import org.projectcheckins.core.forms.*;
-import org.projectcheckins.core.models.DateAnswers;
 import org.projectcheckins.core.services.AnswerService;
 import org.projectcheckins.core.services.QuestionService;
+import org.projectcheckins.security.http.TurboFrameUtils;
+import org.projectcheckins.security.http.TurboStreamUtils;
 
 import java.net.URI;
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static org.projectcheckins.http.controllers.ApiConstants.*;
 import static org.projectcheckins.http.controllers.ApiConstants.FRAME_ID_MAIN;
@@ -117,8 +108,7 @@ class QuestionController {
     @GetHtml(uri = PATH_LIST,
             rolesAllowed = SecurityRule.IS_AUTHENTICATED,
             view = VIEW_LIST,
-            turboView = VIEW_LIST_FRAGMENT,
-            turboAction = DATA_TURBO_ACTION)
+            turboView = VIEW_LIST_FRAGMENT)
     Map<String, Object> questionList(@Nullable Tenant tenant) {
         return listModel(tenant);
     }
@@ -144,34 +134,34 @@ class QuestionController {
     HttpResponse<?> questionSave(HttpRequest<?> request,
                                  @NonNull @NotNull @Valid @Body QuestionFormRecord form,
                                  @NonNull Authentication authentication,
-                                 @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                  @Nullable Tenant tenant) {
         String id = questionService.save(form, tenant);
         return TurboMediaType.acceptsTurboStream(request)
-            ? showTurboStream(id, authentication, tenant, turboFrame).map(HttpResponse::ok).orElseGet(HttpResponse::notFound)
+            ? showTurboStream(request, id, authentication, tenant).map(HttpResponse::ok).orElseGet(HttpResponse::notFound)
             : HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionShow(@PathVariable @NotBlank String id,
+    HttpResponse<?> questionShow(HttpRequest<?> request,
+                                 @PathVariable @NotBlank String id,
                                  @NonNull Authentication authentication,
-                                 @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                  @Nullable Tenant tenant) {
-        String viewName = turboFrame != null ? VIEW_SHOW_FRAGMENT : VIEW_SHOW;
         return showModel(answerService, questionService, answerSaveFormGenerator, id, authentication, tenant)
-                .map(model -> new ModelAndView<>(viewName, model))
+                .map(model -> TurboFrameUtils.turboFrame(request, VIEW_SHOW_FRAGMENT, model)
+                        .orElseGet(() -> new ModelAndView<>(VIEW_SHOW, model)))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
     
     @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionEdit(@Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+    HttpResponse<?> questionEdit(HttpRequest<?> request,
                                  @PathVariable @NotBlank String id,
                                  @Nullable Tenant tenant) {
-        String viewName = turboFrame != null ? VIEW_EDIT_FRAGMENT : VIEW_EDIT;
         return questionService.findById(id, tenant)
                 .map(question -> updateModel(question, QuestionFormRecord.of(question), tenant))
-                .map(model -> new ModelAndView<>(viewName, model))
+                .map(model -> TurboFrameUtils.turboFrame(request)
+                        .map(frame -> (Object) TurboFrameUtils.turboFrame(frame, VIEW_EDIT_FRAGMENT, model))
+                        .orElseGet(() -> new ModelAndView<>(VIEW_EDIT, model)))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
@@ -181,11 +171,10 @@ class QuestionController {
                                    @NonNull Authentication authentication,
                                    @PathVariable @NotBlank String id,
                                    @NonNull @NotNull @Valid @Body QuestionFormRecord form,
-                                   @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                    @Nullable Tenant tenant) {
         questionService.update(id, form, tenant);
         if (TurboMediaType.acceptsTurboStream(request)) {
-            return showTurboStream(id, authentication, tenant, turboFrame)
+            return showTurboStream(request, id, authentication, tenant)
                     .map(HttpResponse::ok)
                     .orElseGet(HttpResponse::notFound);
         }
@@ -198,7 +187,7 @@ class QuestionController {
                                    @Nullable Tenant tenant) {
         questionService.deleteById(id, tenant);
         return TurboMediaType.acceptsTurboStream(request)
-                ? HttpResponse.ok(listModel(tenant))
+                ? HttpResponse.ok(TurboStreamUtils.turboStream(request, VIEW_LIST_FRAGMENT, listModel(tenant)))
                 : HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
@@ -230,6 +219,7 @@ class QuestionController {
         return HttpResponse.serverError();
     }
 
+    @NonNull
     private HttpResponse<?> unprocessableEntity(Object model,
                                                 String contentType,
                                                 boolean turboRequest,
@@ -237,7 +227,7 @@ class QuestionController {
                                                 String turboView,
                                                 @Nullable String turboFrame) {
         return HttpResponse.unprocessableEntity().body(turboRequest
-                        ? TurboStream.builder().action(TurboStreamAction.REPLACE).targetDomId(turboFrame).template(turboView, model)
+                        ? TurboStream.builder().targetDomId(turboFrame).template(turboView, model).update()
                         : new ModelAndView<>(view, model))
                 .contentType(contentType);
     }
@@ -261,6 +251,7 @@ class QuestionController {
         );
     }
 
+    @NonNull
     public static Map<String, Object> showModel(AnswerService answerService,
                                                 Question question,
                                                 Form answerFormSave,
@@ -286,16 +277,12 @@ class QuestionController {
                 .map(question -> showModel(answerService, question, answerFormSave, authentication, tenant));
     }
 
-    private Optional<TurboStream.Builder> showTurboStream(@NonNull String questionid,
+    private Optional<TurboStream.Builder> showTurboStream(HttpRequest<?> request,
+                                                          @NonNull String questionid,
                                                           @NonNull Authentication authentication,
-                                                          @Nullable Tenant tenant,
-                                                          @Nullable String turboFrame) {
+                                                          @Nullable Tenant tenant) {
         return showModel(answerService, questionService, answerSaveFormGenerator, questionid, authentication, tenant)
-                .map(model ->
-                        TurboStream.builder()
-                                .action(TurboStreamAction.REPLACE)
-                                .targetDomId(turboFrame)
-                                .template(VIEW_SHOW_FRAGMENT, model));
+                .flatMap(model -> TurboStreamUtils.turboStream(request, VIEW_SHOW_FRAGMENT, model));
     }
 
     @NonNull

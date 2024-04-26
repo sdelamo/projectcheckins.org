@@ -67,7 +67,7 @@ class TeamController {
     // CREATE
     private static final String PATH_CREATE = PATH + SLASH + ACTION_CREATE;
     private static final String VIEW_CREATE = PATH + SLASH + ACTION_CREATE + DOT_HTML;
-    private static final String VIEW_CREATE_FRAGMENT = PATH + SLASH + FRAGMENT_CREATE + DOT_HTML;
+    private static final String VIEW_CREATE_FRAGMENT = PATH + SLASH + FRAGMENT_CREATE;
     private static final Breadcrumb BREADCRUMB_CREATE = new Breadcrumb(Message.of("Add team member", TEAM + DOT + ACTION_CREATE));
 
     // SAVE
@@ -98,11 +98,15 @@ class TeamController {
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> memberSave(HttpRequest<?> request,
                                @NonNull @NotNull @Valid @Body TeamMemberSave form,
-                               @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
+                               @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                @Nullable Tenant tenant) {
         teamService.save(form, tenant, getLocale(request), getSignUpUri(request).toString());
         if (TurboMediaType.acceptsTurboStream(request)) {
-            return HttpResponse.ok().body(TurboStream.builder().targetDomId(turboFrame).template(VIEW_LIST_FRAGMENT, listModel(tenant)).build());
+            return HttpResponse.ok()
+                    .body(TurboStream.builder()
+                            .targetDomId(turboFrame)
+                            .template(VIEW_LIST_FRAGMENT, listModel(tenant))
+                            .update());
         }
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }

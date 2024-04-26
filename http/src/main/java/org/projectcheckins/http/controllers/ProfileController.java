@@ -4,20 +4,14 @@ import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
 import io.micronaut.multitenancy.Tenant;
-import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.FormGenerator;
 import io.micronaut.views.fields.messages.Message;
-import io.micronaut.views.turbo.TurboFrameView;
-import io.micronaut.views.turbo.TurboStream;
-import io.micronaut.views.turbo.TurboStreamAction;
-import io.micronaut.views.turbo.http.TurboHttpHeaders;
 import io.micronaut.views.turbo.http.TurboMediaType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -32,6 +26,8 @@ import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.repositories.ProfileRepository;
+import org.projectcheckins.security.http.TurboFrameUtils;
+import org.projectcheckins.security.http.TurboStreamUtils;
 
 import static org.projectcheckins.http.controllers.ApiConstants.*;
 
@@ -70,24 +66,26 @@ class ProfileController {
     }
 
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> profileShow(@NonNull @NotNull Authentication authentication,
-                                @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+    HttpResponse<?> profileShow(HttpRequest<?> request,
+                                @NonNull @NotNull Authentication authentication,
                                 @Nullable Tenant tenant) {
-        String vieName = turboFrame != null ? VIEW_SHOW_FRAGMENT : VIEW_SHOW;
         return showModel(authentication, tenant)
-                .map(model -> new ModelAndView<>(vieName, model))
+                .map(model -> TurboFrameUtils.turboFrame(request)
+                        .map(frame -> (Object) TurboFrameUtils.turboFrame(frame, VIEW_SHOW_FRAGMENT, model))
+                        .orElseGet(() -> new ModelAndView<>(VIEW_SHOW, model)))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
     @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> profileEdit(@NonNull @NotNull Authentication authentication,
-                                @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+    HttpResponse<?> profileEdit(HttpRequest<?> request,
+                                @NonNull @NotNull Authentication authentication,
                                 @Nullable Tenant tenant) {
-        String vieName = turboFrame != null ? VIEW_EDIT_FRAGMENT : VIEW_EDIT;
         return profileRepository.findByAuthentication(authentication, tenant)
                 .map(this::updateModel)
-                .map(model -> new ModelAndView<>(vieName, model))
+                .map(model -> TurboFrameUtils.turboFrame(request)
+                        .map(frame -> (Object) TurboFrameUtils.turboFrame(frame, VIEW_EDIT_FRAGMENT, model))
+                        .orElseGet(() -> new ModelAndView<>(VIEW_EDIT, model)))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
@@ -97,15 +95,11 @@ class ProfileController {
             HttpRequest<?> request,
             @NonNull @NotNull Authentication authentication,
             @NonNull @NotNull @Valid @Body ProfileUpdate profileUpdate,
-            @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
             @Nullable Tenant tenant) {
         profileRepository.update(authentication, profileUpdate, tenant);
         if (TurboMediaType.acceptsTurboStream(request)) {
             return showModel(authentication, tenant)
-                    .map(model -> TurboStream.builder()
-                            .action(TurboStreamAction.REPLACE)
-                            .targetDomId(turboFrame)
-                            .template(VIEW_SHOW_FRAGMENT, model))
+                    .flatMap(model -> TurboStreamUtils.turboStream(request, VIEW_SHOW_FRAGMENT, model))
                     .map(HttpResponse::ok)
                     .orElseGet(HttpResponse::notFound);
         }

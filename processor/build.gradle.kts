@@ -7,7 +7,7 @@ dependencies {
 
     implementation(project(":annotations"))
     implementation("io.swagger.core.v3:swagger-annotations")
-    implementation("io.micronaut.views:micronaut-views-core")
+    implementation("io.micronaut.views:micronaut-views-core:5.3.0")
     implementation("io.micronaut.security:micronaut-security-annotations")
 
     // JUnit Testing

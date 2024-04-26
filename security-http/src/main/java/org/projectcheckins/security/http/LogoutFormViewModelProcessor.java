@@ -7,6 +7,7 @@ import io.micronaut.security.endpoints.LogoutControllerConfiguration;
 import io.micronaut.security.utils.SecurityService;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Fieldset;
+import io.micronaut.views.fields.FieldsetGenerator;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.FormGenerator;
 import io.micronaut.views.fields.elements.InputSubmitFormElement;
@@ -23,19 +24,13 @@ import java.util.Map;
 class LogoutFormViewModelProcessor  extends MapViewModelProcessor {
 
     private static final String MODEL_KEY = "logoutForm";
-
-    private final SecurityService securityService;
     private final Form logoutForm;
 
-    LogoutFormViewModelProcessor(FormGenerator formGenerator,
-                                 SecurityService securityService,
-                                 LogoutControllerConfiguration logoutControllerConfiguration) {
-        this.securityService = securityService;
-        this.logoutForm = formGenerator.generate(logoutControllerConfiguration.getPath(),
-                new Fieldset(Collections.emptyList(), Collections.emptyList()), InputSubmitFormElement
-                        .builder()
-                        .value(Message.of("Logout", "logout.submit"))
-                        .build());
+    LogoutFormViewModelProcessor(LogoutControllerConfiguration logoutControllerConfiguration) {
+        this.logoutForm = new Form(logoutControllerConfiguration.getPath(), "post", new Fieldset(Collections.singletonList(InputSubmitFormElement
+                .builder()
+                .value(Message.of("Logout", "logout.submit"))
+                .build()), Collections.emptyList()), false);
     }
 
 

@@ -19,7 +19,6 @@ class NotFoundController {
         return Collections.emptyMap();
     }
 
-
     public static <T> MutableHttpResponse<T> notFoundRedirect() {
         return HttpResponse.seeOther(URI.create(PATH));
     }

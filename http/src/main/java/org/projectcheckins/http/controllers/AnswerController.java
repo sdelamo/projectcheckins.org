@@ -15,8 +15,6 @@ import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.FormGenerator;
 import io.micronaut.views.fields.messages.Message;
-import io.micronaut.views.turbo.TurboStream;
-import io.micronaut.views.turbo.http.TurboHttpHeaders;
 import io.micronaut.views.turbo.http.TurboMediaType;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
@@ -31,6 +29,8 @@ import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.services.AnswerService;
 import org.projectcheckins.core.services.QuestionService;
+import org.projectcheckins.security.http.TurboFrameUtils;
+import org.projectcheckins.security.http.TurboStreamUtils;
 
 import java.net.URI;
 import java.util.List;
@@ -42,7 +42,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.projectcheckins.http.controllers.ApiConstants.FRAME_ID_MAIN;
 import static org.projectcheckins.http.controllers.ApiConstants.SLASH;
 
 @Controller
@@ -113,49 +112,48 @@ class AnswerController {
     HttpResponse<?> answerSaveMarkdown(@NonNull HttpRequest<?> request,
                                        @NonNull @PathVariable String questionId,
                                        @NonNull Authentication authentication,
-                                       @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                        @Nullable Tenant tenant,
                                        @Body @NonNull @NotNull @Valid AnswerMarkdownSave form) {
-        return answerSave(request, form, questionId, authentication, Format.MARKDOWN, form.markdown(), turboFrame, tenant);
+        return answerSave(request, form, questionId, authentication, Format.MARKDOWN, form.markdown(), tenant);
     }
 
     @PostForm(uri = PATH_ANSWER_SAVE_WYSIWYG, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> answerSaveWysiwyg(@NonNull HttpRequest<?> request,
                                       @PathVariable String questionId,
                                       @NonNull Authentication authentication,
-                                      @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                       @Nullable Tenant tenant,
                                       @Body @NonNull @NotNull @Valid AnswerWysiwygSave form) {
-        return answerSave(request, form, questionId, authentication, Format.WYSIWYG, form.html(), turboFrame, tenant);
+        return answerSave(request, form, questionId, authentication, Format.WYSIWYG, form.html(), tenant);
     }
 
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> answerShow(HttpRequest<?> request,
-                               @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                @PathVariable @NotBlank String questionId,
                                @PathVariable @NotBlank String id,
                                @NonNull Authentication authentication,
                                @Nullable Tenant tenant) {
-        String viewName = turboFrame != null ? VIEW_SHOW_FRAGMENT : VIEW_SHOW;
         Locale locale = httpLocaleResolver.resolveOrDefault(request);
         return answerShowModel(questionId, id, authentication, locale, tenant)
-                .map(model -> new ModelAndView<>(viewName, model))
+                .map(model -> TurboFrameUtils.turboFrame(request)
+                        .map(frame -> (Object) TurboFrameUtils.turboFrame(frame, VIEW_SHOW_FRAGMENT, model))
+                        .orElseGet(() -> new ModelAndView<>(VIEW_SHOW, model)))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
     @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> answerEdit(@PathVariable @NotBlank String questionId,
+    HttpResponse<?> answerEdit(HttpRequest<?> request, @PathVariable @NotBlank String questionId,
                                @PathVariable @NotBlank String id,
                                @NonNull Authentication authentication,
-                               @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                @Nullable Locale locale,
                                @Nullable Tenant tenant) {
-        String viewName = turboFrame != null ? VIEW_EDIT_FRAGMENT : VIEW_EDIT;
         return questionService.findById(questionId, tenant)
                 .flatMap(question -> answerService.findById(id, authentication, tenant)
                         .map(answer -> updateAnswerModel(question, answer, locale)))
-                .map(model -> HttpResponse.ok(new ModelAndView<>(viewName, model)))
+                .map(model -> TurboFrameUtils.turboFrame(request)
+                        .map(frame -> (Object) TurboFrameUtils.turboFrame(frame, VIEW_EDIT_FRAGMENT, model))
+                        .orElseGet(() -> new ModelAndView<>(VIEW_EDIT, model)))
+                .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
@@ -164,16 +162,13 @@ class AnswerController {
                                  @PathVariable String questionId,
                                  @PathVariable String id,
                                  @NonNull Authentication authentication,
-                                 @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME, defaultValue = FRAME_ID_MAIN) String turboFrame,
                                  @Nullable Tenant tenant,
                                  @Body @NonNull @NotNull @Valid AnswerUpdateRecord answerUpdate) {
         answerService.update(authentication, questionId, id, answerUpdate, tenant);
         if (TurboMediaType.acceptsTurboStream(request)) {
             return answerShowModel(questionId, id, authentication, httpLocaleResolver.resolveOrDefault(request), tenant)
-                    .map(model -> HttpResponse.ok(TurboStream.builder()
-                            .targetDomId(turboFrame)
-                            .replace()
-                            .template(VIEW_SHOW_FRAGMENT, model)))
+                    .flatMap(model -> TurboStreamUtils.turboStream(request, VIEW_SHOW_FRAGMENT, model))
+                    .map(HttpResponse::ok)
                     .orElseGet(NotFoundController::notFoundRedirect);
         }
         return HttpResponse.seeOther(PATH_SHOW_URI_BUILDER.apply(questionId, id));
@@ -191,18 +186,21 @@ class AnswerController {
     }
 
     private Optional<HttpResponse<?>> retrySave(HttpRequest<?> request, Authentication auth, Tenant tenant, ConstraintViolationException ex) {
-        final Optional<? extends AnswerForm> answerForm;
-        if (request.getPath().matches(REGEX_SAVE_MARKDOWN)) {
-            answerForm = request.getBody(AnswerMarkdownSave.class);
-        } else if (request.getPath().matches(REGEX_SAVE_WYSIWYG)) {
-            answerForm = request.getBody(AnswerWysiwygSave.class);
-        } else {
-            answerForm = Optional.empty();
-        }
-        return answerForm.map(f -> questionService.findById(f.questionId(), tenant)
-                .map(q -> HttpResponse.unprocessableEntity().body(new ModelAndView<>(QuestionController.VIEW_SHOW,
-                        QuestionController.showModel(answerService, q, generateForm(f, ex), auth, tenant))))
+        return answerForm(request)
+                .map(f -> questionService.findById(f.questionId(), tenant)
+                        .map(q -> QuestionController.showModel(answerService, q, generateForm(f, ex), auth, tenant))
+                        .map(model -> TurboMediaType.acceptsTurboStream(request) ? TurboStreamUtils.turboStream(request, VIEW_SHOW_FRAGMENT, model) : new ModelAndView<>(QuestionController.VIEW_SHOW, model))
+                        .map(b -> HttpResponse.unprocessableEntity().body(b))
                 .orElseGet(NotFoundController::notFoundRedirect));
+    }
+
+    private Optional<? extends AnswerForm> answerForm(HttpRequest<?> request) {
+        if (request.getPath().matches(REGEX_SAVE_MARKDOWN)) {
+            return request.getBody(AnswerMarkdownSave.class);
+        } else if (request.getPath().matches(REGEX_SAVE_WYSIWYG)) {
+            return request.getBody(AnswerWysiwygSave.class);
+        }
+        return Optional.empty();
     }
 
     private Optional<HttpResponse<?>> retryUpdate(HttpRequest<?> request, Authentication auth, Locale locale, Tenant tenant, ConstraintViolationException ex) {
@@ -282,7 +280,6 @@ class AnswerController {
                                         @NonNull Authentication authentication,
                                         @NonNull Format format,
                                         @NonNull String text,
-                                        @Nullable String turboFrame,
                                         @Nullable Tenant tenant) {
         if (!questionId.equals(form.questionId())) {
             return HttpResponse.unprocessableEntity();
@@ -292,11 +289,10 @@ class AnswerController {
         }
         answerService.save(authentication, new AnswerSave(form.questionId(), form.answerDate(), format, text), tenant);
         if (TurboMediaType.acceptsTurboStream(request)) {
-            Optional<Map<String, Object>> model = QuestionController.showModel(answerService, questionService, answerSaveFormGenerator, questionId, authentication, tenant);
-            return HttpResponse.ok(TurboStream.builder()
-                    .targetDomId(turboFrame)
-                    .replace()
-                    .template(QuestionController.VIEW_SHOW_FRAGMENT, model));
+            return QuestionController.showModel(answerService, questionService, answerSaveFormGenerator, questionId, authentication, tenant)
+                    .flatMap(model -> TurboStreamUtils.turboStream(request, QuestionController.VIEW_SHOW_FRAGMENT, model))
+                    .map(HttpResponse::ok)
+                    .orElseGet(NotFoundController::notFoundRedirect);
         }
         return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
     }
