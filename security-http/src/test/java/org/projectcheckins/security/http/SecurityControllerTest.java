@@ -94,6 +94,7 @@ class SecurityControllerTest {
         assertThat(client.retrieve(BrowserRequest.GET("/security/login")))
                 .containsOnlyOnce(ACTION_SECURITY_LOGIN)
                 .containsOnlyOnce(TYPE_EMAIL)
+                .containsOnlyOnce("Log in")
                 .containsOnlyOnce(TYPE_PASSWORD);
 
         assertThat(client.retrieve(HttpRequest.POST("/login", Map.of("username", "sherlock@example.com", "password", "password"))))
