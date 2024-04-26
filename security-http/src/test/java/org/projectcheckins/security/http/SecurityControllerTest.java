@@ -2,7 +2,9 @@ package org.projectcheckins.security.http;
 
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Property;
+import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
+import io.micronaut.context.annotation.Secondary;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
@@ -12,26 +14,32 @@ import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.multitenancy.Tenant;
+import io.micronaut.security.authentication.Authentication;
+import io.micronaut.security.authentication.ClientAuthentication;
 import io.micronaut.security.authentication.AuthenticationFailureReason;
 import io.micronaut.security.authentication.AuthenticationRequest;
 import io.micronaut.security.authentication.AuthenticationResponse;
 import io.micronaut.security.authentication.provider.HttpRequestExecutorAuthenticationProvider;
+import io.micronaut.security.token.generator.TokenGenerator;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import io.micronaut.views.fields.messages.Message;
 import jakarta.inject.Singleton;
 import org.junit.jupiter.api.Test;
+import org.projectcheckins.security.AbstractRegisterService;
+import org.projectcheckins.security.BlockingTokenValidator;
+import org.projectcheckins.security.BlockingTokenValidatorImpl;
 import org.projectcheckins.security.RegisterService;
 import org.projectcheckins.security.PasswordEncoder;
-import org.projectcheckins.security.PasswordService;
+import org.projectcheckins.security.PasswordUpdate;
 import org.projectcheckins.security.UserFetcher;
 import org.projectcheckins.security.UserState;
-import org.projectcheckins.security.RegistrationCheckViolation;
+import org.projectcheckins.security.UserSave;
 import org.projectcheckins.security.RegistrationCheckViolationException;
 import org.projectcheckins.security.UserAlreadyExistsRegistrationCheck;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -50,6 +58,27 @@ import static org.projectcheckins.test.AssertUtils.*;
 class SecurityControllerTest {
     private static final String EMAIL_ALREADY_EXISTS = "delamos@unityfoundation.io";
     private static final String NEW_USER_EMAIL = "calvog@unityfoundation.io";
+    private static final UserState USER_STATE = new UserState() {
+        @Override
+        public String getId() {
+            return SDELAMO.getName();
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
+
+        @Override
+        public String getEmail() {
+            return EMAIL_ALREADY_EXISTS;
+        }
+
+        @Override
+        public String getPassword() {
+            return "secret";
+        }
+    };
     private static final HttpRequest<?> NOT_MATCHING_PASSWORD_REQUEST = BrowserRequest.POST("/security/signUp", Map.of("email", EMAIL_ALREADY_EXISTS, "password", "password", "repeatPassword", "bogus"));
     private static final HttpRequest<?> EMAIL_ALREADY_EXISTS_REQUEST = BrowserRequest.POST("/security/signUp", Map.of("email", EMAIL_ALREADY_EXISTS, "password", "password", "repeatPassword", "password"));
     private static final HttpRequest<?> NEW_USER_REQUEST = BrowserRequest.POST("/security/signUp", Map.of("email", NEW_USER_EMAIL, "password", "password", "repeatPassword", "password"));
@@ -167,6 +196,78 @@ class SecurityControllerTest {
                         <form action="/login""");
     }
 
+    @Test
+    void forgotPassword(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        assertThat(client.retrieve(BrowserRequest.GET("/security/forgotPassword")))
+                .containsOnlyOnce("""
+                        <input type="email" name="email""")
+                .containsOnlyOnce("""
+                        action="/security/forgotPassword" method="post""");
+    }
+
+    @Test
+    void sendResetInstructions(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final HttpRequest<?> request = BrowserRequest.POST("/security/forgotPassword", Map.of("email", EMAIL_ALREADY_EXISTS));
+        assertThat(client.retrieve(request))
+                .containsOnlyOnce("""
+                        <form action="/login" method="post""")
+                .containsOnlyOnce("Check your email for reset instructions");
+    }
+
+    @Test
+    void sendResetInstructionsInvalidEmail(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final HttpRequest<?> request = BrowserRequest.POST("/security/forgotPassword", Map.of("email", "invalid email"));
+        assertThat(client.retrieve(request))
+                .containsOnlyOnce("must be a well-formed email address");
+    }
+
+    @Test
+    void resetPasswordForm(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        assertThat(client.retrieve(BrowserRequest.GET("/security/resetPassword?token=valid")))
+                .satisfies(containsManyTimes(2, TYPE_PASSWORD))
+                .containsOnlyOnce("""
+                        <form action="/security/resetPassword" method="post""");
+    }
+
+    @Test
+    void resetPasswordFormInvalidToken(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        assertThat(client.retrieve(BrowserRequest.GET("/security/resetPassword?token=invalid")))
+                .containsOnlyOnce("Token is invalid or already expired")
+                .containsOnlyOnce("""
+                        <form action="/login" method="post""");
+    }
+
+    @Test
+    void resetPassword(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final HttpRequest<?> request = BrowserRequest.POST("/security/resetPassword", Map.of(
+                "token", "valid",
+                "password", "new password",
+                "repeatPassword", "new password"));
+        assertThat(client.retrieve(request))
+                .containsOnlyOnce("You have successfully reset your password")
+                .containsOnlyOnce("""
+                        <form action="/login" method="post""");
+    }
+
+    @Test
+    void resetPasswordsNewPasswordsDoNotMatch(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final HttpRequest<?> request = BrowserRequest.POST("/security/resetPassword", Map.of(
+                "token", "valid",
+                "password", "new password one",
+                "repeatPassword", "new password two"));
+        assertThat(client.retrieve(request))
+                .containsOnlyOnce("Passwords do not match")
+                .containsOnlyOnce("""
+                        <form action="/security/resetPassword" method="post""");
+    }
+
     @Requires(property = "spec.name", value = "SecurityControllerTest")
     @Singleton
     static class RegisterServiceMock implements RegisterService {
@@ -200,11 +301,31 @@ class SecurityControllerTest {
     }
 
     @Requires(property = "spec.name", value = "SecurityControllerTest")
+    @Secondary
     @Singleton
-    static class PasswordServiceMock implements PasswordService {
-        @Override
-        public void updatePassword(String userId, String newRawPassword) {
+    static class PasswordServiceMock extends AbstractRegisterService {
+        protected PasswordServiceMock(TokenGenerator tokenGenerator) {
+            super(new PasswordEncoderMock(), null, null, new BlockingTokenValidatorMock(), tokenGenerator, () -> 600, x -> {});
+        }
 
+        @Override
+        protected String register(UserSave userSave, Tenant tenant) {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+
+        @Override
+        protected void updatePassword(PasswordUpdate passwordUpdate) {
+            // do nothing
+        }
+
+        @Override
+        public Optional<UserState> findById(String id) {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+
+        @Override
+        public Optional<UserState> findByEmail(String email) {
+            return Optional.of(USER_STATE);
         }
     }
 
@@ -264,6 +385,16 @@ class SecurityControllerTest {
         @Override
         public boolean matches(String rawPassword, String encodedPassword) {
             return rawPassword.equals(encodedPassword);
+        }
+    }
+
+    @Requires(property = "spec.name", value = "SecurityControllerTest")
+    @Singleton
+    @Replaces(BlockingTokenValidatorImpl.class)
+    static class BlockingTokenValidatorMock implements BlockingTokenValidator {
+        @Override
+        public Optional<Authentication> validateToken(String token) {
+            return "valid".equals(token) ? Optional.of(new ClientAuthentication(EMAIL_ALREADY_EXISTS, null)) : Optional.empty();
         }
     }
 }

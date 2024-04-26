@@ -6,6 +6,7 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.serde.SerdeIntrospections;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.validation.validator.Validator;
+import io.micronaut.views.fields.messages.Message;
 import jakarta.inject.Singleton;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
@@ -23,6 +24,24 @@ class AlertTest {
         String message = null;
         assertThatThrownBy(() -> testValidator.validate(new Alert(message, AlertVariant.DANGER, true)))
                 .isInstanceOf(ConstraintViolationException.class);
+    }
+
+    @Test
+    void alertInfo() {
+        assertThat(Alert.info(Message.of("Hello")))
+                .matches(alert -> alert.variant().equals(AlertVariant.INFO));
+
+        assertThat(Alert.info(Message.of("Hello"), false))
+                .matches(alert -> alert.variant().equals(AlertVariant.INFO) && !alert.dismissible());
+    }
+
+    @Test
+    void alertDanger() {
+        assertThat(Alert.danger(Message.of("Hello")))
+                .matches(alert -> alert.variant().equals(AlertVariant.DANGER));
+
+        assertThat(Alert.danger(Message.of("Hello"), false))
+                .matches(alert -> alert.variant().equals(AlertVariant.DANGER) && !alert.dismissible());
     }
 
     @Requires(property = "spec.name", value = "AlertTest")
