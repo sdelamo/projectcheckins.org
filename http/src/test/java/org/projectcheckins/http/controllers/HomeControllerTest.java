@@ -10,6 +10,7 @@ import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import org.junit.jupiter.api.Test;
+import org.projectcheckins.test.BrowserRequest;
 
 @Property(name = "micronaut.http.client.follow-redirects", value = StringUtils.FALSE)
 @Property(name = "micronaut.security.filter.enabled", value = StringUtils.FALSE)
@@ -19,7 +20,7 @@ class HomeControllerTest {
     @Test
     void crud(@Client("/") HttpClient httpClient) {
         BlockingHttpClient client = httpClient.toBlocking();
-        assertThat(client.exchange("/"))
+        assertThat(client.exchange(BrowserRequest.GET("/")))
             .satisfies(redirection("/question/list"));
     }
 }
