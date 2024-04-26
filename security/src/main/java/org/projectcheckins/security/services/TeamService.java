@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.security.api.PublicProfile;
 import org.projectcheckins.security.forms.TeamMemberSave;
+import org.projectcheckins.security.forms.TeamInvitationDelete;
 import org.projectcheckins.security.TeamInvitation;
 
 import java.util.List;
@@ -22,4 +23,6 @@ public interface TeamService {
     List<? extends TeamInvitation> findInvitations(@Nullable Tenant tenant);
 
     void save(@NotNull @Valid TeamMemberSave form, @Nullable Tenant tenant, @NotNull Locale locale, @NotBlank String signupUrl);
+
+    void uninvite(@NotNull @Valid TeamInvitationDelete form, @Nullable Tenant tenant);
 }

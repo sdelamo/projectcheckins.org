@@ -1,0 +1,12 @@
+<th:block th:fragment="invitation(invitation)" xmlns:th="http://www.thymeleaf.org">
+    <tr>
+        <th scope="row"><code th:text="${invitation.email}"></code></th>
+        <td class="text-end">
+        <th:block th:if="${invitation.deleteForm}">
+            <div>
+                <form th:replace="~{fieldset/form :: form(${invitation.deleteForm})}"></form>
+            </div>
+        </th:block>
+        </td>
+    </tr>
+</th:block>

@@ -1,0 +1,7 @@
+<th:block th:fragment="invitations(invitations)" xmlns:th="http://www.thymeleaf.org">
+    <header><h2 class="mt-3" th:text="#{team.pending}"></h2></header>
+    <div class="mt-3">
+        <a href="/team/create"><button type="button" class="btn btn-primary" th:text="#{team.create}"></button></a>
+    </div>
+    <div th:replace="~{team/_invitationsList :: invitations(${invitations})}"></div>
+</th:block>

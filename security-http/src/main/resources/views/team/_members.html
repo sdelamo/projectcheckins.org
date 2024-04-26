@@ -1,0 +1,13 @@
+<th:block th:fragment="members(members)" xmlns:th="http://www.thymeleaf.org">
+    <header><h1 th:text="#{team.list}"></h1></header>
+    <table class="table table-striped">
+        <tbody>
+        <tr th:each="member : ${members}">
+            <th scope="row">
+                <span th:unless="${member.fullName.empty}" th:text="${member.fullName}"></span>
+                <code th:if="${member.fullName.empty}" th:text="${member.email}"></code>
+            </th>
+        </tr>
+        </tbody>
+    </table>
+</th:block>

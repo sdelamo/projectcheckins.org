@@ -22,7 +22,9 @@ import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.annotations.GetHtml;
 import org.projectcheckins.annotations.PostForm;
 import org.projectcheckins.bootstrap.Breadcrumb;
+import org.projectcheckins.security.TeamInvitation;
 import org.projectcheckins.security.forms.TeamMemberSave;
+import org.projectcheckins.security.forms.TeamInvitationDelete;
 import org.projectcheckins.security.services.TeamService;
 
 import java.net.URI;
@@ -39,7 +41,9 @@ class TeamController {
     public static final String ACTION_LIST = "list";
     public static final String ACTION_CREATE = "create";
     public static final String ACTION_SAVE = "save";
+    public static final String ACTION_DELETE = "delete";
     private static final String TEAM = "team";
+    private static final String INVITATION = "invitation";
     public static final String PATH = SLASH + TEAM;
 
     private static final Message MESSAGE_HOME = Message.of("Home", "home");
@@ -66,6 +70,9 @@ class TeamController {
     // SAVE
     private static final String PATH_SAVE = PATH + SLASH + ACTION_SAVE;
 
+    // UNINVITE
+    private static final String PATH_INVITATION_DELETE = PATH + SLASH + INVITATION + SLASH + ACTION_DELETE;
+    private static final Message MESSAGE_DELETE = Message.of("Delete", "action.delete");
     private final TeamService teamService;
     private final FormGenerator formGenerator;
     private final HttpHostResolver httpHostResolver;
@@ -84,7 +91,15 @@ class TeamController {
                 MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
                 MODEL_MEMBERS, teamService.findAll(tenant),
                 MODEL_INVITATIONS, teamService.findInvitations(tenant)
+                        .stream()
+                        .map(i -> new InvitationRow(i.email(), deleteInvitationForm(i)))
+                        .toList()
         );
+    }
+
+    @NonNull
+    private Form deleteInvitationForm(@NonNull TeamInvitation invitation) {
+        return formGenerator.generate(PATH_INVITATION_DELETE, new TeamInvitationDelete(invitation.email()), MESSAGE_DELETE);
     }
 
     @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE)
@@ -100,8 +115,17 @@ class TeamController {
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
+    @PostForm(uri = PATH_INVITATION_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    HttpResponse<?> teamInvitationDelete(@NonNull @NotNull @Valid @Body TeamInvitationDelete form, @Nullable Tenant tenant) {
+        teamService.uninvite(form, tenant);
+        return HttpResponse.seeOther(URI.create(PATH_LIST));
+    }
+
     @Error(exception = ConstraintViolationException.class)
     public HttpResponse<?> onConstraintViolationException(HttpRequest<?> request, ConstraintViolationException ex) {
+        if (PATH_INVITATION_DELETE.equals(request.getPath())) {
+            return HttpResponse.seeOther(URI.create(PATH_LIST));
+        }
         return request.getBody(TeamMemberSave.class)
                 .map(form -> HttpResponse.unprocessableEntity().body(new ModelAndView<>(VIEW_CREATE, createModel(form, ex))))
                 .orElseGet(HttpResponse::serverError);

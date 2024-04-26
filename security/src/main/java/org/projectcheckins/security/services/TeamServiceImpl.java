@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.security.InvitationSavedEvent;
 import org.projectcheckins.security.api.PublicProfile;
 import org.projectcheckins.security.forms.TeamMemberSave;
+import org.projectcheckins.security.forms.TeamInvitationDelete;
 import org.projectcheckins.security.repositories.PublicProfileRepository;
 import org.projectcheckins.security.TeamInvitation;
 import org.projectcheckins.security.TeamInvitationRecord;
@@ -49,5 +50,10 @@ public class TeamServiceImpl implements TeamService {
     public void save(@NotNull TeamMemberSave form, @Nullable Tenant tenant, @NotNull Locale locale, @NotBlank String signupUrl) {
         teamInvitationRepository.save(new TeamInvitationRecord(form.email(), tenant));
         invitationSavedEventPublisher.publishEventAsync(new InvitationSavedEvent(form, locale, signupUrl));
+    }
+
+    @Override
+    public void uninvite(@NotNull TeamInvitationDelete form, @Nullable Tenant tenant) {
+        teamInvitationRepository.deleteByEmail(form.email(), tenant);
     }
 }
