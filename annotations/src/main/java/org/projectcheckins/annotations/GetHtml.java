@@ -21,7 +21,5 @@ public @interface GetHtml {
 
     String executesOn() default TaskExecutors.BLOCKING;
 
-    String turboAction() default "";
-
     String turboView() default "";
 }
