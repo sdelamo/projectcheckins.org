@@ -114,35 +114,38 @@ class QuestionControllerTest {
                 .bodyHtmlTest(html -> html.contains("You must select at least one day")); // days missing when selecting DAILY_ON
 
         assertThat(client.exchange(BrowserRequest.GET("/question/list"), String.class))
-            .satisfies(htmlPage())
+                .satisfies(htmlPage())
                 .satisfies(htmlBody(Pattern.compile("""
                 Asking 1 person\\s*every weekday\\s*at the end of the day.""")));
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path(questionId).path("edit").build()), String.class))
-            .satisfies(htmlPage())
-            .satisfies(htmlBody("""
+                .satisfies(htmlPage())
+                .satisfies(htmlBody("""
                 <li class="breadcrumb-item"><a href="/question/list">"""));
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("yyy").path("edit").build()), String.class))
-            .satisfies(redirection("/notFound"));
+                .satisfies(redirection("/notFound"));
 
         answerRepository.save(new AnswerRecord("zzz", "yyy", SDELAMO.getName(), LocalDate.now(), Format.MARKDOWN, "This is *my* answer."), null);
 
+        assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("yyy").path("show").build()), String.class))
+                .satisfies(redirection("/notFound"));
+
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("xxx").path("show").build()), String.class))
-            .satisfies(htmlPage())
-            .satisfies(htmlBody(Pattern.compile("""
+                .satisfies(htmlPage())
+                .satisfies(htmlBody(Pattern.compile("""
                 Asking 1 person\\s*every weekday\\s*at the end of the day.""")))
                 .satisfies(htmlBody("Today"))
                 .satisfies(htmlBody("This is <em>my</em> answer."))
-            .satisfies(htmlBody("/question/yyy/answer/zzz/edit"))
-            .satisfies(htmlBody("""
+                .satisfies(htmlBody("/question/yyy/answer/zzz/edit"))
+                .satisfies(htmlBody("""
                 <li class="breadcrumb-item"><a href="/question/list">"""));
 
         assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of("/question").path("create").build()), String.class))
-            .satisfies(htmlPage())
-            .satisfies(htmlBody("""
+                .satisfies(htmlPage())
+                .satisfies(htmlBody("""
                 <li class="breadcrumb-item"><a href="/question/list">"""))
-            .satisfies(htmlBody(Pattern.compile("""
+                .satisfies(htmlBody(Pattern.compile("""
                 <input type="text" class="form-control"\\s*id="title""")));
     }
 
