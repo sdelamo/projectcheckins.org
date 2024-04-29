@@ -23,6 +23,8 @@ import org.projectcheckins.annotations.GetHtml;
 import org.projectcheckins.annotations.PostForm;
 import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.security.TeamInvitation;
+import org.projectcheckins.security.api.PublicProfile;
+import org.projectcheckins.security.forms.TeamMemberDelete;
 import org.projectcheckins.security.forms.TeamMemberSave;
 import org.projectcheckins.security.forms.TeamInvitationDelete;
 import org.projectcheckins.security.services.TeamService;
@@ -68,6 +70,9 @@ class TeamController {
     // SAVE
     private static final String PATH_SAVE = PATH + SLASH + ACTION_SAVE;
 
+    // DELETE
+    private static final String PATH_DELETE = PATH + SLASH + ACTION_DELETE;
+
     // UNINVITE
     private static final String PATH_INVITATION_DELETE = PATH + SLASH + INVITATION + SLASH + ACTION_DELETE;
     private static final Message MESSAGE_DELETE = Message.of("Delete", "action.delete");
@@ -93,6 +98,11 @@ class TeamController {
         return formGenerator.generate(PATH_INVITATION_DELETE, new TeamInvitationDelete(invitation.email()), MESSAGE_DELETE);
     }
 
+    @NonNull
+    private Form deleteMemberForm(@NonNull PublicProfile member) {
+        return formGenerator.generate(PATH_DELETE, new TeamMemberDelete(member.email()), MESSAGE_DELETE);
+    }
+
     @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE)
     Map<String, Object> memberCreate() {
         return createModel();
@@ -103,6 +113,12 @@ class TeamController {
                                @NonNull @NotNull @Valid @Body TeamMemberSave form,
                                @Nullable Tenant tenant) {
         teamService.save(form, tenant, getLocale(request), getSignUpUri(request).toString());
+        return HttpResponse.seeOther(URI.create(PATH_LIST));
+    }
+
+    @PostForm(uri = PATH_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    HttpResponse<?> teamMemberDelete(@NonNull @NotNull @Valid @Body TeamMemberDelete form, @Nullable Tenant tenant) {
+        teamService.remove(form, tenant);
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
@@ -140,7 +156,10 @@ class TeamController {
     private Map<String, Object> listModel(@Nullable Tenant tenant) {
         return Map.of(
                 MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
-                MODEL_MEMBERS, teamService.findAll(tenant),
+                MODEL_MEMBERS, teamService.findAll(tenant)
+                        .stream()
+                        .map(m -> new MemberRow(m.email(), m.fullName(), deleteMemberForm(m)))
+                        .toList(),
                 MODEL_INVITATIONS, teamService.findInvitations(tenant)
                         .stream()
                         .map(i -> new InvitationRow(i.email(), deleteInvitationForm(i)))

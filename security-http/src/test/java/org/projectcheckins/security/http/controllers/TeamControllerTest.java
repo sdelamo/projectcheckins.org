@@ -21,6 +21,7 @@ import jakarta.validation.constraints.NotNull;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.security.api.PublicProfile;
+import org.projectcheckins.security.forms.TeamMemberDelete;
 import org.projectcheckins.security.forms.TeamMemberSave;
 import org.projectcheckins.security.forms.TeamInvitationDelete;
 import org.projectcheckins.security.services.TeamService;
@@ -49,6 +50,7 @@ class TeamControllerTest {
     static final String URI_LIST = UriBuilder.of("/team").path("list").build().toString();
     static final String URI_CREATE = UriBuilder.of("/team").path("create").build().toString();
     static final String URI_SAVE = UriBuilder.of("/team").path("save").build().toString();
+    static final String URI_DELETE = UriBuilder.of("/team").path("delete").build().toString();
     static final String URI_UNINVITE = UriBuilder.of("/team").path("uninvite").build().toString();
 
     static final PublicProfile USER_1 = new PublicProfileRecord(
@@ -174,6 +176,23 @@ class TeamControllerTest {
                 .satisfies(redirection(URI_LIST));
     }
 
+    @Test
+    void testRemoveTeamMemberIllegalEmail(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final String email = "*** illegal email ***";
+        Assertions.assertThat(client.exchange(BrowserRequest.GET(UriBuilder.of(URI_DELETE).queryParam("email", email).toString()), String.class))
+                .satisfies(redirection(URI_LIST));
+    }
+
+    @Test
+    void testRemoveTeamMember(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        final Map<String, Object> body = Map.of("email", "user3@email.com");
+        final HttpRequest<?> request = BrowserRequest.POST(URI_DELETE, body);
+        Assertions.assertThat(client.exchange(request))
+                .satisfies(redirection(URI_LIST));
+    }
+
     @Requires(property = "spec.name", value = "TeamControllerTest")
     @Singleton
     static class AuthenticationFetcherMock extends AbstractAuthenticationFetcher {
@@ -219,6 +238,11 @@ class TeamControllerTest {
 
         @Override
         public void save(@NotNull @Valid TeamMemberSave form, @Nullable Tenant tenant, @NotNull Locale locale, @NotBlank String signupUrl) {
+        }
+
+        @Override
+        public void remove(@NotNull @Valid TeamMemberDelete form, @Nullable Tenant tenant) {
+
         }
 
         @Override

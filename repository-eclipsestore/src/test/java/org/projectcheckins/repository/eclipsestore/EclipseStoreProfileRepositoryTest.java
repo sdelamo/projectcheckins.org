@@ -4,6 +4,7 @@ import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SUNDAY;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.micronaut.security.authentication.Authentication;
@@ -48,6 +49,12 @@ class EclipseStoreProfileRepositoryTest {
             .hasFieldOrPropertyWithValue("firstName", "first name")
             .hasFieldOrPropertyWithValue("lastName", "last name"));
     assertThatThrownBy(() -> profileRepository.update(wrongAuth, new ProfileUpdate(TimeZone.getDefault(), SUNDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,"first name", "last name")))
+        .isInstanceOf(UserNotFoundException.class);
+
+    assertThatCode(() -> profileRepository.deleteByEmail(email, null))
+        .doesNotThrowAnyException();
+
+    assertThatThrownBy(() -> profileRepository.deleteByEmail(email, null))
         .isInstanceOf(UserNotFoundException.class);
   }
 }
