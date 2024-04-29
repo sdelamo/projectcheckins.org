@@ -12,11 +12,13 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.security.*;
 import org.projectcheckins.security.api.PublicProfile;
+import org.projectcheckins.security.forms.TeamMemberDelete;
 import org.projectcheckins.security.forms.TeamMemberSave;
 import org.projectcheckins.security.repositories.PublicProfileRepository;
 
@@ -115,6 +117,20 @@ class TeamServiceImplTest {
                 .hasMessage("save.invitation: Invitation already exists");
     }
 
+    @Test
+    void testRemove() {
+        final TeamMemberDelete form = new TeamMemberDelete(USER_1.email());
+        assertThatCode(() -> teamService.remove(form, null))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void testRemoveUserNotFound() {
+        final TeamMemberDelete form = new TeamMemberDelete("no-such-user@example.com");
+        assertThatThrownBy(() -> teamService.remove(form, null))
+                .hasMessage("User not found");
+    }
+
     @Requires(property = "spec.name", value = "TeamServiceImplTest")
     @Singleton
     static class RegisterServiceMock implements RegisterService {
@@ -165,6 +181,18 @@ class TeamServiceImplTest {
         @Override
         public boolean existsByEmail(String email, @Nullable Tenant tenant) {
             return USER_1.email().equals(email);
+        }
+    }
+
+    @Requires(property = "spec.name", value = "TeamServiceImplTest")
+    @Singleton
+    @Replaces(TeamInvitationRepository.class)
+    static class UserRepositoryMock extends SecondaryUserRepository {
+        @Override
+        public void deleteByEmail(@NotBlank @Email String email, @Nullable Tenant tenant) {
+            if (!email.equals(USER_1.email())) {
+                throw new RuntimeException("User not found");
+            }
         }
     }
 

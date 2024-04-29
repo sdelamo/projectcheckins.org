@@ -14,4 +14,9 @@ public class SecondaryUserRepository implements UserRepository {
     public boolean existsByEmail(@NotBlank @Email String email, @Nullable Tenant tenant) {
         throw new UnsupportedOperationException("Not implemented");
     }
+
+    @Override
+    public void deleteByEmail(@NotBlank @Email String email, @Nullable Tenant tenant) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
 }

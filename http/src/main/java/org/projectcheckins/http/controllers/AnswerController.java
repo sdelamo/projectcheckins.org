@@ -94,6 +94,7 @@ class AnswerController {
     private final AnswerService answerService;
     private final FormGenerator formGenerator;
     private final AnswerSaveFormGenerator answerSaveFormGenerator;
+
     private final HttpLocaleResolver httpLocaleResolver;
 
     AnswerController(QuestionService questionService,
@@ -142,7 +143,8 @@ class AnswerController {
     }
 
     @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> answerEdit(HttpRequest<?> request, @PathVariable @NotBlank String questionId,
+    HttpResponse<?> answerEdit(@NonNull @NotNull HttpRequest<?> request,
+                               @PathVariable @NotBlank String questionId,
                                @PathVariable @NotBlank String id,
                                @NonNull Authentication authentication,
                                @Nullable Locale locale,
@@ -158,7 +160,7 @@ class AnswerController {
     }
 
     @PostForm(uri = PATH_ANSWER_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> answerUpdate(HttpRequest<?> request,
+    HttpResponse<?> answerUpdate(@NonNull @NotNull HttpRequest<?> request,
                                  @PathVariable String questionId,
                                  @PathVariable String id,
                                  @NonNull Authentication authentication,
@@ -192,6 +194,7 @@ class AnswerController {
                         .map(model -> TurboMediaType.acceptsTurboStream(request) ? TurboStreamUtils.turboStream(request, VIEW_SHOW_FRAGMENT, model) : new ModelAndView<>(QuestionController.VIEW_SHOW, model))
                         .map(b -> HttpResponse.unprocessableEntity().body(b))
                 .orElseGet(NotFoundController::notFoundRedirect));
+
     }
 
     private Optional<? extends AnswerForm> answerForm(HttpRequest<?> request) {

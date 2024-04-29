@@ -1,0 +1,15 @@
+<th:block th:fragment="member(member)" xmlns:th="http://www.thymeleaf.org">
+    <tr>
+        <th scope="row">
+            <span th:unless="${member.fullName.empty}" th:text="${member.fullName}"></span>
+            <code th:if="${member.fullName.empty}" th:text="${member.email}"></code>
+        </th>
+        <td class="text-end">
+            <th:block th:if="${member.deleteForm}">
+                <div>
+                    <form th:replace="~{fieldset/form :: form(${member.deleteForm})}"></form>
+                </div>
+            </th:block>
+        </td>
+    </tr>
+</th:block>

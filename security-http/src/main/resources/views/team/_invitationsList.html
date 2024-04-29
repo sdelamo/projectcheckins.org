@@ -1,0 +1,9 @@
+<th:block th:fragment="invitations(invitations)" xmlns:th="http://www.thymeleaf.org">
+    <table class="table table-striped mt-3">
+        <tbody>
+            <th:block th:each="invitation : ${invitations}">
+                <tr th:replace="~{team/_invitation :: invitation(${invitation})}"></tr>
+            </th:block>
+        </tbody>
+    </table>
+</th:block>

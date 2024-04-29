@@ -1,0 +1,4 @@
+<th:block th:fragment="members(members)" xmlns:th="http://www.thymeleaf.org">
+    <header><h1 th:text="#{team.list}"></h1></header>
+    <div th:replace="~{team/_membersList :: members(${members})}"></div>
+</th:block>

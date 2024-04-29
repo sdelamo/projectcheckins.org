@@ -1,0 +1,9 @@
+<th:block th:fragment="members(members)" xmlns:th="http://www.thymeleaf.org">
+    <table class="table table-striped mt-3">
+        <tbody>
+            <th:block th:each="member : ${members}">
+                <tr th:replace="~{team/_member :: member(${member})}"></tr>
+            </th:block>
+        </tbody>
+    </table>
+</th:block>

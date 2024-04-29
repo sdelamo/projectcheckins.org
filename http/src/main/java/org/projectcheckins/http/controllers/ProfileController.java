@@ -26,9 +26,9 @@ import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.repositories.ProfileRepository;
+
 import org.projectcheckins.security.http.TurboFrameUtils;
 import org.projectcheckins.security.http.TurboStreamUtils;
-
 import static org.projectcheckins.http.controllers.ApiConstants.*;
 
 @Controller
@@ -66,7 +66,7 @@ class ProfileController {
     }
 
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> profileShow(HttpRequest<?> request,
+    HttpResponse<?> profileShow(@NonNull @NotNull HttpRequest<?> request,
                                 @NonNull @NotNull Authentication authentication,
                                 @Nullable Tenant tenant) {
         return showModel(authentication, tenant)
@@ -78,7 +78,7 @@ class ProfileController {
     }
 
     @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> profileEdit(HttpRequest<?> request,
+    HttpResponse<?> profileEdit(@NonNull @NotNull HttpRequest<?> request,
                                 @NonNull @NotNull Authentication authentication,
                                 @Nullable Tenant tenant) {
         return profileRepository.findByAuthentication(authentication, tenant)
@@ -92,7 +92,7 @@ class ProfileController {
 
     @PostForm(uri = PATH_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> profileUpdate(
-            HttpRequest<?> request,
+            @NonNull @NotNull HttpRequest<?> request,
             @NonNull @NotNull Authentication authentication,
             @NonNull @NotNull @Valid @Body ProfileUpdate profileUpdate,
             @Nullable Tenant tenant) {

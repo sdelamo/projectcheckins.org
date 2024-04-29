@@ -50,6 +50,12 @@ class EclipseStoreProfileRepository implements ProfileRepository, UserRepository
     return findByEmail(email).isPresent();
   }
 
+  @Override
+  public void deleteByEmail(@NotBlank @Email String email, @Nullable Tenant tenant) {
+    final UserEntity user = findByEmail(email).orElseThrow(UserNotFoundException::new);
+    deleteUser(rootProvider.root().getUsers(), user);
+  }
+
   @NonNull
   private Optional<UserEntity> findByEmail(@NotBlank @Email String email) {
     return rootProvider.root().getUsers().stream().filter(u -> u.email().equals(email)).findFirst();
@@ -57,6 +63,11 @@ class EclipseStoreProfileRepository implements ProfileRepository, UserRepository
 
   @StoreParams("user")
   public void save(UserEntity user) {
+  }
+
+  @StoreParams("users")
+  public void deleteUser(List<UserEntity> users, UserEntity user) {
+      users.remove(user);
   }
 
   private Optional<UserEntity> findFirst(Authentication authentication) {

@@ -1,12 +1,18 @@
 package org.projectcheckins.http.controllers;
 
+import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
-import io.micronaut.http.annotation.*;
+import io.micronaut.http.annotation.Body;
+import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
+import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.authentication.Authentication;
+import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.messages.Message;
@@ -14,15 +20,11 @@ import io.micronaut.views.turbo.TurboStream;
 import io.micronaut.views.turbo.http.TurboHttpHeaders;
 import io.micronaut.views.turbo.http.TurboMediaType;
 import jakarta.validation.ConstraintViolationException;
-import org.projectcheckins.annotations.GetHtml;
-import org.projectcheckins.annotations.PostForm;
-import io.micronaut.core.annotation.NonNull;
-import io.micronaut.http.HttpResponse;
-import io.micronaut.http.uri.UriBuilder;
-import io.micronaut.security.rules.SecurityRule;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.projectcheckins.annotations.GetHtml;
+import org.projectcheckins.annotations.PostForm;
 import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Question;
 import org.projectcheckins.core.forms.*;
@@ -131,14 +133,14 @@ class QuestionController {
     }
 
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionSave(HttpRequest<?> request,
+    HttpResponse<?> questionSave(@NonNull @NotNull HttpRequest<?> request,
                                  @NonNull @NotNull @Valid @Body QuestionFormRecord form,
                                  @NonNull Authentication authentication,
                                  @Nullable Tenant tenant) {
         String id = questionService.save(form, tenant);
         return TurboMediaType.acceptsTurboStream(request)
-            ? showTurboStream(request, id, authentication, tenant).map(HttpResponse::ok).orElseGet(HttpResponse::notFound)
-            : HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
+                ? showTurboStream(request, id, authentication, tenant).map(HttpResponse::ok).orElseGet(HttpResponse::notFound)
+                : HttpResponse.seeOther(PATH_SHOW_BUILDER.apply(id));
     }
 
     @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
@@ -152,7 +154,8 @@ class QuestionController {
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
-    
+
+
     @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
     HttpResponse<?> questionEdit(HttpRequest<?> request,
                                  @PathVariable @NotBlank String id,
@@ -167,7 +170,8 @@ class QuestionController {
     }
 
     @PostForm(uri = PATH_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> questionUpdate(HttpRequest<?> request,
+
+    HttpResponse<?> questionUpdate(@NonNull @NotNull HttpRequest<?> request,
                                    @NonNull Authentication authentication,
                                    @PathVariable @NotBlank String id,
                                    @NonNull @NotNull @Valid @Body QuestionFormRecord form,
@@ -198,6 +202,7 @@ class QuestionController {
         String turboFrame = request.getHeaders().get(TurboHttpHeaders.TURBO_FRAME, String.class, FRAME_ID_MAIN);
         boolean turboRequest = TurboMediaType.acceptsTurboStream(request);
         String contentType = turboRequest ? TurboMediaType.TURBO_STREAM : MediaType.TEXT_HTML;
+
         final Matcher matcher = REGEX_UPDATE.matcher(request.getPath());
         if (request.getPath().equals(PATH_SAVE)) {
             return request.getBody(QuestionForm.class)
@@ -228,8 +233,7 @@ class QuestionController {
                                                 @Nullable String turboFrame) {
         return HttpResponse.unprocessableEntity().body(turboRequest
                         ? TurboStream.builder().targetDomId(turboFrame).template(turboView, model).update()
-                        : new ModelAndView<>(view, model))
-                .contentType(contentType);
+                        : new ModelAndView<>(view, model));
     }
 
     @NonNull

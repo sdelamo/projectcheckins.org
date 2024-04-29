@@ -26,7 +26,11 @@ import jakarta.validation.constraints.NotNull;
 import org.projectcheckins.annotations.GetHtml;
 import org.projectcheckins.annotations.PostForm;
 import org.projectcheckins.bootstrap.Breadcrumb;
+import org.projectcheckins.security.TeamInvitation;
+import org.projectcheckins.security.api.PublicProfile;
+import org.projectcheckins.security.forms.TeamMemberDelete;
 import org.projectcheckins.security.forms.TeamMemberSave;
+import org.projectcheckins.security.forms.TeamInvitationDelete;
 import org.projectcheckins.security.services.TeamService;
 
 import java.net.URI;
@@ -45,7 +49,9 @@ class TeamController {
     public static final String FRAGMENT_CREATE = "_create.html";
     public static final String ACTION_CREATE = "create";
     public static final String ACTION_SAVE = "save";
+    public static final String ACTION_DELETE = "delete";
     private static final String TEAM = "team";
+    private static final String INVITATION = "invitation";
     public static final String PATH = SLASH + TEAM;
 
     private static final Message MESSAGE_HOME = Message.of("Home", "home");
@@ -73,6 +79,12 @@ class TeamController {
     // SAVE
     private static final String PATH_SAVE = PATH + SLASH + ACTION_SAVE;
 
+    // DELETE
+    private static final String PATH_DELETE = PATH + SLASH + ACTION_DELETE;
+
+    // UNINVITE
+    private static final String PATH_INVITATION_DELETE = PATH + SLASH + INVITATION + SLASH + ACTION_DELETE;
+    private static final Message MESSAGE_DELETE = Message.of("Delete", "action.delete");
     private final TeamService teamService;
     private final FormGenerator formGenerator;
     private final HttpHostResolver httpHostResolver;
@@ -90,13 +102,23 @@ class TeamController {
         return listModel(tenant);
     }
 
+    @NonNull
+    private Form deleteInvitationForm(@NonNull TeamInvitation invitation) {
+        return formGenerator.generate(PATH_INVITATION_DELETE, new TeamInvitationDelete(invitation.email()), MESSAGE_DELETE);
+    }
+
+    @NonNull
+    private Form deleteMemberForm(@NonNull PublicProfile member) {
+        return formGenerator.generate(PATH_DELETE, new TeamMemberDelete(member.email()), MESSAGE_DELETE);
+    }
+
     @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE, turboView = VIEW_CREATE_FRAGMENT)
     Map<String, Object> memberCreate() {
         return createModel();
     }
 
     @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> memberSave(HttpRequest<?> request,
+    HttpResponse<?> memberSave(@NonNull @NotNull HttpRequest<?> request,
                                @NonNull @NotNull @Valid @Body TeamMemberSave form,
                                @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
                                @Nullable Tenant tenant) {
@@ -111,8 +133,23 @@ class TeamController {
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
+    @PostForm(uri = PATH_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    HttpResponse<?> teamMemberDelete(@NonNull @NotNull @Valid @Body TeamMemberDelete form, @Nullable Tenant tenant) {
+        teamService.remove(form, tenant);
+        return HttpResponse.seeOther(URI.create(PATH_LIST));
+    }
+
+    @PostForm(uri = PATH_INVITATION_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    HttpResponse<?> teamInvitationDelete(@NonNull @NotNull @Valid @Body TeamInvitationDelete form, @Nullable Tenant tenant) {
+        teamService.uninvite(form, tenant);
+        return HttpResponse.seeOther(URI.create(PATH_LIST));
+    }
+
     @Error(exception = ConstraintViolationException.class)
     public HttpResponse<?> onConstraintViolationException(HttpRequest<?> request, ConstraintViolationException ex) {
+        if (PATH_INVITATION_DELETE.equals(request.getPath())) {
+            return HttpResponse.seeOther(URI.create(PATH_LIST));
+        }
         return request.getBody(TeamMemberSave.class)
                 .map(form -> HttpResponse.unprocessableEntity().body(new ModelAndView<>(VIEW_CREATE, createModel(form, ex))))
                 .orElseGet(HttpResponse::serverError);
@@ -132,12 +169,18 @@ class TeamController {
                 MEMBER_FORM, form
         );
     }
-    
+
     private Map<String, Object> listModel(@Nullable Tenant tenant) {
         return Map.of(
                 MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
-                MODEL_MEMBERS, teamService.findAll(tenant),
+                MODEL_MEMBERS, teamService.findAll(tenant)
+                        .stream()
+                        .map(m -> new MemberRow(m.email(), m.fullName(), deleteMemberForm(m)))
+                        .toList(),
                 MODEL_INVITATIONS, teamService.findInvitations(tenant)
+                        .stream()
+                        .map(i -> new InvitationRow(i.email(), deleteInvitationForm(i)))
+                        .toList()
         );
     }
 

@@ -118,7 +118,10 @@ class SecurityControllerTest {
         assertThat(client.retrieve(BrowserRequest.GET("/security/signUp")))
                 .satisfies(containsManyTimes(2, TYPE_PASSWORD))
                 .containsOnlyOnce(TYPE_EMAIL)
-                .containsOnlyOnce(ACTION_SECURITY_SIGN_UP);
+                .containsOnlyOnce(ACTION_SECURITY_SIGN_UP)
+                .containsOnlyOnce("Already have an account?")
+                .containsOnlyOnce("""
+                        <a href="/security/login">Log in</a>""");
 
         assertThat(client.retrieve(NOT_MATCHING_PASSWORD_REQUEST))
                 .satisfies(containsManyTimes(2, TYPE_PASSWORD))
@@ -146,6 +149,10 @@ class SecurityControllerTest {
         assertThat(client.retrieve(BrowserRequest.GET("/security/changePassword")))
                 .satisfies(containsManyTimes(3, TYPE_PASSWORD))
                 .containsOnlyOnce("""
+                        action="/security/updatePassword""")
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/profile/show">""")
+                .containsOnlyOnce("""
                         action="/security/updatePassword""");
     }
 
@@ -158,6 +165,12 @@ class SecurityControllerTest {
                 "password", "new password",
                 "repeatPassword", "new password"));
         assertThat(client.retrieve(request))
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/">""")
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/profile/show">""")
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/security/changePassword">""")
                 .containsOnlyOnce("You have successfully changed your password.");
     }
 
@@ -170,6 +183,12 @@ class SecurityControllerTest {
                 "password", "new password",
                 "repeatPassword", "new password"));
         assertThat(client.retrieve(request))
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/">""")
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/profile/show">""")
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/security/changePassword">""")
                 .containsOnlyOnce("Current password is incorrect. Please try again.");
     }
 
@@ -182,6 +201,12 @@ class SecurityControllerTest {
                 "password", "new password one",
                 "repeatPassword", "new password two"));
         assertThat(client.retrieve(request))
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/">""")
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/profile/show">""")
+                .containsOnlyOnce("""
+                        <li class="breadcrumb-item"><a href="/security/changePassword">""")
                 .containsOnlyOnce("Passwords do not match");
     }
 
