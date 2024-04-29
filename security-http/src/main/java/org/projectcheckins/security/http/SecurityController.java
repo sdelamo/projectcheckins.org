@@ -19,6 +19,7 @@ import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.FormGenerator;
+import io.micronaut.views.fields.elements.InputSubmitFormElement;
 import io.micronaut.views.fields.messages.Message;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
@@ -54,6 +55,8 @@ class SecurityController {
     private static final String VIEW_SECURITY_LOGIN = PATH + "/" + ACTION_LOGIN + ".html";
     private static final String PATH_LOGIN = PATH + "/" + ACTION_LOGIN;
     private static final URI URI_LOGIN = UriBuilder.of(PATH).path(ACTION_LOGIN).build();
+    public static final @NonNull Message MESSAGE_LOG_IN = Message.of("Log in", "loginform.submit");
+    public static final @NonNull InputSubmitFormElement INPUT_SUBMIT_LOGIN = InputSubmitFormElement.builder().value(MESSAGE_LOG_IN).build();
 
     private final Form loginForm;
 
@@ -106,7 +109,7 @@ class SecurityController {
         this.passwordService = passwordService;
         this.httpHostResolver = httpHostResolver;
         this.httpLocaleResolver = httpLocaleResolver;
-        loginForm = formGenerator.generate(loginControllerConfiguration.getPath(), LoginForm.class);
+        loginForm = formGenerator.generate(loginControllerConfiguration.getPath(), LoginForm.class, INPUT_SUBMIT_LOGIN);
         signUpForm = formGenerator.generate(PATH_SIGN_UP, SignUpForm.class);
         forgotPasswordForm = formGenerator.generate(PATH_PASSWORD_FORGOT, ForgotPasswordForm.class, MESSAGE_FORGOT_SUBMIT);
     }
