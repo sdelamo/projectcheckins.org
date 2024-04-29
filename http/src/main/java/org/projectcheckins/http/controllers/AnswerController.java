@@ -4,10 +4,9 @@ import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.Body;
-import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.*;
 import io.micronaut.http.annotation.Error;
-import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.server.util.locale.HttpLocaleResolver;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
 import io.micronaut.security.authentication.Authentication;
@@ -26,15 +25,7 @@ import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Answer;
 import org.projectcheckins.core.api.AnswerView;
 import org.projectcheckins.core.api.Question;
-import org.projectcheckins.core.forms.AnswerForm;
-import org.projectcheckins.core.forms.AnswerMarkdownSave;
-import org.projectcheckins.core.forms.AnswerSave;
-import org.projectcheckins.core.forms.AnswerUpdate;
-import org.projectcheckins.core.forms.AnswerUpdateMarkdown;
-import org.projectcheckins.core.forms.AnswerUpdateRecord;
-import org.projectcheckins.core.forms.AnswerUpdateWysiwyg;
-import org.projectcheckins.core.forms.AnswerWysiwygSave;
-import org.projectcheckins.core.forms.Format;
+import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.services.AnswerService;
 import org.projectcheckins.core.services.QuestionService;
 
@@ -95,63 +86,51 @@ class AnswerController {
     private final QuestionService questionService;
     private final AnswerService answerService;
     private final FormGenerator formGenerator;
+    private final HttpLocaleResolver httpLocaleResolver;
 
-    AnswerController(QuestionService questionService, AnswerService answerService, FormGenerator formGenerator) {
+    AnswerController(QuestionService questionService,
+                     AnswerService answerService,
+                     FormGenerator formGenerator,
+                     HttpLocaleResolver httpLocaleResolver) {
         this.questionService = questionService;
         this.answerService = answerService;
         this.formGenerator = formGenerator;
+        this.httpLocaleResolver = httpLocaleResolver;
     }
 
     @PostForm(uri = PATH_ANSWER_SAVE_MARKDOWN, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> answerSaveMarkdown(@PathVariable String questionId,
+    HttpResponse<?> answerSaveMarkdown(@NonNull HttpRequest<?> request,
+                                       @NonNull @PathVariable String questionId,
                                        @NonNull Authentication authentication,
                                        @Nullable Tenant tenant,
                                        @Body @NonNull @NotNull @Valid AnswerMarkdownSave form) {
-        if (!questionId.equals(form.questionId())) {
-            return HttpResponse.unprocessableEntity();
-        }
-        if (!authentication.getName().equals(form.respondentId())) {
-            return HttpResponse.unprocessableEntity();
-        }
-        answerService.save(authentication, new AnswerSave(form.questionId(), form.answerDate(), Format.MARKDOWN, form.markdown()), tenant);
-        return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
+        return answerSave(request, form, questionId, authentication, Format.MARKDOWN, form.markdown(), tenant);
     }
 
     @PostForm(uri = PATH_ANSWER_SAVE_WYSIWYG, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> answerSaveWysiwyg(@PathVariable String questionId,
+    HttpResponse<?> answerSaveWysiwyg(@NonNull HttpRequest<?> request,
+                                      @PathVariable String questionId,
                                       @NonNull Authentication authentication,
                                       @Nullable Tenant tenant,
                                       @Body @NonNull @NotNull @Valid AnswerWysiwygSave form) {
-        if (!questionId.equals(form.questionId())) {
-            return HttpResponse.unprocessableEntity();
-        }
-        if (!authentication.getName().equals(form.respondentId())) {
-            return HttpResponse.unprocessableEntity();
-        }
-        answerService.save(authentication, new AnswerSave(form.questionId(), form.answerDate(), Format.WYSIWYG, form.html()), tenant);
-        return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
+        return answerSave(request, form, questionId, authentication, Format.WYSIWYG, form.html(), tenant);
     }
 
-    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_SHOW)
-    HttpResponse<?> answerShow(@PathVariable @NotBlank String questionId,
+    @GetHtml(uri = PATH_SHOW, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    HttpResponse<?> answerShow(HttpRequest<?> request,
+                               @PathVariable @NotBlank String questionId,
                                @PathVariable @NotBlank String id,
                                @NonNull Authentication authentication,
-                               @Nullable Locale locale,
                                @Nullable Tenant tenant) {
-        return questionService.findById(questionId, tenant)
-                .flatMap(question -> answerService.findById(id, authentication, tenant)
-                            .map(answer -> HttpResponse.ok(Map.of(
-                                    MODEL_ANSWER, answer,
-                                    ApiConstants.MODEL_BREADCRUMBS, List.of(
-                                            QuestionController.BREADCRUMB_LIST,
-                                            QuestionController.BREADCRUMB_SHOW.apply(question),
-                                            makeBreadcrumbShow(answer, locale))
-                                    ))))
+        Locale locale = httpLocaleResolver.resolveOrDefault(request);
+        return answerShowModel(questionId, id, authentication, locale, tenant)
+                .map(model -> new ModelAndView<>(VIEW_SHOW, model))
+                .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
-    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_EDIT)
-    HttpResponse<?> answerEdit(@PathVariable @NotBlank String questionId,
+    @GetHtml(uri = PATH_EDIT, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    HttpResponse<?> answerEdit(@NonNull @NotNull HttpRequest<?> request, @PathVariable @NotBlank String questionId,
                                @PathVariable @NotBlank String id,
                                @NonNull Authentication authentication,
                                @Nullable Locale locale,
@@ -159,12 +138,14 @@ class AnswerController {
         return questionService.findById(questionId, tenant)
                 .flatMap(question -> answerService.findById(id, authentication, tenant)
                         .map(answer -> updateAnswerModel(question, answer, locale)))
-                .map(model -> HttpResponse.ok(new ModelAndView<>(VIEW_EDIT, model)))
+                .map(model -> new ModelAndView<>(VIEW_EDIT, model))
+                .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
 
     @PostForm(uri = PATH_ANSWER_UPDATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
-    HttpResponse<?> answerUpdate(@PathVariable String questionId,
+    HttpResponse<?> answerUpdate(@NonNull @NotNull HttpRequest<?> request,
+                                 @PathVariable String questionId,
                                  @PathVariable String id,
                                  @NonNull Authentication authentication,
                                  @Nullable Tenant tenant,
@@ -185,18 +166,21 @@ class AnswerController {
     }
 
     private Optional<HttpResponse<?>> retrySave(HttpRequest<?> request, Authentication auth, Tenant tenant, ConstraintViolationException ex) {
-        final Optional<? extends AnswerForm> answerForm;
+        return answerForm(request)
+                .map(f -> questionService.findById(f.questionId(), tenant)
+                        .map(q -> QuestionController.showModel(answerService, q, generateForm(f, ex), auth, tenant))
+                        .map(model -> new ModelAndView<>(QuestionController.VIEW_SHOW, model))
+                        .map(b -> HttpResponse.unprocessableEntity().body(b))
+                        .orElseGet(NotFoundController::notFoundRedirect));
+    }
+
+    private Optional<? extends AnswerForm> answerForm(HttpRequest<?> request) {
         if (request.getPath().matches(REGEX_SAVE_MARKDOWN)) {
-            answerForm = request.getBody(AnswerMarkdownSave.class);
+            return request.getBody(AnswerMarkdownSave.class);
         } else if (request.getPath().matches(REGEX_SAVE_WYSIWYG)) {
-            answerForm = request.getBody(AnswerWysiwygSave.class);
-        } else {
-            answerForm = Optional.empty();
+            return request.getBody(AnswerWysiwygSave.class);
         }
-        return answerForm.map(f -> questionService.findById(f.questionId(), tenant)
-                .map(q -> HttpResponse.unprocessableEntity().body(new ModelAndView<>(QuestionController.VIEW_SHOW,
-                        QuestionController.showModel(answerService, q, generateForm(f, ex), auth, tenant))))
-                .orElseGet(NotFoundController::notFoundRedirect));
+        return Optional.empty();
     }
 
     private Optional<HttpResponse<?>> retryUpdate(HttpRequest<?> request, Authentication auth, Locale locale, Tenant tenant, ConstraintViolationException ex) {
@@ -267,5 +251,39 @@ class AnswerController {
             case AnswerWysiwygSave wysiwyg -> Format.WYSIWYG;
             default -> null;
         };
+    }
+
+    @NonNull
+    private HttpResponse<?>  answerSave(@NonNull HttpRequest<?> request,
+                                        @NonNull AnswerForm form,
+                                        @NonNull String questionId,
+                                        @NonNull Authentication authentication,
+                                        @NonNull Format format,
+                                        @NonNull String text,
+                                        @Nullable Tenant tenant) {
+        if (!questionId.equals(form.questionId())) {
+            return HttpResponse.unprocessableEntity();
+        }
+        if (!authentication.getName().equals(form.respondentId())) {
+            return HttpResponse.unprocessableEntity();
+        }
+        answerService.save(authentication, new AnswerSave(form.questionId(), form.answerDate(), format, text), tenant);
+        return HttpResponse.seeOther(QuestionController.PATH_SHOW_BUILDER.apply(questionId));
+    }
+
+    private Optional<Map<String, Object>> answerShowModel(@NonNull String questionId,
+                                                          @NonNull String answerId,
+                                                          @NonNull Authentication authentication,
+                                                          @NonNull Locale locale,
+                                                          @Nullable Tenant tenant) {
+        return questionService.findById(questionId, tenant)
+                .flatMap(question -> answerService.findById(answerId, authentication, tenant)
+                        .map(answer -> Map.of(
+                                MODEL_ANSWER, answer,
+                                ApiConstants.MODEL_BREADCRUMBS, List.of(
+                                        QuestionController.BREADCRUMB_LIST,
+                                        QuestionController.BREADCRUMB_SHOW.apply(question),
+                                        makeBreadcrumbShow(answer, locale))
+                        )));
     }
 }
