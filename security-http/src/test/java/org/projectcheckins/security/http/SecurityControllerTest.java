@@ -117,7 +117,10 @@ class SecurityControllerTest {
         assertThat(client.retrieve(BrowserRequest.GET("/security/signUp")))
                 .satisfies(containsManyTimes(2, TYPE_PASSWORD))
                 .containsOnlyOnce(TYPE_EMAIL)
-                .containsOnlyOnce(ACTION_SECURITY_SIGN_UP);
+                .containsOnlyOnce(ACTION_SECURITY_SIGN_UP)
+                .containsOnlyOnce("Already have an account?")
+                .containsOnlyOnce("""
+                        <a href="/security/login">Log in</a>""");
 
         assertThat(client.retrieve(NOT_MATCHING_PASSWORD_REQUEST))
                 .satisfies(containsManyTimes(2, TYPE_PASSWORD))
