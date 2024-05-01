@@ -3,6 +3,8 @@ package org.projectcheckins.core.viewmodelprocessors;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.http.HttpRequest;
 import jakarta.inject.Singleton;
+import org.projectcheckins.security.MapViewModelProcessor;
+
 import java.util.Map;
 
 @Singleton

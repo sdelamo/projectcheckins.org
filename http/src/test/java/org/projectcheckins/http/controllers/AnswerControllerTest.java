@@ -298,7 +298,8 @@ class AnswerControllerTest {
                     TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
                     Format.MARKDOWN,
                     "Code",
-                    "Monkey"
+                    "Monkey",
+                    true
             ));
         }
     }

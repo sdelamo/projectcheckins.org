@@ -17,6 +17,9 @@ import org.projectcheckins.annotations.Generated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.Arrays.asList;
+import static org.projectcheckins.security.Role.ROLE_ADMIN;
+
 @Generated// "ignore for jacoco"
 @Requires(env = Environment.DEVELOPMENT)
 @Singleton
@@ -38,6 +41,7 @@ public class Bootstrap implements ApplicationEventListener<ServerStartupEvent> {
     @Override
     public void onApplicationEvent(ServerStartupEvent event) {
         Tenant tenant = null;
+        addUser("admin@unityfoundation.io", tenant, ROLE_ADMIN);
         sendInvitation("pending@example.com", tenant);
         addUser("delamos@unityfoundation.io", tenant);
         addUser("calvog@unityfoundation.io", tenant);
@@ -46,10 +50,10 @@ public class Bootstrap implements ApplicationEventListener<ServerStartupEvent> {
         addUser("wetted@objectcomputing.com", tenant);
     }
 
-    private void addUser(String email, Tenant tenant) {
+    private void addUser(String email, Tenant tenant, String... authorities) {
         try {
             sendInvitation(email, tenant);
-            registerService.register(email, "secret", tenant);
+            registerService.register(email, "secret", tenant, asList(authorities));
         } catch (RegistrationCheckViolationException e) {
             LOG.warn("{}", e.getViolation().message().defaultMessage());
         }

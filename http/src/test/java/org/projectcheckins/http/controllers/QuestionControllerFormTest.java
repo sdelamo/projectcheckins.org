@@ -61,7 +61,9 @@ class QuestionControllerFormTest {
                     TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
                     Format.WYSIWYG,
                     null,
-                    null));
+                    null,
+                    true
+            ));
         }
 
         @Override
@@ -74,7 +76,9 @@ class QuestionControllerFormTest {
                     TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
                     Format.WYSIWYG,
                     null,
-                    null));
+                    null,
+                    true
+            ));
         }
     }
 

@@ -40,7 +40,8 @@ class TeamServiceImplTest {
     static final PublicProfile USER_1 = new PublicProfileRecord(
             "user1",
             "user1@email.com",
-            ""
+            "",
+            true
     );
 
     static final UserState USER_1_STATE = new UserState() {
@@ -223,6 +224,6 @@ class TeamServiceImplTest {
         }
     }
 
-    record PublicProfileRecord(String id, String email, String fullName) implements PublicProfile {
+    record PublicProfileRecord(String id, String email, String fullName, boolean isAdmin) implements PublicProfile {
     }
 }

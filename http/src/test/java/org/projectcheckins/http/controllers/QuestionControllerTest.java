@@ -72,7 +72,9 @@ class QuestionControllerTest {
                     TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
                     Format.MARKDOWN,
                     null,
-                    null));
+                    null,
+                    true
+            ));
         }
 
         @Override
@@ -85,7 +87,9 @@ class QuestionControllerTest {
                     TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
                     Format.MARKDOWN,
                     null,
-                    null));
+                    null,
+                    true
+            ));
         }
     }
 

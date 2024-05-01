@@ -4,9 +4,8 @@ import io.micronaut.context.MessageSource;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.server.util.locale.HttpLocaleResolver;
-import io.micronaut.views.ModelAndView;
 import jakarta.inject.Singleton;
-import org.projectcheckins.core.viewmodelprocessors.MapViewModelProcessor;
+import org.projectcheckins.security.MapViewModelProcessor;
 
 import java.util.Locale;
 import java.util.Map;

@@ -12,4 +12,6 @@ public interface PublicProfile {
 
     @NonNull
     String fullName();
+
+    boolean isAdmin();
 }

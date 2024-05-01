@@ -30,7 +30,8 @@ class DateAnswersTest {
             TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
             Format.MARKDOWN,
             "Code",
-            "Monkey"
+            "Monkey",
+            true
     );
     private static final Answer ANSWER_1 = new AnswerRecord("answer1", "question1", USER_1.id(), LocalDate.of(2024, 1, 1), Format.MARKDOWN, "Lorem *ipsum*.");
 

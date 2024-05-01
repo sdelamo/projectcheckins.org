@@ -18,7 +18,7 @@ class ProfileTest {
 
     @Test
     void fieldsCannotBeNull(Validator validator) {
-        assertThat(validator.validate(new ProfileRecord(null, "email", null, null, null, null, null, null, null, null)))
+        assertThat(validator.validate(new ProfileRecord(null, "email", null, null, null, null, null, null, null, null, false)))
                 .hasNotNullViolation("id")
                 .hasMalformedEmailViolation("email")
                 .hasNotNullViolation("timeZone")
@@ -31,13 +31,13 @@ class ProfileTest {
 
     @Test
     void validProfile(Validator validator) {
-        assertThat(validator.validate(new ProfileRecord("id", "delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,null, null)))
+        assertThat(validator.validate(new ProfileRecord("id", "delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,null, null, false)))
                 .isValid();
     }
 
     @Test
     void fullName() {
-        assertThat(new ProfileRecord("id", "delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "Sergio", "del Amo"))
+        assertThat(new ProfileRecord("id", "delamos@unityfoundation.io", TimeZone.getDefault(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK, Format.MARKDOWN, "Sergio", "del Amo", false))
                 .extracting(ProfileRecord::fullName)
                 .isEqualTo("Sergio del Amo");
     }

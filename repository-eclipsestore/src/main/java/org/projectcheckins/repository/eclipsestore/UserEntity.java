@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
+import static org.projectcheckins.security.Role.ADMIN;
+
 @Introspected
 public class UserEntity implements Profile {
 
@@ -193,5 +195,10 @@ public class UserEntity implements Profile {
 
     public void format(Format format) {
         this.format = format;
+    }
+
+    @Override
+    public boolean isAdmin() {
+        return ADMIN.matches(authorities);
     }
 }

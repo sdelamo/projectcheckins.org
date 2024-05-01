@@ -10,6 +10,7 @@ import java.util.Collections;
 
 public abstract class AbstractAuthenticationFetcher implements AuthenticationFetcher<HttpRequest<?>> {
 
+    public static final Authentication ADMIN = Authentication.build("admin", Collections.singletonList("ROLE_ADMIN"), Collections.singletonMap("email", "admin@unityfoundation.io"));
     public static final Authentication SDELAMO = Authentication.build("xxx", Collections.emptyList(), Collections.singletonMap("email", "delamos@unityfoundation.io"));
     private Authentication authentication;
 

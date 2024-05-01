@@ -107,7 +107,9 @@ class AnswerSaveFormGeneratorTest {
                     TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
                     format,
                     null,
-                    null);
+                    null,
+                    true
+            );
         }
     }
 }

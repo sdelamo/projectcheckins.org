@@ -46,7 +46,8 @@ public class AnswerServiceImpl implements AnswerService {
             TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
             Format.MARKDOWN,
             "Unknown",
-            "Respondent"
+            "Respondent",
+            false
     );
 
     private final AnswerRepository answerRepository;

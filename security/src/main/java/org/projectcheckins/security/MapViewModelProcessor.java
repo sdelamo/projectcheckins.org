@@ -1,4 +1,4 @@
-package org.projectcheckins.core.viewmodelprocessors;
+package org.projectcheckins.security;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.http.HttpRequest;

@@ -23,6 +23,7 @@ public record ProfileRecord(
         @NotNull TimeFormat timeFormat,
         @NotNull Format format,
         @Nullable String firstName,
-        @Nullable String lastName
+        @Nullable String lastName,
+        boolean isAdmin
 ) implements Profile {
 }

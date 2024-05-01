@@ -100,7 +100,8 @@ class ProfileControllerTest {
               TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
               Format.WYSIWYG,
               "Guillermo",
-              "Calvo"
+              "Calvo",
+              true
       ));
     }
 
@@ -116,7 +117,8 @@ class ProfileControllerTest {
               TimeFormat.TWENTY_FOUR_HOUR_CLOCK,
               Format.WYSIWYG,
               "Guillermo",
-              "Calvo"
+              "Calvo",
+              true
       ));
     }
 

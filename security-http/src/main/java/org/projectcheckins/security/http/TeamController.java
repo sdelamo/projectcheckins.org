@@ -11,6 +11,7 @@ import io.micronaut.http.server.util.HttpHostResolver;
 import io.micronaut.http.server.util.locale.HttpLocaleResolver;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
+import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
@@ -33,6 +34,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import static org.projectcheckins.security.Role.isAdmin;
+import static org.projectcheckins.security.Role.ROLE_ADMIN;
 
 @Controller
 class TeamController {
@@ -89,8 +93,8 @@ class TeamController {
     }
 
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
-    Map<String, Object> memberList(@Nullable Tenant tenant) {
-        return listModel(tenant);
+    Map<String, Object> memberList(@NonNull @NotNull Authentication authentication, @Nullable Tenant tenant) {
+        return listModel(authentication, tenant);
     }
 
     @NonNull
@@ -103,12 +107,12 @@ class TeamController {
         return formGenerator.generate(PATH_DELETE, new TeamMemberDelete(member.email()), MESSAGE_DELETE);
     }
 
-    @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE)
+    @GetHtml(uri = PATH_CREATE, rolesAllowed = ROLE_ADMIN, view = VIEW_CREATE)
     Map<String, Object> memberCreate() {
         return createModel();
     }
 
-    @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    @PostForm(uri = PATH_SAVE, rolesAllowed = ROLE_ADMIN)
     HttpResponse<?> memberSave(@NonNull @NotNull HttpRequest<?> request,
                                @NonNull @NotNull @Valid @Body TeamMemberSave form,
                                @Nullable Tenant tenant) {
@@ -116,13 +120,13 @@ class TeamController {
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
-    @PostForm(uri = PATH_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    @PostForm(uri = PATH_DELETE, rolesAllowed = ROLE_ADMIN)
     HttpResponse<?> teamMemberDelete(@NonNull @NotNull @Valid @Body TeamMemberDelete form, @Nullable Tenant tenant) {
         teamService.remove(form, tenant);
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
-    @PostForm(uri = PATH_INVITATION_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    @PostForm(uri = PATH_INVITATION_DELETE, rolesAllowed = ROLE_ADMIN)
     HttpResponse<?> teamInvitationDelete(@NonNull @NotNull @Valid @Body TeamInvitationDelete form, @Nullable Tenant tenant) {
         teamService.uninvite(form, tenant);
         return HttpResponse.seeOther(URI.create(PATH_LIST));
@@ -153,16 +157,18 @@ class TeamController {
         );
     }
 
-    private Map<String, Object> listModel(@Nullable Tenant tenant) {
+    private Map<String, Object> listModel(Authentication authentication, @Nullable Tenant tenant) {
+        final boolean isAdmin = isAdmin(authentication);
+        final String self = authentication.getName();
         return Map.of(
                 MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
                 MODEL_MEMBERS, teamService.findAll(tenant)
                         .stream()
-                        .map(m -> new MemberRow(m.email(), m.fullName(), deleteMemberForm(m)))
+                        .map(m -> new MemberRow(m.email(), m.fullName(), isAdmin && !m.id().equals(self) ? deleteMemberForm(m) : null))
                         .toList(),
                 MODEL_INVITATIONS, teamService.findInvitations(tenant)
                         .stream()
-                        .map(i -> new InvitationRow(i.email(), deleteInvitationForm(i)))
+                        .map(i -> new InvitationRow(i.email(), isAdmin ? deleteInvitationForm(i) : null))
                         .toList()
         );
     }
