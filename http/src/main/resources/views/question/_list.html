@@ -1,6 +1,8 @@
 <th:block th:fragment="list(breadcrumbs, questions)" xmlns:th="http://www.thymeleaf.org">
     <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
-    <a href="/question/create"><button type="button" class="btn btn-primary" th:text="#{question.create}"></button></a>
+    <th:block th:if="${user.roles.contains('ROLE_ADMIN')}">
+        <a href="/question/create"><button type="button" class="btn btn-primary" th:text="#{question.create}"></button></a>
+    </th:block>
     <th:block th:each="question : ${questions}">
         <div th:replace="~{question/_question :: question(${question})}"/>
     </th:block>

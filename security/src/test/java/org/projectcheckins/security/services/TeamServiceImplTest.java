@@ -20,11 +20,14 @@ import org.projectcheckins.security.*;
 import org.projectcheckins.security.api.PublicProfile;
 import org.projectcheckins.security.forms.TeamMemberDelete;
 import org.projectcheckins.security.forms.TeamMemberSave;
+import org.projectcheckins.security.forms.TeamMemberUpdate;
 import org.projectcheckins.security.repositories.PublicProfileRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -132,6 +135,17 @@ class TeamServiceImplTest {
                 .hasMessage("User not found");
     }
 
+    @Test
+    void testUpdate(UserRepositoryMock users) {
+        final String email = USER_1.email();
+        teamService.update(new TeamMemberUpdate(email, false), null);
+        assertThat(users.updatedAuthorities.get(email))
+                .doesNotContain(Role.ROLE_ADMIN);
+        teamService.update(new TeamMemberUpdate(email, true), null);
+        assertThat(users.updatedAuthorities.get(email))
+                .contains(Role.ROLE_ADMIN);
+    }
+
     @Requires(property = "spec.name", value = "TeamServiceImplTest")
     @Singleton
     static class RegisterServiceMock implements RegisterService {
@@ -189,11 +203,18 @@ class TeamServiceImplTest {
     @Singleton
     @Replaces(TeamInvitationRepository.class)
     static class UserRepositoryMock extends SecondaryUserRepository {
+        Map<String, List<String>> updatedAuthorities = new HashMap<>();
         @Override
         public void deleteByEmail(@NotBlank @Email String email, @Nullable Tenant tenant) {
             if (!email.equals(USER_1.email())) {
                 throw new RuntimeException("User not found");
             }
+        }
+        @Override
+        public void updateAuthorities(@NotBlank @Email String email,
+                                      @NonNull List<String> authorities,
+                                      @Nullable Tenant tenant) {
+            updatedAuthorities.put(email, authorities);
         }
     }
 

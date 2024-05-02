@@ -11,6 +11,7 @@ import org.projectcheckins.security.forms.TeamMemberDelete;
 import org.projectcheckins.security.forms.TeamMemberSave;
 import org.projectcheckins.security.forms.TeamInvitationDelete;
 import org.projectcheckins.security.TeamInvitation;
+import org.projectcheckins.security.forms.TeamMemberUpdate;
 
 import java.util.List;
 import java.util.Locale;
@@ -28,4 +29,6 @@ public interface TeamService {
     void remove(@NotNull @Valid TeamMemberDelete form, @Nullable Tenant tenant);
 
     void uninvite(@NotNull @Valid TeamInvitationDelete form, @Nullable Tenant tenant);
+
+    void update(@NotNull @Valid TeamMemberUpdate form, @Nullable Tenant tenant);
 }

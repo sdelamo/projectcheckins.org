@@ -10,5 +10,6 @@ import jakarta.validation.constraints.NotNull;
 @Serdeable
 public record MemberRow(@NonNull @NotNull @Email String email,
                         @NonNull @NotNull String fullName,
+                        @Nullable Form updateForm,
                         @Nullable Form deleteForm) {
 }

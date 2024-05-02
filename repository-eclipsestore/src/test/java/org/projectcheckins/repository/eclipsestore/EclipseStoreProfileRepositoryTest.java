@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.projectcheckins.security.Role.ROLE_ADMIN;
 
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.authentication.ClientAuthentication;
@@ -41,6 +42,7 @@ class EclipseStoreProfileRepositoryTest {
     profileRepository.update(rightAuth, new ProfileUpdate(TimeZone.getDefault(), SUNDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWELVE_HOUR_CLOCK, Format.WYSIWYG, "first name", "last name"));
     assertThat(profileRepository.findByAuthentication(rightAuth))
         .hasValueSatisfying(p -> assertThat(p)
+            .hasFieldOrPropertyWithValue("admin", false)
             .hasFieldOrPropertyWithValue("firstDayOfWeek", SUNDAY)
             .hasFieldOrPropertyWithValue("beginningOfDay", LocalTime.of(9, 0))
             .hasFieldOrPropertyWithValue("endOfDay", LocalTime.of(16, 30))
@@ -48,6 +50,13 @@ class EclipseStoreProfileRepositoryTest {
             .hasFieldOrPropertyWithValue("format", Format.WYSIWYG)
             .hasFieldOrPropertyWithValue("firstName", "first name")
             .hasFieldOrPropertyWithValue("lastName", "last name"));
+
+    profileRepository.updateAuthorities(email, Collections.singletonList(ROLE_ADMIN), null);
+
+    assertThat(profileRepository.findByAuthentication(rightAuth))
+        .hasValueSatisfying(p -> assertThat(p)
+            .hasFieldOrPropertyWithValue("admin", true));
+
     assertThatThrownBy(() -> profileRepository.update(wrongAuth, new ProfileUpdate(TimeZone.getDefault(), SUNDAY, LocalTime.of(9, 0), LocalTime.of(16, 30), TimeFormat.TWENTY_FOUR_HOUR_CLOCK,  Format.MARKDOWN,"first name", "last name")))
         .isInstanceOf(UserNotFoundException.class);
 

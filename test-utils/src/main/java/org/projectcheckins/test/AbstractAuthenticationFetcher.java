@@ -22,4 +22,8 @@ public abstract class AbstractAuthenticationFetcher implements AuthenticationFet
     public void setAuthentication(Authentication authentication) {
         this.authentication = authentication;
     }
+
+    public Authentication getAuthentication() {
+        return authentication;
+    }
 }

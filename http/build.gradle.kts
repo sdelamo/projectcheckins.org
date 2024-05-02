@@ -3,6 +3,7 @@ plugins {
 }
 dependencies {
     api(project(":core"))
+    api(project(":security-http"))
     api(project(":bootstrap"))
     implementation("io.micronaut:micronaut-management")
 

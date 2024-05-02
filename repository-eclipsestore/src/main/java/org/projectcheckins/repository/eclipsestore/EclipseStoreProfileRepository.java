@@ -56,6 +56,15 @@ class EclipseStoreProfileRepository implements ProfileRepository, UserRepository
     deleteUser(rootProvider.root().getUsers(), user);
   }
 
+  @Override
+  public void updateAuthorities(@NotBlank @Email String email,
+                                @NonNull List<String> authorities,
+                                @Nullable Tenant tenant) {
+      final UserEntity user = findByEmail(email).orElseThrow(UserNotFoundException::new);
+      user.authorities(authorities);
+      save(user);
+  }
+
   @NonNull
   private Optional<UserEntity> findByEmail(@NotBlank @Email String email) {
     return rootProvider.root().getUsers().stream().filter(u -> u.email().equals(email)).findFirst();

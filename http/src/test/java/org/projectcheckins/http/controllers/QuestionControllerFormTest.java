@@ -2,6 +2,7 @@ package org.projectcheckins.http.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.projectcheckins.test.AbstractAuthenticationFetcher.ADMIN;
 import static org.projectcheckins.test.AbstractAuthenticationFetcher.SDELAMO;
 import static org.projectcheckins.test.AssertUtils.redirection;
 
@@ -12,13 +13,17 @@ import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpHeaders;
+import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
+import io.micronaut.security.authentication.Authentication;
+import io.micronaut.security.filters.AuthenticationFetcher;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -31,6 +36,7 @@ import org.projectcheckins.core.forms.*;
 import org.projectcheckins.core.repositories.QuestionRepository;
 import org.projectcheckins.core.repositories.SecondaryAnswerRepository;
 import org.projectcheckins.core.repositories.SecondaryProfileRepository;
+import org.projectcheckins.security.http.UserViewModelProcessor;
 import org.projectcheckins.test.AbstractAuthenticationFetcher;
 import org.projectcheckins.test.BrowserRequest;
 
@@ -46,6 +52,16 @@ class QuestionControllerFormTest {
     @Requires(property = "spec.name", value = "QuestionControllerFormTest")
     @Singleton
     static class AuthenticationFetcherMock extends AbstractAuthenticationFetcher {
+    }
+
+    @Requires(property = "spec.name", value = "QuestionControllerFormTest")
+    static class UserViewModelProcessorReplacement extends UserViewModelProcessor {
+        @Inject
+        private AuthenticationFetcherMock authenticationFetcher;
+        @Override
+        protected Optional<Authentication> getAuthentication(HttpRequest<?> request) {
+            return Optional.of(authenticationFetcher.getAuthentication());
+        }
     }
 
     @Requires(property = "spec.name", value = "QuestionControllerFormTest")
@@ -96,9 +112,15 @@ class QuestionControllerFormTest {
         String location = saveResponse.getHeaders().get(HttpHeaders.LOCATION);
         String id = location.substring(location.indexOf("/question/") + "/question/".length(), location.lastIndexOf("/show"));
 
+        authenticationFetcher.setAuthentication(ADMIN);
+        assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path("list").build()), String.class))
+                .contains(title)
+                .contains("/question/create");
+
+        authenticationFetcher.setAuthentication(SDELAMO);
         assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path("list").build()), String.class))
             .contains(title)
-            .contains("/question/create");
+            .doesNotContain("/question/create");
 
         assertThat(client.retrieve(BrowserRequest.GET(UriBuilder.of("/question").path(id).path("show").build()), String.class))
             .contains(title)

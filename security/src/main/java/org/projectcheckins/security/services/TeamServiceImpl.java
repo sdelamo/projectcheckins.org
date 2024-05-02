@@ -13,6 +13,8 @@ import org.projectcheckins.security.api.PublicProfile;
 import org.projectcheckins.security.forms.TeamMemberDelete;
 import org.projectcheckins.security.forms.TeamMemberSave;
 import org.projectcheckins.security.forms.TeamInvitationDelete;
+import org.projectcheckins.security.forms.TeamMemberUpdate;
+import org.projectcheckins.security.Role;
 import org.projectcheckins.security.repositories.PublicProfileRepository;
 import org.projectcheckins.security.TeamInvitation;
 import org.projectcheckins.security.TeamInvitationRecord;
@@ -24,6 +26,9 @@ import java.util.Locale;
 
 @Singleton
 public class TeamServiceImpl implements TeamService {
+
+    private static final List<String> ADMIN = List.of(Role.ROLE_ADMIN);
+    private static final List<String> MEMBER = List.of();
 
     private final PublicProfileRepository profileRepository;
     private final UserRepository userRepository;
@@ -66,5 +71,10 @@ public class TeamServiceImpl implements TeamService {
     @Override
     public void uninvite(@NotNull TeamInvitationDelete form, @Nullable Tenant tenant) {
         teamInvitationRepository.deleteByEmail(form.email(), tenant);
+    }
+
+    @Override
+    public void update(@NotNull @Valid TeamMemberUpdate form, @Nullable Tenant tenant) {
+        userRepository.updateAuthorities(form.email(), form.isAdmin() ? ADMIN : MEMBER, tenant);
     }
 }

@@ -25,6 +25,7 @@ import org.projectcheckins.security.api.PublicProfile;
 import org.projectcheckins.security.forms.TeamMemberDelete;
 import org.projectcheckins.security.forms.TeamMemberSave;
 import org.projectcheckins.security.forms.TeamInvitationDelete;
+import org.projectcheckins.security.forms.TeamMemberUpdate;
 import org.projectcheckins.security.services.TeamService;
 import org.projectcheckins.security.services.TeamServiceImpl;
 import org.projectcheckins.security.TeamInvitationRecord;
@@ -53,6 +54,7 @@ class TeamControllerTest {
     static final String URI_SAVE = UriBuilder.of("/team").path("save").build().toString();
     static final String URI_DELETE = UriBuilder.of("/team").path("delete").build().toString();
     static final String URI_UNINVITE = UriBuilder.of("/team").path("uninvite").build().toString();
+    static final String URI_UPDATE = UriBuilder.of("/team").path("update").build().toString();
 
     static final PublicProfile USER_1 = new PublicProfileRecord(
             "user1",
@@ -126,6 +128,12 @@ class TeamControllerTest {
                 .satisfies(htmlBody("""
                         <span>User One</span>"""))
                 .satisfies(htmlBody("""
+                        <form action="/team/delete" method="post">"""))
+                .satisfies(htmlBody("""
+                        <form action="/team/update" method="post">"""))
+                .satisfies(htmlBody("Revoke Admin privileges"))
+                .satisfies(htmlBody("Grant Admin privileges"))
+                .satisfies(htmlBody("""
                         <code>user2@email.com</code>"""))
                 .satisfies(htmlBody("""
                         <code>pending@email.com</code>"""))
@@ -143,10 +151,17 @@ class TeamControllerTest {
                         <span>User One</span>"""))
                 .satisfies(htmlBody("""
                         <code>user2@email.com</code>"""))
-                .satisfies(htmlBody(body -> Assertions.assertThat(body).doesNotContain("""
-                        <code>pending@email.com</code>""")))
-                .satisfies(htmlBody(body -> Assertions.assertThat(body).doesNotContain("""
-                        <a href="/team/create">""")));
+                .satisfies(htmlBody(body -> Assertions.assertThat(body)
+                        .doesNotContain("<code>pending@email.com</code>")
+                        .doesNotContain("""
+                                <form action="/team/delete" method="post">""")
+                        .doesNotContain("""
+                                <form action="/team/update" method="post">""")
+                        .doesNotContain("""
+                                <a href="/team/create">""")
+                        .doesNotContain("Revoke Admin privileges")
+                        .doesNotContain("Grant Admin privileges")
+                ));
     }
 
     @Test
@@ -260,6 +275,16 @@ class TeamControllerTest {
                 .satisfies(redirection("/unauthorized"));
     }
 
+    @Test
+    void testMemberUpdate(@Client("/") HttpClient httpClient) {
+        final BlockingHttpClient client = httpClient.toBlocking();
+        authMock.setAuthentication(AbstractAuthenticationFetcher.ADMIN);
+        final Map<String, Object> body = Map.of("email", "user3@email.com", "isAdmin", true);
+        final HttpRequest<?> request = BrowserRequest.POST(URI_UPDATE, body);
+        Assertions.assertThat(client.exchange(request, String.class))
+                .satisfies(redirection(URI_LIST));
+    }
+
     @Requires(property = "spec.name", value = "TeamControllerTest")
     @Singleton
     static class AuthenticationFetcherMock extends AbstractAuthenticationFetcher {
@@ -313,6 +338,9 @@ class TeamControllerTest {
         public void uninvite(@NotNull @Valid TeamInvitationDelete form, @Nullable Tenant tenant) {
 
         }
+
+        @Override
+        public void update(@NotNull @Valid TeamMemberUpdate form, @Nullable Tenant tenant) {}
     }
 
     record PublicProfileRecord(String id, String email, String fullName, boolean isAdmin) implements PublicProfile {
