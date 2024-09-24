@@ -43,11 +43,3 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
-
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "io.micronaut.views") {
-            useVersion("5.3.0")
-        }
-    }
-}
