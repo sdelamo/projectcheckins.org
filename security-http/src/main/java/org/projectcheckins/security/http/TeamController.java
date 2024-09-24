@@ -1,3 +1,17 @@
+// Copyright 2024 Object Computing, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package org.projectcheckins.security.http;
 
 import io.micronaut.core.annotation.NonNull;
@@ -12,6 +26,7 @@ import io.micronaut.http.server.util.HttpHostResolver;
 import io.micronaut.http.server.util.locale.HttpLocaleResolver;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.multitenancy.Tenant;
+import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
@@ -29,6 +44,7 @@ import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.security.TeamInvitation;
 import org.projectcheckins.security.api.PublicProfile;
 import org.projectcheckins.security.forms.TeamMemberDelete;
+import org.projectcheckins.security.forms.TeamMemberUpdate;
 import org.projectcheckins.security.forms.TeamMemberSave;
 import org.projectcheckins.security.forms.TeamInvitationDelete;
 import org.projectcheckins.security.services.TeamService;
@@ -37,6 +53,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import static org.projectcheckins.security.Role.isAdmin;
+import static org.projectcheckins.security.Role.ROLE_ADMIN;
 
 @Controller
 class TeamController {
@@ -50,6 +69,7 @@ class TeamController {
     public static final String ACTION_CREATE = "create";
     public static final String ACTION_SAVE = "save";
     public static final String ACTION_DELETE = "delete";
+    public static final String ACTION_UPDATE = "update";
     private static final String TEAM = "team";
     private static final String INVITATION = "invitation";
     public static final String PATH = SLASH + TEAM;
@@ -84,7 +104,13 @@ class TeamController {
 
     // UNINVITE
     private static final String PATH_INVITATION_DELETE = PATH + SLASH + INVITATION + SLASH + ACTION_DELETE;
+
+    // UPDATE
+    private static final String PATH_UPDATE = PATH + SLASH + ACTION_UPDATE;
+
     private static final Message MESSAGE_DELETE = Message.of("Delete", "action.delete");
+    private static final Message MESSAGE_GRANT_ADMIN = Message.of("Grant Admin privileges", "team.admin.grant");
+    private static final Message MESSAGE_REVOKE_ADMIN = Message.of("Revoke Admin privileges", "team.admin.revoke");
     private final TeamService teamService;
     private final FormGenerator formGenerator;
     private final HttpHostResolver httpHostResolver;
@@ -98,13 +124,20 @@ class TeamController {
     }
 
     @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST, turboView = VIEW_LIST_FRAGMENT)
-    Map<String, Object> memberList(@Nullable Tenant tenant) {
-        return listModel(tenant);
+    Map<String, Object> memberList(@NonNull @NotNull Authentication authentication, @Nullable Tenant tenant) {
+        return listModel(authentication, tenant);
     }
 
     @NonNull
     private Form deleteInvitationForm(@NonNull TeamInvitation invitation) {
         return formGenerator.generate(PATH_INVITATION_DELETE, new TeamInvitationDelete(invitation.email()), MESSAGE_DELETE);
+    }
+
+    @NonNull
+    private Form updateMemberForm(@NonNull PublicProfile member) {
+        final TeamMemberUpdate form = new TeamMemberUpdate(member.email(), !member.isAdmin());
+        final Message message = member.isAdmin() ? MESSAGE_REVOKE_ADMIN : MESSAGE_GRANT_ADMIN;
+        return formGenerator.generate(PATH_UPDATE, form, message);
     }
 
     @NonNull
@@ -117,31 +150,39 @@ class TeamController {
         return createModel();
     }
 
-    @PostForm(uri = PATH_SAVE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    @PostForm(uri = PATH_SAVE, rolesAllowed = ROLE_ADMIN)
     HttpResponse<?> memberSave(@NonNull @NotNull HttpRequest<?> request,
                                @NonNull @NotNull @Valid @Body TeamMemberSave form,
                                @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
-                               @Nullable Tenant tenant) {
+                               Authentication authentication,
+                               @Nullable Tenant tenant
+                               ) {
         teamService.save(form, tenant, getLocale(request), getSignUpUri(request).toString());
         if (TurboMediaType.acceptsTurboStream(request)) {
             return HttpResponse.ok()
                     .body(TurboStream.builder()
                             .targetDomId(turboFrame)
-                            .template(VIEW_LIST_FRAGMENT, listModel(tenant))
+                            .template(VIEW_LIST_FRAGMENT, listModel(authentication, tenant))
                             .update());
         }
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
-    @PostForm(uri = PATH_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    @PostForm(uri = PATH_DELETE, rolesAllowed = ROLE_ADMIN)
     HttpResponse<?> teamMemberDelete(@NonNull @NotNull @Valid @Body TeamMemberDelete form, @Nullable Tenant tenant) {
         teamService.remove(form, tenant);
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
-    @PostForm(uri = PATH_INVITATION_DELETE, rolesAllowed = SecurityRule.IS_AUTHENTICATED)
+    @PostForm(uri = PATH_INVITATION_DELETE, rolesAllowed = ROLE_ADMIN)
     HttpResponse<?> teamInvitationDelete(@NonNull @NotNull @Valid @Body TeamInvitationDelete form, @Nullable Tenant tenant) {
         teamService.uninvite(form, tenant);
+        return HttpResponse.seeOther(URI.create(PATH_LIST));
+    }
+
+    @PostForm(uri = PATH_UPDATE, rolesAllowed = ROLE_ADMIN)
+    HttpResponse<?> memberUpdate(@NonNull @NotNull @Valid @Body TeamMemberUpdate form, @Nullable Tenant tenant) {
+        teamService.update(form, tenant);
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 
@@ -170,16 +211,18 @@ class TeamController {
         );
     }
 
-    private Map<String, Object> listModel(@Nullable Tenant tenant) {
+    private Map<String, Object> listModel(Authentication authentication, @Nullable Tenant tenant) {
+        final boolean isAdmin = isAdmin(authentication);
+        final String self = authentication.getName();
         return Map.of(
                 MODEL_BREADCRUMBS, BREADCRUMBS_LIST,
                 MODEL_MEMBERS, teamService.findAll(tenant)
                         .stream()
-                        .map(m -> new MemberRow(m.email(), m.fullName(), deleteMemberForm(m)))
+                        .map(m -> new MemberRow(m.email(), m.fullName(), isAdmin && !m.id().equals(self) ? updateMemberForm(m) : null, isAdmin && !m.id().equals(self) ? deleteMemberForm(m) : null))
                         .toList(),
                 MODEL_INVITATIONS, teamService.findInvitations(tenant)
                         .stream()
-                        .map(i -> new InvitationRow(i.email(), deleteInvitationForm(i)))
+                        .map(i -> new InvitationRow(i.email(), isAdmin ? deleteInvitationForm(i) : null))
                         .toList()
         );
     }

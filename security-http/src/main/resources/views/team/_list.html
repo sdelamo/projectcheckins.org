@@ -2,6 +2,8 @@
     <nav th:replace="~{bootstrap/_breadcrumbs :: breadcrumbs(${breadcrumbs})}"></nav>
     <article>
         <div th:replace="~{team/_members :: members(${members})}"></div>
-        <div th:replace="~{team/_invitations :: invitations(${invitations})}"></div>
+        <th:block th:if="${user.roles.contains('ROLE_ADMIN')}">
+            <div th:replace="~{team/_invitations :: invitations(${invitations})}"></div>
+        </th:block>
     </article>
 </th:block>

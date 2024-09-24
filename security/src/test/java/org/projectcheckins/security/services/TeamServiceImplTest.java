@@ -1,3 +1,17 @@
+// Copyright 2024 Object Computing, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package org.projectcheckins.security.services;
 
 import io.micronaut.context.annotation.Property;
@@ -20,11 +34,14 @@ import org.projectcheckins.security.*;
 import org.projectcheckins.security.api.PublicProfile;
 import org.projectcheckins.security.forms.TeamMemberDelete;
 import org.projectcheckins.security.forms.TeamMemberSave;
+import org.projectcheckins.security.forms.TeamMemberUpdate;
 import org.projectcheckins.security.repositories.PublicProfileRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -40,7 +57,8 @@ class TeamServiceImplTest {
     static final PublicProfile USER_1 = new PublicProfileRecord(
             "user1",
             "user1@email.com",
-            ""
+            "",
+            true
     );
 
     static final UserState USER_1_STATE = new UserState() {
@@ -131,6 +149,17 @@ class TeamServiceImplTest {
                 .hasMessage("User not found");
     }
 
+    @Test
+    void testUpdate(UserRepositoryMock users) {
+        final String email = USER_1.email();
+        teamService.update(new TeamMemberUpdate(email, false), null);
+        assertThat(users.updatedAuthorities.get(email))
+                .doesNotContain(Role.ROLE_ADMIN);
+        teamService.update(new TeamMemberUpdate(email, true), null);
+        assertThat(users.updatedAuthorities.get(email))
+                .contains(Role.ROLE_ADMIN);
+    }
+
     @Requires(property = "spec.name", value = "TeamServiceImplTest")
     @Singleton
     static class RegisterServiceMock implements RegisterService {
@@ -188,11 +217,18 @@ class TeamServiceImplTest {
     @Singleton
     @Replaces(TeamInvitationRepository.class)
     static class UserRepositoryMock extends SecondaryUserRepository {
+        Map<String, List<String>> updatedAuthorities = new HashMap<>();
         @Override
         public void deleteByEmail(@NotBlank @Email String email, @Nullable Tenant tenant) {
             if (!email.equals(USER_1.email())) {
                 throw new RuntimeException("User not found");
             }
+        }
+        @Override
+        public void updateAuthorities(@NotBlank @Email String email,
+                                      @NonNull List<String> authorities,
+                                      @Nullable Tenant tenant) {
+            updatedAuthorities.put(email, authorities);
         }
     }
 
@@ -223,6 +259,6 @@ class TeamServiceImplTest {
         }
     }
 
-    record PublicProfileRecord(String id, String email, String fullName) implements PublicProfile {
+    record PublicProfileRecord(String id, String email, String fullName, boolean isAdmin) implements PublicProfile {
     }
 }

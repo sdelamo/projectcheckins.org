@@ -4,7 +4,14 @@
             <span th:unless="${member.fullName.empty}" th:text="${member.fullName}"></span>
             <code th:if="${member.fullName.empty}" th:text="${member.email}"></code>
         </th>
-        <td class="text-end">
+        <td class="text-end" style="width: 1%">
+            <th:block th:if="${member.updateForm}">
+                <div>
+                    <form th:replace="~{fieldset/form :: form(${member.updateForm})}"></form>
+                </div>
+            </th:block>
+        </td>
+        <td class="text-end" style="width: 1%">
             <th:block th:if="${member.deleteForm}">
                 <div>
                     <form th:replace="~{fieldset/form :: form(${member.deleteForm})}"></form>
