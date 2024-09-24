@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 @Property(name = "micronaut.security.token.jwt.signatures.secret.generator.secret", value="pleaseChangeThisSecretForANewOne")
-@MicronautTest
+@MicronautTest(startApplication = false)
 class EmailConfirmationTokenGeneratorTest {
 
     @Test
