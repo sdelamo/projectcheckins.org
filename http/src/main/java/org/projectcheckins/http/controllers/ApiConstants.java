@@ -24,6 +24,8 @@ import io.swagger.v3.oas.annotations.info.Info;
         )
 )
 public interface ApiConstants {
+    String FRAME_ID_MAIN = "main";
+    String DATA_TURBO_ACTION = "advance";
     String PATH_VARIABLE_ID = "{id}";
 
     String SLASH = "/";
@@ -33,6 +35,10 @@ public interface ApiConstants {
     String ACTION_SHOW = "show";
 
     String ACTION_CREATE = "create";
+    String FRAGMENT_SHOW = "_show.html";
+    String FRAGMENT_CREATE = "_create.html";
+    String FRAGMENT_EDIT = "_edit.html";
+    String FRAGMENT_LIST = "_list.html";
     String ACTION_EDIT = "edit";
     String ACTION_SAVE = "save";
     String ACTION_UPDATE = "update";

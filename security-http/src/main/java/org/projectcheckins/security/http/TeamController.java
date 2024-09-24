@@ -21,6 +21,7 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
+import io.micronaut.http.annotation.Header;
 import io.micronaut.http.server.util.HttpHostResolver;
 import io.micronaut.http.server.util.locale.HttpLocaleResolver;
 import io.micronaut.http.uri.UriBuilder;
@@ -31,6 +32,9 @@ import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.FormGenerator;
 import io.micronaut.views.fields.messages.Message;
+import io.micronaut.views.turbo.TurboStream;
+import io.micronaut.views.turbo.http.TurboHttpHeaders;
+import io.micronaut.views.turbo.http.TurboMediaType;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -55,10 +59,13 @@ import static org.projectcheckins.security.Role.ROLE_ADMIN;
 
 @Controller
 class TeamController {
+    private static final String FRAME_ID_MAIN = "main";
     public static final String SLASH = "/";
     public static final String DOT = ".";
     public static final String DOT_HTML = DOT + "html";
     public static final String ACTION_LIST = "list";
+    public static final String FRAGMENT_LIST = "_list.html";
+    public static final String FRAGMENT_CREATE = "_create.html";
     public static final String ACTION_CREATE = "create";
     public static final String ACTION_SAVE = "save";
     public static final String ACTION_DELETE = "delete";
@@ -78,6 +85,7 @@ class TeamController {
     // LIST
     public static final String PATH_LIST = PATH + SLASH + ACTION_LIST;
     private static final String VIEW_LIST = PATH + SLASH + ACTION_LIST + DOT_HTML;
+    private static final String VIEW_LIST_FRAGMENT = PATH + SLASH + FRAGMENT_LIST;
     private static final Message MESSAGE_LIST = Message.of("Team members", TEAM + DOT + ACTION_LIST);
     public static final Breadcrumb BREADCRUMB_LIST = new Breadcrumb(MESSAGE_LIST, PATH_LIST);
     private static final List<Breadcrumb> BREADCRUMBS_LIST = List.of(BREADCRUMB_HOME, new Breadcrumb(MESSAGE_LIST));
@@ -85,6 +93,7 @@ class TeamController {
     // CREATE
     private static final String PATH_CREATE = PATH + SLASH + ACTION_CREATE;
     private static final String VIEW_CREATE = PATH + SLASH + ACTION_CREATE + DOT_HTML;
+    private static final String VIEW_CREATE_FRAGMENT = PATH + SLASH + FRAGMENT_CREATE;
     private static final Breadcrumb BREADCRUMB_CREATE = new Breadcrumb(Message.of("Add team member", TEAM + DOT + ACTION_CREATE));
 
     // SAVE
@@ -114,7 +123,7 @@ class TeamController {
         this.httpLocaleResolver = httpLocaleResolver;
     }
 
-    @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST)
+    @GetHtml(uri = PATH_LIST, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_LIST, turboView = VIEW_LIST_FRAGMENT)
     Map<String, Object> memberList(@NonNull @NotNull Authentication authentication, @Nullable Tenant tenant) {
         return listModel(authentication, tenant);
     }
@@ -136,7 +145,7 @@ class TeamController {
         return formGenerator.generate(PATH_DELETE, new TeamMemberDelete(member.email()), MESSAGE_DELETE);
     }
 
-    @GetHtml(uri = PATH_CREATE, rolesAllowed = ROLE_ADMIN, view = VIEW_CREATE)
+    @GetHtml(uri = PATH_CREATE, rolesAllowed = ROLE_ADMIN, view = VIEW_CREATE, turboView = VIEW_CREATE_FRAGMENT)
     Map<String, Object> memberCreate() {
         return createModel();
     }
@@ -144,8 +153,18 @@ class TeamController {
     @PostForm(uri = PATH_SAVE, rolesAllowed = ROLE_ADMIN)
     HttpResponse<?> memberSave(@NonNull @NotNull HttpRequest<?> request,
                                @NonNull @NotNull @Valid @Body TeamMemberSave form,
-                               @Nullable Tenant tenant) {
+                               @Nullable @Header(value = TurboHttpHeaders.TURBO_FRAME) String turboFrame,
+                               Authentication authentication,
+                               @Nullable Tenant tenant
+                               ) {
         teamService.save(form, tenant, getLocale(request), getSignUpUri(request).toString());
+        if (TurboMediaType.acceptsTurboStream(request)) {
+            return HttpResponse.ok()
+                    .body(TurboStream.builder()
+                            .targetDomId(turboFrame)
+                            .template(VIEW_LIST_FRAGMENT, listModel(authentication, tenant))
+                            .update());
+        }
         return HttpResponse.seeOther(URI.create(PATH_LIST));
     }
 

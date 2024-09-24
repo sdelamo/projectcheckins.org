@@ -3,4 +3,5 @@ plugins {
 }
 dependencies {
     api("io.micronaut:micronaut-http")
+    api("io.micronaut.views:micronaut-views-core")
 }

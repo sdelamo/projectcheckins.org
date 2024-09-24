@@ -14,8 +14,8 @@
 
 package org.projectcheckins.processor;
 
-import org.projectcheckins.annotations.GetHtml;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Get;
@@ -26,7 +26,9 @@ import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.views.View;
+import io.micronaut.views.turbo.TurboFrameView;
 import io.swagger.v3.oas.annotations.Hidden;
+import org.projectcheckins.annotations.GetHtml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,10 +38,11 @@ public class GetHtmlAnnotationMapper implements TypedAnnotationMapper<GetHtml> {
     public static final String MEMBER_VALUE = "value";
     public static final String MEMBER_VIEW = "view";
     public static final String MEMBER_URI = "uri";
-
+    private static final String MEMBER_TURBO_VIEW = "turboView";
     public static final String MEMBER_ROLESALLOWED  = "rolesAllowed";
     public static final String MEMBER_EXECUTES_ON = "executesOn";
     public static final String MEMBER_HIDDEN = "hidden";
+    public static final String MEMBER_ACTION = "action";
 
     @Override
     public Class<GetHtml> annotationType() {
@@ -56,6 +59,14 @@ public class GetHtmlAnnotationMapper implements TypedAnnotationMapper<GetHtml> {
                 .filter(StringUtils::isNotEmpty)
                 .ifPresent(view ->
                 result.add(AnnotationValue.builder(View.class).member(MEMBER_VALUE, view).build()));
+
+        annotation.stringValue(MEMBER_TURBO_VIEW)
+                .filter(StringUtils::isNotEmpty)
+                .ifPresent(view -> {
+                    AnnotationValueBuilder<TurboFrameView> b = AnnotationValue.builder(TurboFrameView.class)
+                                        .member(MEMBER_VALUE, view);
+                    result.add(b.build());
+                });
 
         annotation.stringValue(MEMBER_URI)
                 .filter(StringUtils::isNotEmpty)

@@ -14,6 +14,7 @@
 
 package org.projectcheckins.processor;
 
+import io.micronaut.views.turbo.http.TurboMediaType;
 import org.projectcheckins.annotations.PostForm;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.http.MediaType;
@@ -46,7 +47,9 @@ public class PostFormAnnotationMapper implements TypedAnnotationMapper<PostForm>
     public List<AnnotationValue<?>> map(AnnotationValue<PostForm> annotation, VisitorContext visitorContext) {
         List<AnnotationValue<?>> result = new ArrayList<>();
 
-        result.add(AnnotationValue.builder(Produces.class).member(MEMBER_VALUE, MediaType.TEXT_HTML).build());
+        result.add(AnnotationValue.builder(Produces.class)
+                        .member(MEMBER_VALUE, MediaType.TEXT_HTML, TurboMediaType.TURBO_STREAM)
+                .build());
 
         result.add(AnnotationValue.builder(Consumes.class).member(MEMBER_VALUE, MediaType.APPLICATION_FORM_URLENCODED).build());
 

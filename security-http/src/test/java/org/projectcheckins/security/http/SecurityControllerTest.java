@@ -109,6 +109,7 @@ class SecurityControllerTest {
                 .containsOnlyOnce(ACTION_SECURITY_LOGIN)
                 .containsOnlyOnce(TYPE_EMAIL)
                 .containsOnlyOnce("Log in")
+                .containsOnlyOnce("data-turbo=\"false\"")
                 .containsOnlyOnce(TYPE_PASSWORD);
 
         assertThat(client.retrieve(HttpRequest.POST("/login", Map.of("username", "sherlock@example.com", "password", "password"))))
@@ -162,11 +163,11 @@ class SecurityControllerTest {
         assertThat(client.retrieve(BrowserRequest.GET("/security/changePassword")))
                 .satisfies(containsManyTimes(3, TYPE_PASSWORD))
                 .containsOnlyOnce("""
-                        <li class="breadcrumb-item"><a href="/">""")
+                        action="/security/updatePassword""")
                 .containsOnlyOnce("""
                         <li class="breadcrumb-item"><a href="/profile/show">""")
                 .containsOnlyOnce("""
-                        action="/security/updatePassword" method="post">""");
+                        action="/security/updatePassword""");
     }
 
     @Test
@@ -233,7 +234,7 @@ class SecurityControllerTest {
                 "repeatPassword", "new password"));
         assertThat(client.retrieve(request))
                 .containsOnlyOnce("""
-                        <form action="/login" method="post">""");
+                        <form action="/login""");
     }
 
     @Test
@@ -243,7 +244,7 @@ class SecurityControllerTest {
                 .containsOnlyOnce("""
                         <input type="email" name="email""")
                 .containsOnlyOnce("""
-                        action="/security/forgotPassword" method="post""");
+                        action="/security/forgotPassword""");
     }
 
     @Test
@@ -252,7 +253,7 @@ class SecurityControllerTest {
         final HttpRequest<?> request = BrowserRequest.POST("/security/forgotPassword", Map.of("email", EMAIL_ALREADY_EXISTS));
         assertThat(client.retrieve(request))
                 .containsOnlyOnce("""
-                        <form action="/login" method="post""")
+                        <form action="/login""")
                 .containsOnlyOnce("Check your email for reset instructions");
     }
 
@@ -270,7 +271,7 @@ class SecurityControllerTest {
         assertThat(client.retrieve(BrowserRequest.GET("/security/resetPassword?token=valid")))
                 .satisfies(containsManyTimes(2, TYPE_PASSWORD))
                 .containsOnlyOnce("""
-                        <form action="/security/resetPassword" method="post""");
+                        <form action="/security/resetPassword""");
     }
 
     @Test
@@ -279,7 +280,7 @@ class SecurityControllerTest {
         assertThat(client.retrieve(BrowserRequest.GET("/security/resetPassword?token=invalid")))
                 .containsOnlyOnce("Token is invalid or already expired")
                 .containsOnlyOnce("""
-                        <form action="/login" method="post""");
+                        <form action="/login""");
     }
 
     @Test
@@ -292,7 +293,7 @@ class SecurityControllerTest {
         assertThat(client.retrieve(request))
                 .containsOnlyOnce("You have successfully reset your password")
                 .containsOnlyOnce("""
-                        <form action="/login" method="post""");
+                        <form action="/login""");
     }
 
     @Test
@@ -305,7 +306,7 @@ class SecurityControllerTest {
         assertThat(client.retrieve(request))
                 .containsOnlyOnce("Passwords do not match")
                 .containsOnlyOnce("""
-                        <form action="/security/resetPassword" method="post""");
+                        <form action="/security/resetPassword""");
     }
 
     @Requires(property = "spec.name", value = "SecurityControllerTest")

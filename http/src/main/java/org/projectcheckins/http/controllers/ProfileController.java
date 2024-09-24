@@ -26,6 +26,7 @@ import io.micronaut.views.ModelAndView;
 import io.micronaut.views.fields.Form;
 import io.micronaut.views.fields.FormGenerator;
 import io.micronaut.views.fields.messages.Message;
+import io.micronaut.views.turbo.http.TurboMediaType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -39,6 +40,9 @@ import org.projectcheckins.bootstrap.Breadcrumb;
 import org.projectcheckins.core.api.Profile;
 import org.projectcheckins.core.forms.ProfileUpdate;
 import org.projectcheckins.core.repositories.ProfileRepository;
+
+import org.projectcheckins.security.http.TurboFrameUtils;
+import org.projectcheckins.security.http.TurboStreamUtils;
 import static org.projectcheckins.http.controllers.ApiConstants.*;
 
 @Controller
@@ -50,11 +54,15 @@ class ProfileController {
     private static final String MODEL_PROFILE = "profile";
 
     // SHOW
+    public static final String VIEW_SHOW_FRAGMENT = MODEL_PROFILE + SLASH + ApiConstants.FRAGMENT_SHOW;
+
     private static final Message MESSAGE_SHOW = Message.of("Profile", PROFILE + ApiConstants.DOT + ApiConstants.ACTION_SHOW);
     private static final String PATH_SHOW = PATH + SLASH + ApiConstants.ACTION_SHOW;
     private static final String VIEW_SHOW = PATH + ApiConstants.VIEW_SHOW;
 
     // EDIT
+    private static final String VIEW_EDIT_FRAGMENT = PATH + SLASH + FRAGMENT_EDIT;
+
     private static final Message MESSAGE_BREADCRUMB_EDIT = Message.of("Edit", PROFILE + ApiConstants.DOT + ApiConstants.ACTION_EDIT);
     private static final Breadcrumb BREADCRUMB_EDIT = new Breadcrumb(MESSAGE_BREADCRUMB_EDIT);
     private static final String PATH_EDIT = PATH + SLASH + ApiConstants.ACTION_EDIT;
@@ -76,7 +84,9 @@ class ProfileController {
                                 @NonNull @NotNull Authentication authentication,
                                 @Nullable Tenant tenant) {
         return showModel(authentication, tenant)
-                .map(model -> new ModelAndView<>(VIEW_SHOW, model))
+                .map(model -> TurboFrameUtils.turboFrame(request)
+                        .map(frame -> (Object) TurboFrameUtils.turboFrame(frame, VIEW_SHOW_FRAGMENT, model))
+                        .orElseGet(() -> new ModelAndView<>(VIEW_SHOW, model)))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
@@ -87,7 +97,9 @@ class ProfileController {
                                 @Nullable Tenant tenant) {
         return profileRepository.findByAuthentication(authentication, tenant)
                 .map(this::updateModel)
-                .map(model -> new ModelAndView<>(VIEW_EDIT, model))
+                .map(model -> TurboFrameUtils.turboFrame(request)
+                        .map(frame -> (Object) TurboFrameUtils.turboFrame(frame, VIEW_EDIT_FRAGMENT, model))
+                        .orElseGet(() -> new ModelAndView<>(VIEW_EDIT, model)))
                 .map(HttpResponse::ok)
                 .orElseGet(NotFoundController::notFoundRedirect);
     }
@@ -99,6 +111,12 @@ class ProfileController {
             @NonNull @NotNull @Valid @Body ProfileUpdate profileUpdate,
             @Nullable Tenant tenant) {
         profileRepository.update(authentication, profileUpdate, tenant);
+        if (TurboMediaType.acceptsTurboStream(request)) {
+            return showModel(authentication, tenant)
+                    .flatMap(model -> TurboStreamUtils.turboStream(request, VIEW_SHOW_FRAGMENT, model))
+                    .map(HttpResponse::ok)
+                    .orElseGet(HttpResponse::notFound);
+        }
         return HttpResponse.seeOther(URI.create(PATH_SHOW));
     }
 
