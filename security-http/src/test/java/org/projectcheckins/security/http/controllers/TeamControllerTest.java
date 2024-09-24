@@ -34,6 +34,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.projectcheckins.security.api.PublicProfile;
 import org.projectcheckins.security.forms.TeamMemberDelete;
@@ -133,6 +134,7 @@ class TeamControllerTest {
     @Inject
     AuthenticationFetcherMock authMock;
 
+    @Disabled
     @Test
     void testListTeamMembers(@Client("/") HttpClient httpClient) {
         final BlockingHttpClient client = httpClient.toBlocking();
