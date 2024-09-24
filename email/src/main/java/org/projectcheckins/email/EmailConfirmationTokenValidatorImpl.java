@@ -14,9 +14,12 @@
 
 package org.projectcheckins.email;
 
+import com.nimbusds.jwt.JWT;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.security.authentication.Authentication;
+import io.micronaut.security.token.jwt.validator.JsonWebTokenValidator;
+import io.micronaut.security.token.jwt.validator.JwtAuthenticationFactory;
 import io.micronaut.security.token.validator.TokenValidator;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -33,27 +36,19 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 class EmailConfirmationTokenValidatorImpl implements EmailConfirmationTokenValidator {
     private static final Logger LOG = LoggerFactory.getLogger(EmailConfirmationTokenValidatorImpl.class);
-    private final TokenValidator<?> tokenValidator;
-    private final ExecutorService blockingExecutor;
+    private final JsonWebTokenValidator<JWT, ?> tokenValidator;
+    private final JwtAuthenticationFactory jwtAuthenticationFactory;
 
-    EmailConfirmationTokenValidatorImpl(TokenValidator<?> tokenValidator,
-                                        @Named(TaskExecutors.BLOCKING) ExecutorService blockingExecutor) {
+    EmailConfirmationTokenValidatorImpl(JsonWebTokenValidator<JWT, ?> tokenValidator,
+                                        JwtAuthenticationFactory jwtAuthenticationFactory) {
         this.tokenValidator = tokenValidator;
-        this.blockingExecutor = blockingExecutor;
+        this.jwtAuthenticationFactory = jwtAuthenticationFactory;
     }
 
     @Override
     @NonNull
     public Optional<Authentication> validate(@NonNull @NotBlank String token) {
-        try {
-            return blockingExecutor.submit(() ->
-                    Mono.from(tokenValidator.validateToken(token, null)).blockOptional()
-            ).get();
-        } catch (ExecutionException e) {
-            LOG.warn("ExecutionException validating toke {}", token);
-        } catch (InterruptedException e) {
-            LOG.warn("InterruptedException validating toke {}", token);
-        }
-        return Optional.empty();
+        return tokenValidator.validate(token, null)
+                .flatMap(jwtAuthenticationFactory::createAuthentication);
     }
 }
