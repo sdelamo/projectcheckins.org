@@ -145,7 +145,7 @@ class TeamController {
         return formGenerator.generate(PATH_DELETE, new TeamMemberDelete(member.email()), MESSAGE_DELETE);
     }
 
-    @GetHtml(uri = PATH_CREATE, rolesAllowed = SecurityRule.IS_AUTHENTICATED, view = VIEW_CREATE, turboView = VIEW_CREATE_FRAGMENT)
+    @GetHtml(uri = PATH_CREATE, rolesAllowed = ROLE_ADMIN, view = VIEW_CREATE, turboView = VIEW_CREATE_FRAGMENT)
     Map<String, Object> memberCreate() {
         return createModel();
     }
